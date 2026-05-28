@@ -11,6 +11,7 @@ kotlin = "2.2.20"
 material = "1.10.0"
 
 [libraries]
+android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
@@ -23,6 +24,8 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+kotlin-compose-gradle-plugin = { group = "org.jetbrains.kotlin.plugin.compose", name = "org.jetbrains.kotlin.plugin.compose.gradle.plugin", version.ref = "kotlin" }
+kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
