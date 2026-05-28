@@ -45,11 +45,21 @@ android {
 
     buildTypes {
         debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
             isDebuggable = true
+            buildConfigField("String", "APP_ENV", "\"debug\"")
+            buildConfigField("Boolean", "IS_INTERNAL_BUILD", "true")
+            buildConfigField("Boolean", "LOGGING_ENABLED", "true")
         }
 
         release {
-            isMinifyEnabled = false
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            buildConfigField("String", "APP_ENV", "\"release\"")
+            buildConfigField("Boolean", "IS_INTERNAL_BUILD", "false")
+            buildConfigField("Boolean", "LOGGING_ENABLED", "false")
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -70,6 +80,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
