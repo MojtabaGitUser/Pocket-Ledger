@@ -1,0 +1,62 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  android-validation:
+    name: Android validation
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: androidApp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: List Gradle projects
+        run: ./gradlew projects
+
+      - name: Assemble app debug
+        run: ./gradlew :app:assembleDebug
+
+      - name: Assemble app release
+        run: ./gradlew :app:assembleRelease
+
+      - name: Compile app Kotlin
+        run: ./gradlew :app:compileDebugKotlin :app:compileReleaseKotlin
+
+      - name: Assemble design system debug
+        run: ./gradlew :core:designsystem:assembleDebug
+
+      - name: Compile shared KMP
+        run: ./gradlew :shared:compileKotlinMetadata :shared:compileAndroidMain
+
+      - name: Run shared tests
+        run: ./gradlew :shared:allTests
+
+      - name: Run full build
+        run: ./gradlew clean build
