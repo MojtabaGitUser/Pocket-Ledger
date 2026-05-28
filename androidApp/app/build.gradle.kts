@@ -11,6 +11,16 @@ android {
         }
     }
 
+    val releaseStoreFile = providers.gradleProperty("POCKET_LEDGER_RELEASE_STORE_FILE")
+    val releaseStorePassword = providers.gradleProperty("POCKET_LEDGER_RELEASE_STORE_PASSWORD")
+    val releaseKeyAlias = providers.gradleProperty("POCKET_LEDGER_RELEASE_KEY_ALIAS")
+    val releaseKeyPassword = providers.gradleProperty("POCKET_LEDGER_RELEASE_KEY_PASSWORD")
+    val hasReleaseSigningConfig =
+        releaseStoreFile.isPresent &&
+            releaseStorePassword.isPresent &&
+            releaseKeyAlias.isPresent &&
+            releaseKeyPassword.isPresent
+
     defaultConfig {
         applicationId = "com.mojtaba.pocketledger"
         minSdk = 26
@@ -22,9 +32,27 @@ android {
             "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            if (hasReleaseSigningConfig) {
+                storeFile = file(releaseStoreFile.get())
+                storePassword = releaseStorePassword.get()
+                keyAlias = releaseKeyAlias.get()
+                keyPassword = releaseKeyPassword.get()
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            isDebuggable = true
+        }
+
         release {
             isMinifyEnabled = false
+            if (hasReleaseSigningConfig) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
