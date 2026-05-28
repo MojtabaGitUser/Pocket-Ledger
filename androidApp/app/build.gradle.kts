@@ -1,15 +1,10 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.compose)
+    id("pocketledger.android.application")
+    id("pocketledger.android.compose")
 }
 
 android {
     namespace = "com.mojtaba.pocketledger"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
 
     val releaseStoreFile = providers.gradleProperty("POCKET_LEDGER_RELEASE_STORE_FILE")
     val releaseStorePassword = providers.gradleProperty("POCKET_LEDGER_RELEASE_STORE_PASSWORD")
@@ -23,13 +18,9 @@ android {
 
     defaultConfig {
         applicationId = "com.mojtaba.pocketledger"
-        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner =
-            "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -69,30 +60,16 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-        }
-    }
     buildFeatures {
-        compose = true
         buildConfig = true
     }
 }
 
 dependencies {
     implementation(project(":core:designsystem"))
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
