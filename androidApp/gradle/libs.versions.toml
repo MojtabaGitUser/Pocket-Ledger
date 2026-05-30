@@ -9,7 +9,6 @@ espressoCore = "3.5.1"
 appcompat = "1.6.1"
 kotlin = "2.2.20"
 material = "1.10.0"
-navigationCompose = "2.9.8"
 
 [libraries]
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
@@ -29,7 +28,6 @@ kotlin-compose-gradle-plugin = { group = "org.jetbrains.kotlin.plugin.compose", 
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
