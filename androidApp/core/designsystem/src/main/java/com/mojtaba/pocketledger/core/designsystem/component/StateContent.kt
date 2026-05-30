@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.mojtaba.pocketledger.core.designsystem.preview.PreviewText
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerPreviewTheme
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 
@@ -136,8 +137,8 @@ private fun StateColumn(
 private fun EmptyStatePreview() {
     PocketLedgerPreviewTheme {
         EmptyState(
-            title = "No transactions yet",
-            message = "Add your first transaction to start tracking your ledger.",
+            title = PreviewText.emptyMessage,
+            message = "Add a transaction to start tracking your ledger.",
             action = {
                 Button(onClick = {}) {
                     Text(text = "Add transaction")
@@ -151,7 +152,7 @@ private fun EmptyStatePreview() {
 @Composable
 private fun LoadingStatePreview() {
     PocketLedgerPreviewTheme {
-        LoadingState(message = "Loading transactions")
+        LoadingState(message = PreviewText.loadingMessage)
     }
 }
 
@@ -161,7 +162,7 @@ private fun ErrorStatePreview() {
     PocketLedgerPreviewTheme {
         ErrorState(
             title = "Could not load",
-            message = "Check your connection and try again.",
+            message = PreviewText.errorMessage,
             onRetry = {},
         )
     }

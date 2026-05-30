@@ -8,6 +8,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import com.mojtaba.pocketledger.core.designsystem.preview.PreviewCategories
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerPreviewTheme
 
 @Composable
@@ -39,12 +40,12 @@ private fun CategoryChipPreview() {
     PocketLedgerPreviewTheme {
         androidx.compose.foundation.layout.Row {
             CategoryChip(
-                label = "Groceries",
+                label = PreviewCategories.food,
                 selected = true,
                 onClick = {},
             )
             CategoryChip(
-                label = "Bills",
+                label = PreviewCategories.utilities,
                 selected = false,
                 onClick = {},
             )
