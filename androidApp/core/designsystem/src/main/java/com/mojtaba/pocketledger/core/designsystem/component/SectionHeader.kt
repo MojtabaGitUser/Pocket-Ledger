@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import com.mojtaba.pocketledger.core.designsystem.preview.PreviewText
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerPreviewTheme
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 
@@ -64,9 +65,9 @@ fun SectionHeader(
 private fun SectionHeaderPreview() {
     PocketLedgerPreviewTheme {
         SectionHeader(
-            title = "Recent transactions",
-            subtitle = "Updated today",
-            actionLabel = "View all",
+            title = PreviewText.recentTransactions,
+            subtitle = PreviewText.recentTransactionsSubtitle,
+            actionLabel = PreviewText.viewAll,
             onActionClick = {},
         )
     }

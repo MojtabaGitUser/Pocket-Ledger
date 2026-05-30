@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.mojtaba.pocketledger.core.designsystem.preview.PreviewText
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerPreviewTheme
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 
@@ -41,7 +42,7 @@ private fun AdaptiveContainerPreview() {
     PocketLedgerPreviewTheme {
         AdaptiveContainer {
             SectionHeader(
-                title = "Dashboard",
+                title = PreviewText.dashboardTitle,
                 subtitle = "Adaptive content width with screen padding",
             )
         }

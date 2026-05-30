@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import com.mojtaba.pocketledger.core.designsystem.preview.PreviewTransactions
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerPreviewTheme
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 
@@ -73,7 +74,7 @@ fun TransactionRow(
                     overflow = TextOverflow.Ellipsis,
                 )
                 val supportingText = listOfNotNull(category, subtitle)
-                    .joinToString(separator = " · ")
+                    .joinToString(separator = " - ")
                 if (supportingText.isNotBlank()) {
                     Text(
                         text = supportingText,
@@ -108,11 +109,12 @@ private fun transactionRowContentDescription(
 @Composable
 private fun TransactionRowPreview() {
     PocketLedgerPreviewTheme {
+        val transaction = PreviewTransactions.expense
         TransactionRow(
-            title = "Coffee shop",
-            category = "Food",
-            subtitle = "Today",
-            amount = AmountDisplay("-$5.40", AmountTone.Negative, "minus 5 dollars and 40 cents"),
+            title = transaction.title,
+            category = transaction.category,
+            subtitle = transaction.subtitle,
+            amount = transaction.amount,
             onClick = {},
         )
     }

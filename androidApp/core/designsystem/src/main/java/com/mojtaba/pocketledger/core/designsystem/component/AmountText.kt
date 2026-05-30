@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import com.mojtaba.pocketledger.core.designsystem.preview.PreviewAmounts
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerPreviewTheme
 
 enum class AmountTone {
@@ -73,9 +74,9 @@ private fun amountColor(tone: AmountTone): Color =
 private fun AmountTextPreview() {
     PocketLedgerPreviewTheme {
         androidx.compose.foundation.layout.Column {
-            AmountText("$1,240.00", tone = AmountTone.Positive)
-            AmountText("-$82.30", tone = AmountTone.Negative)
-            AmountText("$0.00", tone = AmountTone.Neutral)
+            AmountText(amount = PreviewAmounts.positive)
+            AmountText(amount = PreviewAmounts.negative)
+            AmountText(amount = PreviewAmounts.zero)
         }
     }
 }
