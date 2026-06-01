@@ -26,4 +26,5 @@ dependencyResolutionManagement {
 rootProject.name = "PocketLedger"
 include(":app")
 include(":core:designsystem")
+include(":core:database")
 include(":shared")
