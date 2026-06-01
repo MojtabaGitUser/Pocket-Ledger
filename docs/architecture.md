@@ -13,6 +13,8 @@ Current implemented Gradle modules:
 ```text
 :app
 :core:designsystem
+:core:database
+:core:data
 :shared
 ```
 
@@ -29,11 +31,18 @@ The current implemented project dependency graph is:
 :core:designsystem
   -> external AndroidX Compose UI dependencies
 
+:core:data
+  -> :core:database
+  -> external Kotlin coroutines dependencies
+
+:core:database
+  -> external Room dependencies
+
 :shared
   -> external Kotlin test dependency for common tests
 ```
 
-There are no implemented `:feature:*`, `:core:data`, `:core:domain`, `:core:database`, benchmark, or baseline profile modules at the time this document was written.
+There are no implemented `:feature:*`, `:core:domain`, benchmark, or baseline profile modules at the time this document was written.
 
 ## Planned Module Types
 
@@ -103,7 +112,7 @@ Feature modules may depend on stable core APIs and shared logic. They must not d
 Future core modules should be split by responsibility:
 
 - `:core:domain`: Android-app domain models, use cases, and repository contracts.
-- `:core:data`: repository implementations, data orchestration, and mapping between data models and domain models.
+- `:core:data`: repository contracts, local repository implementations, data orchestration, and mapping between database entities and external data models.
 - `:core:database`: local persistence configuration, DAOs/queries, entities, and migrations.
 
 Domain code should stay free of Android framework APIs, Compose, database implementations, and network DTOs. Data and database modules should not expose persistence entities or DTOs directly to UI modules.
@@ -132,7 +141,7 @@ flowchart TD
     feature -. planned .-> domain[":core:domain"]
     feature -. planned .-> shared[":shared"]
     data[":core:data"] -. planned .-> domain
-    data -. planned .-> database[":core:database"]
+    data --> database[":core:database"]
     data -. planned .-> shared
     domain -. planned .-> shared
     benchmark[":benchmark"] -. planned tooling .-> app
@@ -161,8 +170,7 @@ implementation(project(":core:designsystem"))
 implementation(project(":core:domain"))
 implementation(project(":shared"))
 
-// Data can implement domain contracts and use persistence infrastructure.
-implementation(project(":core:domain"))
+// Data can own repository contracts, local implementations, and persistence mapping.
 implementation(project(":core:database"))
 implementation(project(":shared"))
 
@@ -208,7 +216,9 @@ Pocket Ledger is currently an Android app. The project should optimize for Andro
 
 ### Offline-first
 
-The product should be designed so core user workflows can work from local state. Future data modules should treat local persistence as the primary source of truth where appropriate, then synchronize with remote sources if remote features are introduced. UI and domain code should not depend directly on network availability.
+The product should be designed so core user workflows can work from local state. `:core:database` is the local persistence source of truth for implemented data, and `:core:data` exposes repository contracts plus local repository implementations over that source.
+
+Repositories expose local-first reads as deterministic Kotlin `Flow` streams and keep writes as suspend functions that update local storage first. Repository interfaces extend the shared offline-first contract in `:core:data`, including observable sync state. Current local repositories report `LOCAL_ONLY` sync state because remote sync is not implemented yet. Future sync work can add pending-change tracking, conflict handling, and remote synchronization behind this contract without changing feature-facing read APIs.
 
 ### Modular
 
@@ -226,9 +236,9 @@ Use these defaults when adding code:
 - Product-wide Compose theme and reusable UI primitives: `:core:designsystem`
 - Platform-independent business rules and value objects: `:shared`
 - Screen UI, ViewModels, UI state, and feature routes: future `:feature:*`
-- Use cases and repository contracts: future `:core:domain`
-- Repository implementations, DTO mapping, and data orchestration: future `:core:data`
-- Entities, DAOs/queries, migrations, and database setup: future `:core:database`
+- Use cases and cross-module domain contracts: future `:core:domain`
+- Repository contracts, repository implementations, data model mapping, and data orchestration: `:core:data`
+- Entities, DAOs/queries, migrations, and database setup: `:core:database`
 - Macrobenchmarks and benchmark harnesses: future benchmark module
 - Baseline profile generation setup: future baseline profile module
 

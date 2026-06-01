@@ -4,13 +4,19 @@ import com.mojtaba.pocketledger.core.data.mapper.asEntity
 import com.mojtaba.pocketledger.core.data.mapper.asExternalModel
 import com.mojtaba.pocketledger.core.data.model.LedgerCategory
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
+import com.mojtaba.pocketledger.core.data.repository.contract.SyncState
 import com.mojtaba.pocketledger.core.database.dao.CategoryDao
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class LocalCategoryRepository(
     private val categoryDao: CategoryDao,
 ) : CategoryRepository {
+    override val repositoryName: String = "categories"
+
+    override fun observeSyncState(): Flow<SyncState> = flowOf(SyncState.localOnly())
+
     override suspend fun insert(category: LedgerCategory) {
         categoryDao.insert(category.asEntity())
     }

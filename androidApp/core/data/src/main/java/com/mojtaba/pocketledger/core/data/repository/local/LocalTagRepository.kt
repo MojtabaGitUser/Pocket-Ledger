@@ -5,13 +5,19 @@ import com.mojtaba.pocketledger.core.data.mapper.asExternalModel
 import com.mojtaba.pocketledger.core.data.model.LedgerTag
 import com.mojtaba.pocketledger.core.data.model.TransactionTagLink
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
+import com.mojtaba.pocketledger.core.data.repository.contract.SyncState
 import com.mojtaba.pocketledger.core.database.dao.TagDao
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class LocalTagRepository(
     private val tagDao: TagDao,
 ) : TagRepository {
+    override val repositoryName: String = "tags"
+
+    override fun observeSyncState(): Flow<SyncState> = flowOf(SyncState.localOnly())
+
     override suspend fun insert(tag: LedgerTag) {
         tagDao.insert(tag.asEntity())
     }

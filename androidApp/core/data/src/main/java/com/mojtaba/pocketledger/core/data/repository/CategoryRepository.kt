@@ -1,9 +1,10 @@
 package com.mojtaba.pocketledger.core.data.repository
 
 import com.mojtaba.pocketledger.core.data.model.LedgerCategory
+import com.mojtaba.pocketledger.core.data.repository.contract.OfflineFirstRepository
 import kotlinx.coroutines.flow.Flow
 
-interface CategoryRepository {
+interface CategoryRepository : OfflineFirstRepository {
     suspend fun insert(category: LedgerCategory)
 
     suspend fun insertAll(categories: List<LedgerCategory>)
