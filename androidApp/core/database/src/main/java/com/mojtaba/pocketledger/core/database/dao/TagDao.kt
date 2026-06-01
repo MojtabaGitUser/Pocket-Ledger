@@ -15,8 +15,14 @@ interface TagDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(tag: TagEntity)
 
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(tags: List<TagEntity>)
+
     @Upsert
     suspend fun upsert(tag: TagEntity)
+
+    @Upsert
+    suspend fun upsertAll(tags: List<TagEntity>)
 
     @Delete
     suspend fun delete(tag: TagEntity)
