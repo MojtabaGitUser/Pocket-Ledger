@@ -4,13 +4,19 @@ import com.mojtaba.pocketledger.core.data.mapper.asEntity
 import com.mojtaba.pocketledger.core.data.mapper.asExternalModel
 import com.mojtaba.pocketledger.core.data.model.LedgerTransaction
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
+import com.mojtaba.pocketledger.core.data.repository.contract.SyncState
 import com.mojtaba.pocketledger.core.database.dao.TransactionDao
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class LocalTransactionRepository(
     private val transactionDao: TransactionDao,
 ) : TransactionRepository {
+    override val repositoryName: String = "transactions"
+
+    override fun observeSyncState(): Flow<SyncState> = flowOf(SyncState.localOnly())
+
     override suspend fun insert(transaction: LedgerTransaction) {
         transactionDao.insert(transaction.asEntity())
     }
