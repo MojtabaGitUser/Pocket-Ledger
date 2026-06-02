@@ -111,7 +111,11 @@ Feature modules will own user-facing product workflows:
 
 Feature modules may depend on stable core APIs and shared logic. They must not depend on `:app`, other feature modules by default, database implementation modules, or network implementation details.
 
-The implemented `:feature:transaction` module currently owns transaction form state and pure validation only. It does not own UI, navigation, database writes, or repository integration yet.
+The implemented `:feature:transaction` module owns transaction form state, validation, and transaction editor presentation logic. It must not depend on `:app` or database implementation details.
+
+#### Transaction Editor Feature
+
+`:feature:transaction` owns the create/edit transaction flow. The editor uses the form validation layer from T-E02-01, holds screen state in a ViewModel, and integrates with repository contracts from `:core:data` for loading and saving transactions, categories, and tags. Navigation remains outside the feature module so `:app` can stay the thin application shell.
 
 ### Future Core Modules
 
@@ -242,7 +246,7 @@ Use these defaults when adding code:
 - App bootstrap, manifest, app ID, signing, and top-level host: `:app`
 - Product-wide Compose theme and reusable UI primitives: `:core:designsystem`
 - Platform-independent business rules and value objects: `:shared`
-- Transaction form state and validation: `:feature:transaction`
+- Transaction form state, validation, and editor presentation: `:feature:transaction`
 - Screen UI, ViewModels, UI state, and feature routes: future `:feature:*`
 - Use cases and cross-module domain contracts: future `:core:domain`
 - Repository contracts, repository implementations, data model mapping, and data orchestration: `:core:data`
