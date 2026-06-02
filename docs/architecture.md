@@ -15,6 +15,7 @@ Current implemented Gradle modules:
 :core:designsystem
 :core:database
 :core:data
+:feature:transaction
 :shared
 ```
 
@@ -38,11 +39,14 @@ The current implemented project dependency graph is:
 :core:database
   -> external Room dependencies
 
+:feature:transaction
+  -> external JUnit dependency for local validation tests
+
 :shared
   -> external Kotlin test dependency for common tests
 ```
 
-There are no implemented `:feature:*`, `:core:domain`, benchmark, or baseline profile modules at the time this document was written.
+There are no implemented `:core:domain`, benchmark, or baseline profile modules at the time this document was written.
 
 ## Planned Module Types
 
@@ -107,6 +111,8 @@ Feature modules will own user-facing product workflows:
 
 Feature modules may depend on stable core APIs and shared logic. They must not depend on `:app`, other feature modules by default, database implementation modules, or network implementation details.
 
+The implemented `:feature:transaction` module currently owns transaction form state and pure validation only. It does not own UI, navigation, database writes, or repository integration yet.
+
 ### Future Core Modules
 
 Future core modules should be split by responsibility:
@@ -137,6 +143,7 @@ Dependencies should point from outer, product-specific modules toward stable, re
 flowchart TD
     app[":app"] --> designsystem[":core:designsystem"]
     app -. planned .-> feature[":feature:*"]
+    featureTransaction[":feature:transaction"]
     feature -. planned .-> designsystem
     feature -. planned .-> domain[":core:domain"]
     feature -. planned .-> shared[":shared"]
@@ -235,6 +242,7 @@ Use these defaults when adding code:
 - App bootstrap, manifest, app ID, signing, and top-level host: `:app`
 - Product-wide Compose theme and reusable UI primitives: `:core:designsystem`
 - Platform-independent business rules and value objects: `:shared`
+- Transaction form state and validation: `:feature:transaction`
 - Screen UI, ViewModels, UI state, and feature routes: future `:feature:*`
 - Use cases and cross-module domain contracts: future `:core:domain`
 - Repository contracts, repository implementations, data model mapping, and data orchestration: `:core:data`
