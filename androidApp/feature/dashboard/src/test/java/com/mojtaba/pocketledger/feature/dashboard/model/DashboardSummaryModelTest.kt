@@ -1,0 +1,33 @@
+package com.mojtaba.pocketledger.feature.dashboard.model
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Test
+
+class DashboardSummaryModelTest {
+    @Test
+    fun periodContainsInclusiveBounds() {
+        val period = DashboardPeriod(
+            startMillis = 100L,
+            endMillis = 200L,
+            label = "Test",
+        )
+
+        assertEquals(true, period.contains(100L))
+        assertEquals(true, period.contains(150L))
+        assertEquals(true, period.contains(200L))
+        assertEquals(false, period.contains(99L))
+        assertEquals(false, period.contains(201L))
+    }
+
+    @Test
+    fun invalidPeriodIsRejected() {
+        assertThrows(IllegalArgumentException::class.java) {
+            DashboardPeriod(
+                startMillis = 200L,
+                endMillis = 100L,
+                label = "Invalid",
+            )
+        }
+    }
+}
