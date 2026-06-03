@@ -19,7 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.mojtaba.pocketledger.PocketLedgerAppGraph
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
+import com.mojtaba.pocketledger.feature.transaction.navigation.TransactionRoutes
 
 private val NavigationRailBreakpoint = 600.dp
 
@@ -27,6 +30,7 @@ private val NavigationRailBreakpoint = 600.dp
 @Composable
 fun PocketLedgerAppShell(
     appState: PocketLedgerAppState,
+    appGraph: PocketLedgerAppGraph,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -43,19 +47,23 @@ fun PocketLedgerAppShell(
                 )
             }
 
+            val showShellTopBar = appState.shouldShowShellTopBar()
+
             Scaffold(
                 modifier = Modifier.weight(1f),
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 topBar = {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = title,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
-                    )
+                    if (showShellTopBar) {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = title,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                        )
+                    }
                 },
                 bottomBar = {
                     if (!useNavigationRail) {
@@ -77,12 +85,22 @@ fun PocketLedgerAppShell(
                         startDestination = appState.startDestination,
                         includeDebugDestinations = appState.topLevelDestinations
                             .contains(TopLevelDestination.DebugHealth),
+                        appGraph = appGraph,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun PocketLedgerAppState.shouldShowShellTopBar(): Boolean {
+    val currentDestination = navController.currentBackStackEntryAsState().value?.destination
+    val currentRoute = currentDestination?.route
+    return currentRoute != TransactionRoutes.ListRoute &&
+        currentRoute != TransactionRoutes.DetailRoutePattern &&
+        currentRoute != TransactionRoutes.EditRoutePattern
 }
 
 @Composable

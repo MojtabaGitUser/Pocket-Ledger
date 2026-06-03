@@ -11,12 +11,14 @@ import com.mojtaba.pocketledger.navigation.rememberPocketLedgerAppState
 fun PocketLedgerApp(
     modifier: Modifier = Modifier,
 ) {
+    val appGraph = rememberPocketLedgerAppGraph()
     val appState = rememberPocketLedgerAppState(
         includeDebugDestinations = BuildConfig.DEBUG,
     )
 
     PocketLedgerAppShell(
         appState = appState,
+        appGraph = appGraph,
         modifier = modifier,
     )
 }

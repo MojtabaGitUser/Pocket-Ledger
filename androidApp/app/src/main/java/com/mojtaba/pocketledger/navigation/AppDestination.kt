@@ -1,5 +1,7 @@
 package com.mojtaba.pocketledger.navigation
 
+import com.mojtaba.pocketledger.feature.transaction.navigation.TransactionRoutes
+
 sealed interface AppDestination {
     val route: String
     val deepLinkPath: String
@@ -10,7 +12,7 @@ sealed interface AppDestination {
     }
 
     data object Transactions : AppDestination {
-        override val route = "transactions"
+        override val route = TransactionRoutes.ListRoute
     }
 
     data object Search : AppDestination {
