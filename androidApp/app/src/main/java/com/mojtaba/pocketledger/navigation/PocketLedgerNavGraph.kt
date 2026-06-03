@@ -7,12 +7,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import com.mojtaba.pocketledger.PocketLedgerAppGraph
+import com.mojtaba.pocketledger.feature.transaction.navigation.transactionGraph
 
 @Composable
 fun PocketLedgerNavGraph(
     navController: NavHostController,
     startDestination: AppDestination,
     includeDebugDestinations: Boolean,
+    appGraph: PocketLedgerAppGraph,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -23,9 +26,16 @@ fun PocketLedgerNavGraph(
         placeholderDestination(AppDestination.Dashboard) {
             DashboardPlaceholderScreen()
         }
-        placeholderDestination(AppDestination.Transactions) {
-            TransactionsPlaceholderScreen()
-        }
+        transactionGraph(
+            navController = navController,
+            transactionRepository = appGraph.transactionRepository,
+            categoryRepository = appGraph.categoryRepository,
+            tagRepository = appGraph.tagRepository,
+            deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
+            onDeleteRequested = {
+                // Confirmation, undo, and actual delete execution are owned by T-E02-04.
+            },
+        )
         placeholderDestination(AppDestination.Search) {
             SearchPlaceholderScreen()
         }

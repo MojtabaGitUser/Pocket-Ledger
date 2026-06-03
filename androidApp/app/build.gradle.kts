@@ -67,10 +67,14 @@ android {
 
 dependencies {
     implementation(project(":core:designsystem"))
+    implementation(project(":core:data"))
+    implementation(project(":core:database"))
+    implementation(project(":feature:transaction"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.room.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)

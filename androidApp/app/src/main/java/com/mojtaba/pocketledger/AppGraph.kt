@@ -1,0 +1,44 @@
+package com.mojtaba.pocketledger
+
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.room.Room
+import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
+import com.mojtaba.pocketledger.core.data.repository.TagRepository
+import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
+import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryRepository
+import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
+import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
+import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
+
+@Composable
+fun rememberPocketLedgerAppGraph(): PocketLedgerAppGraph {
+    val context = LocalContext.current.applicationContext
+    return remember(context) {
+        PocketLedgerAppGraph.create(context)
+    }
+}
+
+class PocketLedgerAppGraph private constructor(
+    val transactionRepository: TransactionRepository,
+    val categoryRepository: CategoryRepository,
+    val tagRepository: TagRepository,
+) {
+    companion object {
+        fun create(context: Context): PocketLedgerAppGraph {
+            val database = Room.databaseBuilder(
+                context,
+                PocketLedgerDatabase::class.java,
+                PocketLedgerDatabase.DATABASE_NAME,
+            ).build()
+
+            return PocketLedgerAppGraph(
+                transactionRepository = LocalTransactionRepository(database.transactionDao()),
+                categoryRepository = LocalCategoryRepository(database.categoryDao()),
+                tagRepository = LocalTagRepository(database.tagDao()),
+            )
+        }
+    }
+}
