@@ -10,6 +10,8 @@ sealed interface TransactionDetailUiState {
     @Immutable
     data class Content(
         val transaction: TransactionDetailUiModel,
+        val showDeleteConfirmation: Boolean = false,
+        val isDeleting: Boolean = false,
     ) : TransactionDetailUiState
 
     @Immutable

@@ -20,7 +20,6 @@ fun NavGraphBuilder.transactionGraph(
     categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
     deepLinkBaseUri: String,
-    onDeleteRequested: (String) -> Unit,
 ) {
     composable(
         route = TransactionRoutes.ListRoute,
@@ -59,7 +58,6 @@ fun NavGraphBuilder.transactionGraph(
             transactionId = transactionId,
             onNavigateBack = navController::navigateUp,
             onEditTransaction = { id -> navController.navigate(TransactionRoutes.editRoute(id)) },
-            onDeleteRequested = onDeleteRequested,
         )
     }
 
