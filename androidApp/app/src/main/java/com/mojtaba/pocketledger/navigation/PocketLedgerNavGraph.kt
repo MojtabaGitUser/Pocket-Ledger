@@ -32,9 +32,6 @@ fun PocketLedgerNavGraph(
             categoryRepository = appGraph.categoryRepository,
             tagRepository = appGraph.tagRepository,
             deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
-            onDeleteRequested = {
-                // Confirmation, undo, and actual delete execution are owned by T-E02-04.
-            },
         )
         placeholderDestination(AppDestination.Search) {
             SearchPlaceholderScreen()

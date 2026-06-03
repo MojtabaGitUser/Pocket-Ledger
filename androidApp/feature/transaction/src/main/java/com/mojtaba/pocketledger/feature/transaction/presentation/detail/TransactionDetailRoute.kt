@@ -1,9 +1,13 @@
 package com.mojtaba.pocketledger.feature.transaction.presentation.detail
 
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
@@ -21,7 +25,7 @@ fun TransactionDetailRoute(
     transactionId: String?,
     onNavigateBack: () -> Unit,
     onEditTransaction: (String) -> Unit,
-    onDeleteRequested: (String) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     viewModel: TransactionDetailViewModel = viewModel(
         factory = TransactionDetailViewModelFactory(
             transactionRepository = transactionRepository,
@@ -33,11 +37,26 @@ fun TransactionDetailRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(viewModel) {
+    LaunchedEffect(viewModel, snackbarHostState) {
         viewModel.events.collect { event ->
             when (event) {
                 is TransactionDetailEvent.EditTransaction -> onEditTransaction(event.transactionId)
-                is TransactionDetailEvent.DeleteRequested -> onDeleteRequested(event.transactionId)
+                TransactionDetailEvent.NavigateBackAfterDelete -> onNavigateBack()
+                TransactionDetailEvent.ShowDeleteUndoSnackbar -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = "Transaction deleted",
+                        actionLabel = "Undo",
+                        duration = SnackbarDuration.Long,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        viewModel.onAction(TransactionDetailAction.UndoDeleteClicked)
+                    } else {
+                        onNavigateBack()
+                    }
+                }
+                is TransactionDetailEvent.ShowDeleteFailedSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
             }
         }
     }
@@ -46,6 +65,7 @@ fun TransactionDetailRoute(
         uiState = uiState,
         onAction = viewModel::onAction,
         onNavigateBack = onNavigateBack,
+        snackbarHostState = snackbarHostState,
     )
 }
 

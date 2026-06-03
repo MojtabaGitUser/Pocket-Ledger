@@ -19,6 +19,9 @@ class TestTransactionRepository(
 ) : TransactionRepository {
     private val transactions = MutableStateFlow(initialTransactions.associateBy { it.id })
     var deleteByIdCalls = 0
+    var upsertCalls = 0
+    var throwOnDeleteById = false
+    var forceDeleteByIdResult: Boolean? = null
 
     override val repositoryName: String = "test-transactions"
     override fun observeSyncState(): Flow<SyncState> = flowOf(SyncState.localOnly())
@@ -26,6 +29,7 @@ class TestTransactionRepository(
     override suspend fun insert(transaction: LedgerTransaction) = upsert(transaction)
     override suspend fun insertAll(transactions: List<LedgerTransaction>) = upsertAll(transactions)
     override suspend fun upsert(transaction: LedgerTransaction) {
+        upsertCalls += 1
         transactions.update { it + (transaction.id to transaction) }
     }
     override suspend fun upsertAll(transactions: List<LedgerTransaction>) {
@@ -37,6 +41,10 @@ class TestTransactionRepository(
     }
     override suspend fun deleteById(id: String): Boolean {
         deleteByIdCalls += 1
+        if (throwOnDeleteById) {
+            error("Delete failed")
+        }
+        forceDeleteByIdResult?.let { return it }
         val existed = transactions.value.containsKey(id)
         transactions.update { it - id }
         return existed
@@ -60,6 +68,8 @@ class TestTransactionRepository(
     override fun observeTransactionsByType(type: String): Flow<List<LedgerTransaction>> =
         observeRecentTransactions(Int.MAX_VALUE).map { items -> items.filter { it.type == type } }
     override fun observeTransactionsByTag(tagId: String): Flow<List<LedgerTransaction>> = flowOf(emptyList())
+
+    fun containsTransaction(id: String): Boolean = transactions.value.containsKey(id)
 }
 
 class TestCategoryRepository(
@@ -137,6 +147,9 @@ class TestTagRepository(
         tags.combineWith(links) { tagMap, linkMap ->
             linkMap[transactionId].orEmpty().mapNotNull(tagMap::get)
         }
+
+    fun tagIdsForTransaction(transactionId: String): Set<String> =
+        links.value[transactionId].orEmpty()
 
     private fun <A, B, R> Flow<A>.combineWith(other: Flow<B>, transform: (A, B) -> R): Flow<R> =
         kotlinx.coroutines.flow.combine(this, other) { a, b -> transform(a, b) }
