@@ -98,7 +98,8 @@ fun PocketLedgerAppShell(
 private fun PocketLedgerAppState.shouldShowShellTopBar(): Boolean {
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
     val currentRoute = currentDestination?.route
-    return currentRoute != TransactionRoutes.ListRoute &&
+    return currentRoute != AppDestination.Dashboard.route &&
+        currentRoute != TransactionRoutes.ListRoute &&
         currentRoute != TransactionRoutes.DetailRoutePattern &&
         currentRoute != TransactionRoutes.EditRoutePattern
 }

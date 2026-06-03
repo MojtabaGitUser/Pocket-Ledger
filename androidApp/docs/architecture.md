@@ -6,16 +6,15 @@ Pocket Ledger is organized as a thin Android app shell over modular core and fea
 
 ### `:feature:dashboard`
 
-The dashboard feature module owns dashboard-facing summary models and deterministic derivation logic for future dashboard UI, budget overview, and non-AI insights.
+The dashboard feature module owns dashboard-facing summary models, deterministic derivation logic, and dashboard-specific Compose UI for budget overview and non-AI insights.
 
 Current scope:
 - Pure dashboard summary data models.
 - `DashboardSummaryCalculator`, a side-effect-free calculator that accepts in-memory core data models.
 - Deterministic insight generation such as cash-flow status, concentrated category spending, and budget progress signals.
+- Material 3 dashboard rendering components for cash flow, category spend, budget progress, recent transactions, and deterministic insights.
 
-Out of scope for `T-E03-01`:
-- Dashboard UI.
-- Navigation.
+Out of scope for the current dashboard implementation:
 - Repository orchestration.
 - Room/database access.
 - Cloud sync.
