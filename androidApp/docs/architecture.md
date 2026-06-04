@@ -48,3 +48,28 @@ Migration workflow:
 6. Commit the new schema JSON.
 7. Add or update `MigrationTestHelper` coverage.
 8. Run `:core:database` unit, androidTest assembly, and connected migration tests when a device is available.
+
+## Demo Seed Data
+
+Deterministic local seed data tools live in `:core:data` under
+`com.mojtaba.pocketledger.core.data.seed`. They populate Room-backed local
+repositories with realistic categories, budgets, tags, transactions, and
+transaction-tag links for developer, preview, test, and demo use.
+
+Seed data is offline-only and must not trigger network calls, sync behavior, or
+release runtime insertion. App-side entry points, if added later, must be guarded
+behind `BuildConfig.DEBUG` or an equivalent internal-build flag.
+
+Demo records use stable IDs with the `demo-` prefix, such as
+`demo-category-groceries`, so repeated runs can upsert the same local records
+without duplication. Transaction-tag links are inserted through the repository
+API and rely on the database composite key to ignore duplicate links.
+
+`DemoDataSeeder` intentionally does not expose a broad clear operation. Removing
+demo categories can affect user-created records that reference those categories,
+so any future clear tool must only target demo-prefixed records and must account
+for foreign-key side effects before being wired into a debug flow.
+
+Category and tag names are unique in the schema. Seeding is deterministic and
+idempotent for databases that do not already contain non-demo records with the
+same unique names as the demo category or tag definitions.
