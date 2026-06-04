@@ -20,7 +20,7 @@ import com.mojtaba.pocketledger.core.database.model.TransactionTagCrossRef
         TransactionEntity::class,
         TransactionTagCrossRef::class,
     ],
-    version = 1,
+    version = DatabaseMigrations.CURRENT_VERSION,
     exportSchema = true,
 )
 abstract class PocketLedgerDatabase : RoomDatabase() {

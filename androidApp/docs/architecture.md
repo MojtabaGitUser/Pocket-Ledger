@@ -27,3 +27,24 @@ Dependency rules:
 - `:core:data` and `:core:database` must not depend on dashboard feature code.
 
 The calculator uses a single-currency MVP rule: `DashboardSummaryInput.currencyCode` selects the summary currency, and records in other currencies are excluded rather than converted or combined.
+
+## Core Database
+
+`:core:database` owns the Room database, entities, DAOs, exported schema snapshots, and migration registration.
+
+Room migration rules:
+- Version 1 is the initial Pocket Ledger schema.
+- Future schema changes must bump `PocketLedgerDatabase` and `DatabaseMigrations.CURRENT_VERSION` together.
+- Every released migration must live in `DatabaseMigrations.ALL`.
+- Room schema JSON files under `core/database/schemas` are source artifacts and must be committed.
+- Migration tests must validate each version step and the full path to the current version before release.
+
+Migration workflow:
+1. Change the entity or schema surface.
+2. Bump the database version.
+3. Add an explicit Room `Migration`.
+4. Register it in `DatabaseMigrations.ALL`.
+5. Run schema export.
+6. Commit the new schema JSON.
+7. Add or update `MigrationTestHelper` coverage.
+8. Run `:core:database` unit, androidTest assembly, and connected migration tests when a device is available.

@@ -39,10 +39,10 @@ class TransactionDaoTest {
         categoryDao.insert(testCategory())
         transactionDao.insert(testTransaction())
 
-        assertEquals(-1_250, transactionDao.getById("transaction-1")?.amountMinor)
+        assertEquals(-1_250L, transactionDao.getById("transaction-1")?.amountMinor)
 
         transactionDao.update(testTransaction(amountMinor = -2_000))
-        assertEquals(-2_000, transactionDao.getById("transaction-1")?.amountMinor)
+        assertEquals(-2_000L, transactionDao.getById("transaction-1")?.amountMinor)
 
         transactionDao.deleteById("transaction-1")
         assertNull(transactionDao.getById("transaction-1"))
