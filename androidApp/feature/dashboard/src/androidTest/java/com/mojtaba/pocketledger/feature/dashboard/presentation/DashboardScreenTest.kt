@@ -5,15 +5,24 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
 import com.mojtaba.pocketledger.feature.dashboard.presentation.preview.DashboardPreviewFixtures
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
 class DashboardScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun loadingStateRendersMessage() {
+        setContent(DashboardUiState.Loading)
+
+        composeRule.onNodeWithText("Loading dashboard").assertIsDisplayed()
+    }
 
     @Test
     fun contentStateRendersCashFlowSummary() {
@@ -87,12 +96,47 @@ class DashboardScreenTest {
         composeRule.onNodeWithText("Retry").assertIsDisplayed()
     }
 
+    @Test
+    fun errorStateRetryInvokesAction() {
+        var retryClicks = 0
+        setContent(
+            uiState = DashboardUiState.Error("Could not read local summaries."),
+            onAction = { action ->
+                if (action == DashboardAction.RetryClicked) {
+                    retryClicks += 1
+                }
+            },
+        )
+
+        composeRule.onNodeWithText("Retry").performClick()
+
+        assertEquals(1, retryClicks)
+    }
+
+    @Test
+    fun routeRendersDefaultEmptyState() {
+        composeRule.setContent {
+            PocketLedgerTheme(dynamicColor = false) {
+                DashboardRoute()
+            }
+        }
+
+        composeRule.onNodeWithText("No dashboard data yet").assertIsDisplayed()
+    }
+
     private fun setContent(uiState: DashboardUiState) {
+        setContent(uiState = uiState, onAction = {})
+    }
+
+    private fun setContent(
+        uiState: DashboardUiState,
+        onAction: (DashboardAction) -> Unit,
+    ) {
         composeRule.setContent {
             PocketLedgerTheme(dynamicColor = false) {
                 DashboardScreen(
                     uiState = uiState,
-                    onAction = {},
+                    onAction = onAction,
                 )
             }
         }
