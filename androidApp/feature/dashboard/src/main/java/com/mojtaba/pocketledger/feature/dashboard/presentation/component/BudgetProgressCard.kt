@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +27,7 @@ import com.mojtaba.pocketledger.feature.dashboard.presentation.model.DashboardFo
 @Composable
 fun BudgetProgressCard(
     budgets: List<BudgetProgressSummary>,
+    onSetBudgetClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
@@ -48,9 +50,15 @@ fun BudgetProgressCard(
                     title = "No active budgets",
                     message = "Budget progress will appear here.",
                 )
+                Button(onClick = onSetBudgetClick) {
+                    Text("Set budget")
+                }
             } else {
                 budgets.forEach { budget ->
                     BudgetProgressRow(budget = budget)
+                }
+                Button(onClick = onSetBudgetClick) {
+                    Text("Add budget")
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.mojtaba.pocketledger.navigation
 
+import com.mojtaba.pocketledger.feature.dashboard.navigation.DashboardRoutes
 import com.mojtaba.pocketledger.feature.transaction.navigation.TransactionRoutes
 
 sealed interface AppDestination {
@@ -8,7 +9,7 @@ sealed interface AppDestination {
         get() = route
 
     data object Dashboard : AppDestination {
-        override val route = "dashboard"
+        override val route = DashboardRoutes.DashboardRoute
     }
 
     data object Transactions : AppDestination {

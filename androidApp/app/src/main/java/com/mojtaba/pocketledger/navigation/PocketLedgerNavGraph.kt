@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
-import com.mojtaba.pocketledger.feature.dashboard.presentation.DashboardRoute
+import com.mojtaba.pocketledger.feature.dashboard.navigation.dashboardGraph
 import com.mojtaba.pocketledger.feature.transaction.navigation.transactionGraph
 
 @Composable
@@ -24,9 +24,12 @@ fun PocketLedgerNavGraph(
         startDestination = startDestination.route,
         modifier = modifier,
     ) {
-        placeholderDestination(AppDestination.Dashboard) {
-            DashboardRoute()
-        }
+        dashboardGraph(
+            navController = navController,
+            budgetRepository = appGraph.budgetRepository,
+            categoryRepository = appGraph.categoryRepository,
+            deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
+        )
         transactionGraph(
             navController = navController,
             transactionRepository = appGraph.transactionRepository,

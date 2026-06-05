@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
+import com.mojtaba.pocketledger.feature.dashboard.navigation.DashboardRoutes
 import com.mojtaba.pocketledger.feature.transaction.navigation.TransactionRoutes
 
 private val NavigationRailBreakpoint = 600.dp
@@ -99,6 +100,8 @@ private fun PocketLedgerAppState.shouldShowShellTopBar(): Boolean {
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
     val currentRoute = currentDestination?.route
     return currentRoute != AppDestination.Dashboard.route &&
+        currentRoute != DashboardRoutes.BudgetSetupRoute &&
+        currentRoute != DashboardRoutes.BudgetEditRoutePattern &&
         currentRoute != TransactionRoutes.ListRoute &&
         currentRoute != TransactionRoutes.DetailRoutePattern &&
         currentRoute != TransactionRoutes.EditRoutePattern
