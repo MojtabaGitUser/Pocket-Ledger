@@ -85,6 +85,32 @@ class TransactionEditorScreenTest {
     }
 
     @Test
+    fun merchantNoteAndRecurringInputsUpdateState() {
+        val harness = setEditorContent()
+
+        composeRule.onNodeWithContentDescription("Merchant").performTextInput("Coffee Shop")
+        composeRule.onNodeWithContentDescription("Note").performTextInput("Team breakfast")
+        composeRule.onNodeWithContentDescription("Recurring transaction").performClick()
+
+        assertEquals("Coffee Shop", harness.state.formState.merchant)
+        assertEquals("Team breakfast", harness.state.formState.note)
+        assertTrue(harness.state.formState.isRecurring)
+    }
+
+    @Test
+    fun dateSelectorDisplaysSelectedDate() {
+        setEditorContent(
+            initialFormState = TransactionFormState(
+                amountInput = "12.00",
+                categoryId = "food",
+                occurredAt = CURRENT_TIME,
+            ),
+        )
+
+        composeRule.onNodeWithText("Nov 14, 2023").assertExists()
+    }
+
+    @Test
     fun editFlowShowsPrefilledValues() {
         setEditorContent(
             initialFormState = TransactionFormState(
@@ -104,10 +130,30 @@ class TransactionEditorScreenTest {
         composeRule.onNodeWithText("Lunch").assertExists()
     }
 
+    @Test
+    fun screenDoesNotCrashWithEmptyCategoriesAndTags() {
+        setEditorContent(
+            categories = emptyList(),
+            tags = emptyList(),
+        )
+
+        composeRule.onNodeWithText("Create Transaction").assertExists()
+        composeRule.onNodeWithContentDescription("Transaction amount").assertExists()
+        composeRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
     private fun setEditorContent(
         initialFormState: TransactionFormState = TransactionFormState(occurredAt = CURRENT_TIME),
+        categories: List<TransactionCategoryOption> = listOf(
+            TransactionCategoryOption("food", "Food", "expense"),
+            TransactionCategoryOption("salary", "Salary", "income"),
+        ),
+        tags: List<TransactionTagOption> = listOf(
+            TransactionTagOption("work", "Work"),
+            TransactionTagOption("weekend", "Weekend"),
+        ),
     ): ScreenHarness {
-        val harness = ScreenHarness(initialFormState)
+        val harness = ScreenHarness(initialFormState, categories, tags)
         composeRule.setContent {
             PocketLedgerTheme(dynamicColor = false) {
                 TransactionEditorScreen(
@@ -121,20 +167,18 @@ class TransactionEditorScreenTest {
         return harness
     }
 
-    private class ScreenHarness(initialFormState: TransactionFormState) {
+    private class ScreenHarness(
+        initialFormState: TransactionFormState,
+        categories: List<TransactionCategoryOption>,
+        tags: List<TransactionTagOption>,
+    ) {
         var saveClicked = false
         var state by mutableStateOf(
             TransactionEditorUiState(
                 formState = initialFormState,
                 validationResult = TransactionFormValidation.validate(initialFormState, CURRENT_TIME),
-                categories = listOf(
-                    TransactionCategoryOption("food", "Food", "expense"),
-                    TransactionCategoryOption("salary", "Salary", "income"),
-                ),
-                tags = listOf(
-                    TransactionTagOption("work", "Work"),
-                    TransactionTagOption("weekend", "Weekend"),
-                ),
+                categories = categories,
+                tags = tags,
             ),
         )
 

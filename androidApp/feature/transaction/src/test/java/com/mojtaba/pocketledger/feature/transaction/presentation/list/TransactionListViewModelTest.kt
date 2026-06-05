@@ -1,12 +1,14 @@
 package com.mojtaba.pocketledger.feature.transaction.presentation.list
 
-import com.mojtaba.pocketledger.feature.transaction.testing.MainDispatcherRule
-import com.mojtaba.pocketledger.feature.transaction.testing.TestCategoryRepository
-import com.mojtaba.pocketledger.feature.transaction.testing.TestTagRepository
-import com.mojtaba.pocketledger.feature.transaction.testing.TestTransactionRepository
-import com.mojtaba.pocketledger.feature.transaction.testing.testCategory
-import com.mojtaba.pocketledger.feature.transaction.testing.testTag
-import com.mojtaba.pocketledger.feature.transaction.testing.testTransaction
+import com.mojtaba.pocketledger.core.testing.coroutine.MainDispatcherRule
+import com.mojtaba.pocketledger.core.testing.fixture.TestClock
+import com.mojtaba.pocketledger.core.testing.fixture.testLedgerCategory
+import com.mojtaba.pocketledger.core.testing.fixture.testLedgerTag
+import com.mojtaba.pocketledger.core.testing.fixture.testLedgerTransaction
+import com.mojtaba.pocketledger.core.testing.fixture.testTransactionTagLink
+import com.mojtaba.pocketledger.core.testing.repository.FakeCategoryRepository
+import com.mojtaba.pocketledger.core.testing.repository.FakeTagRepository
+import com.mojtaba.pocketledger.core.testing.repository.FakeTransactionRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -23,7 +25,7 @@ class TransactionListViewModelTest {
 
     @Test
     fun emitsEmptyStateWhenRepositoryHasNoTransactions() = runTest {
-        val viewModel = newViewModel(transactionRepository = TestTransactionRepository())
+        val viewModel = newViewModel(transactionRepository = FakeTransactionRepository())
         val job = launch { viewModel.uiState.collect {} }
 
         advanceUntilIdle()
@@ -35,7 +37,7 @@ class TransactionListViewModelTest {
     @Test
     fun emitsContentStateWhenRepositoryHasTransactions() = runTest {
         val viewModel = newViewModel(
-            transactionRepository = TestTransactionRepository(listOf(testTransaction())),
+            transactionRepository = FakeTransactionRepository(listOf(testTransaction())),
         )
         val job = launch { viewModel.uiState.collect {} }
 
@@ -50,19 +52,13 @@ class TransactionListViewModelTest {
     @Test
     fun rowModelIncludesAmountCategoryDateNoteAndTags() = runTest {
         val viewModel = newViewModel(
-            transactionRepository = TestTransactionRepository(
-                listOf(
-                    testTransaction(
-                        amountMinor = -4_250,
-                        categoryId = "food",
-                        note = "Team breakfast",
-                    ),
-                ),
+            transactionRepository = FakeTransactionRepository(
+                listOf(testTransaction(amountMinor = -4_250, categoryId = "food", note = "Team breakfast")),
             ),
-            categoryRepository = TestCategoryRepository(listOf(testCategory("food", "Food", "expense"))),
-            tagRepository = TestTagRepository(
-                initialTags = listOf(testTag("work", "Work")),
-                initialLinks = mapOf("transaction-1" to setOf("work")),
+            categoryRepository = FakeCategoryRepository(listOf(testLedgerCategory(id = "food", name = "Food", type = "expense"))),
+            tagRepository = FakeTagRepository(
+                initialTags = listOf(testLedgerTag(id = "work", name = "Work")),
+                initialLinks = listOf(testTransactionTagLink("transaction-1", "work")),
             ),
         )
         val job = launch { viewModel.uiState.collect {} }
@@ -78,13 +74,74 @@ class TransactionListViewModelTest {
         job.cancel()
     }
 
+    @Test
+    fun rowModelUsesFallbackCategoryWhenCategoryIsMissing() = runTest {
+        val viewModel = newViewModel(
+            transactionRepository = FakeTransactionRepository(listOf(testTransaction(categoryId = "missing"))),
+            categoryRepository = FakeCategoryRepository(emptyList()),
+        )
+        val job = launch { viewModel.uiState.collect {} }
+
+        advanceUntilIdle()
+
+        val item = (viewModel.uiState.value as TransactionListUiState.Content).transactions.single()
+        assertEquals("Uncategorized", item.categoryLabel)
+        job.cancel()
+    }
+
+    @Test
+    fun emitsUpdatesWhenRepositoryChanges() = runTest {
+        val transactionRepository = FakeTransactionRepository()
+        val viewModel = newViewModel(transactionRepository = transactionRepository)
+        val job = launch { viewModel.uiState.collect {} }
+        advanceUntilIdle()
+
+        assertEquals(TransactionListUiState.Empty, viewModel.uiState.value)
+
+        transactionRepository.upsert(testTransaction())
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as TransactionListUiState.Content
+        assertEquals(listOf("transaction-1"), state.transactions.map { it.id })
+        job.cancel()
+    }
+
+    @Test
+    fun transactionClickEmitsOpenDetailEvent() = runTest {
+        val viewModel = newViewModel()
+        val events = mutableListOf<TransactionListEvent>()
+        val job = launch { viewModel.events.collect(events::add) }
+
+        viewModel.onAction(TransactionListAction.TransactionClicked("transaction-1"))
+        advanceUntilIdle()
+
+        assertEquals(TransactionListEvent.OpenDetail("transaction-1"), events.single())
+        job.cancel()
+    }
+
     private fun newViewModel(
-        transactionRepository: TestTransactionRepository = TestTransactionRepository(),
-        categoryRepository: TestCategoryRepository = TestCategoryRepository(),
-        tagRepository: TestTagRepository = TestTagRepository(),
+        transactionRepository: FakeTransactionRepository = FakeTransactionRepository(),
+        categoryRepository: FakeCategoryRepository = FakeCategoryRepository(
+            listOf(testLedgerCategory(id = "food", name = "Food", type = "expense")),
+        ),
+        tagRepository: FakeTagRepository = FakeTagRepository(),
     ): TransactionListViewModel = TransactionListViewModel(
         transactionRepository = transactionRepository,
         categoryRepository = categoryRepository,
         tagRepository = tagRepository,
+    )
+
+    private fun testTransaction(
+        id: String = "transaction-1",
+        amountMinor: Long = -4_250,
+        categoryId: String? = "food",
+        note: String? = "Team breakfast",
+    ) = testLedgerTransaction(
+        id = id,
+        amountMinor = amountMinor,
+        categoryId = categoryId,
+        merchant = "Coffee Shop",
+        note = note,
+        occurredAt = TestClock.November14,
     )
 }

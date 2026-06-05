@@ -1,18 +1,23 @@
 package com.mojtaba.pocketledger.feature.transaction.presentation.detail
 
 import androidx.lifecycle.SavedStateHandle
+import com.mojtaba.pocketledger.core.testing.coroutine.MainDispatcherRule
+import com.mojtaba.pocketledger.core.testing.fixture.TestClock
+import com.mojtaba.pocketledger.core.testing.fixture.testLedgerCategory
+import com.mojtaba.pocketledger.core.testing.fixture.testLedgerTag
+import com.mojtaba.pocketledger.core.testing.fixture.testLedgerTransaction
+import com.mojtaba.pocketledger.core.testing.fixture.testTransactionTagLink
+import com.mojtaba.pocketledger.core.testing.repository.FakeCategoryRepository
+import com.mojtaba.pocketledger.core.testing.repository.FakeTagRepository
+import com.mojtaba.pocketledger.core.testing.repository.FakeTransactionRepository
 import com.mojtaba.pocketledger.feature.transaction.navigation.TransactionRoutes
-import com.mojtaba.pocketledger.feature.transaction.testing.MainDispatcherRule
-import com.mojtaba.pocketledger.feature.transaction.testing.TestCategoryRepository
-import com.mojtaba.pocketledger.feature.transaction.testing.TestTagRepository
-import com.mojtaba.pocketledger.feature.transaction.testing.TestTransactionRepository
-import com.mojtaba.pocketledger.feature.transaction.testing.testTransaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -25,7 +30,11 @@ class TransactionDetailViewModelTest {
     @Test
     fun emitsContentForValidId() = runTest {
         val viewModel = newViewModel(
-            transactionRepository = TestTransactionRepository(listOf(testTransaction())),
+            transactionRepository = FakeTransactionRepository(listOf(testTransaction())),
+            tagRepository = FakeTagRepository(
+                initialTags = listOf(testLedgerTag(id = "work", name = "Work")),
+                initialLinks = listOf(testTransactionTagLink("transaction-1", "work")),
+            ),
             transactionId = "transaction-1",
         )
         val job = launch { viewModel.uiState.collect {} }
@@ -34,8 +43,18 @@ class TransactionDetailViewModelTest {
 
         val state = viewModel.uiState.value
         assertTrue(state is TransactionDetailUiState.Content)
-        assertEquals("-\$42.50", (state as TransactionDetailUiState.Content).transaction.amount.text)
-        assertEquals("Food", state.transaction.categoryLabel)
+        val transaction = (state as TransactionDetailUiState.Content).transaction
+        assertEquals("-\$42.50", transaction.amount.text)
+        assertEquals("Expense", transaction.typeLabel)
+        assertEquals("Food", transaction.categoryLabel)
+        assertEquals("Nov 14, 2023", transaction.dateLabel)
+        assertEquals("Coffee Shop", transaction.merchantLabel)
+        assertEquals("Team breakfast", transaction.noteLabel)
+        assertEquals(listOf("Work"), transaction.tagLabels)
+        assertNotNull(transaction.createdAtLabel)
+        assertNotNull(transaction.updatedAtLabel)
+        assertTrue(transaction.createdAtLabel.startsWith("Nov 14, 2023"))
+        assertTrue(transaction.updatedAtLabel.startsWith("Nov 14, 2023"))
         job.cancel()
     }
 
@@ -53,7 +72,7 @@ class TransactionDetailViewModelTest {
     @Test
     fun editActionEmitsExpectedEvent() = runTest {
         val viewModel = newViewModel(
-            transactionRepository = TestTransactionRepository(listOf(testTransaction())),
+            transactionRepository = FakeTransactionRepository(listOf(testTransaction())),
             transactionId = "transaction-1",
         )
         val events = mutableListOf<TransactionDetailEvent>()
@@ -68,7 +87,7 @@ class TransactionDetailViewModelTest {
 
     @Test
     fun deleteClickShowsConfirmation() = runTest {
-        val transactionRepository = TestTransactionRepository(listOf(testTransaction()))
+        val transactionRepository = FakeTransactionRepository(listOf(testTransaction()))
         val viewModel = newViewModel(
             transactionRepository = transactionRepository,
             transactionId = "transaction-1",
@@ -87,7 +106,7 @@ class TransactionDetailViewModelTest {
 
     @Test
     fun cancelDeleteHidesConfirmationAndDoesNotDelete() = runTest {
-        val transactionRepository = TestTransactionRepository(listOf(testTransaction()))
+        val transactionRepository = FakeTransactionRepository(listOf(testTransaction()))
         val viewModel = newViewModel(
             transactionRepository = transactionRepository,
             transactionId = "transaction-1",
@@ -107,7 +126,7 @@ class TransactionDetailViewModelTest {
 
     @Test
     fun confirmDeleteDeletesTransactionAndEmitsUndoSnackbar() = runTest {
-        val transactionRepository = TestTransactionRepository(listOf(testTransaction()))
+        val transactionRepository = FakeTransactionRepository(listOf(testTransaction()))
         val viewModel = newViewModel(
             transactionRepository = transactionRepository,
             transactionId = "transaction-1",
@@ -131,8 +150,11 @@ class TransactionDetailViewModelTest {
 
     @Test
     fun undoRestoresDeletedTransactionAndTags() = runTest {
-        val transactionRepository = TestTransactionRepository(listOf(testTransaction()))
-        val tagRepository = TestTagRepository(initialLinks = mapOf("transaction-1" to setOf("work")))
+        val transactionRepository = FakeTransactionRepository(listOf(testTransaction()))
+        val tagRepository = FakeTagRepository(
+            initialTags = listOf(testLedgerTag(id = "work", name = "Work")),
+            initialLinks = listOf(testTransactionTagLink("transaction-1", "work")),
+        )
         val viewModel = newViewModel(
             transactionRepository = transactionRepository,
             tagRepository = tagRepository,
@@ -154,6 +176,22 @@ class TransactionDetailViewModelTest {
     }
 
     @Test
+    fun undoWithoutSnapshotEmitsSafeError() = runTest {
+        val viewModel = newViewModel(transactionId = "transaction-1")
+        val events = mutableListOf<TransactionDetailEvent>()
+        val job = launch { viewModel.events.collect(events::add) }
+
+        viewModel.onAction(TransactionDetailAction.UndoDeleteClicked)
+        advanceUntilIdle()
+
+        assertEquals(
+            TransactionDetailEvent.ShowDeleteFailedSnackbar("Unable to restore transaction."),
+            events.single(),
+        )
+        job.cancel()
+    }
+
+    @Test
     fun missingTransactionDeleteEmitsSafeError() = runTest {
         val viewModel = newViewModel(transactionId = "missing")
         val events = mutableListOf<TransactionDetailEvent>()
@@ -171,7 +209,7 @@ class TransactionDetailViewModelTest {
 
     @Test
     fun doubleConfirmDoesNotDeleteTwice() = runTest {
-        val transactionRepository = TestTransactionRepository(listOf(testTransaction()))
+        val transactionRepository = FakeTransactionRepository(listOf(testTransaction()))
         val viewModel = newViewModel(
             transactionRepository = transactionRepository,
             transactionId = "transaction-1",
@@ -190,7 +228,7 @@ class TransactionDetailViewModelTest {
 
     @Test
     fun deleteFailureEmitsErrorEvent() = runTest {
-        val transactionRepository = TestTransactionRepository(listOf(testTransaction())).apply {
+        val transactionRepository = FakeTransactionRepository(listOf(testTransaction())).apply {
             throwOnDeleteById = true
         }
         val viewModel = newViewModel(
@@ -207,18 +245,18 @@ class TransactionDetailViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, transactionRepository.deleteByIdCalls)
-        assertTrue(
-            events.contains(TransactionDetailEvent.ShowDeleteFailedSnackbar("Delete failed")),
-        )
+        assertTrue(events.contains(TransactionDetailEvent.ShowDeleteFailedSnackbar("Delete failed")))
         assertTrue(transactionRepository.containsTransaction("transaction-1"))
         uiJob.cancel()
         eventJob.cancel()
     }
 
     private fun newViewModel(
-        transactionRepository: TestTransactionRepository = TestTransactionRepository(),
-        categoryRepository: TestCategoryRepository = TestCategoryRepository(),
-        tagRepository: TestTagRepository = TestTagRepository(),
+        transactionRepository: FakeTransactionRepository = FakeTransactionRepository(),
+        categoryRepository: FakeCategoryRepository = FakeCategoryRepository(
+            listOf(testLedgerCategory(id = "food", name = "Food", type = "expense")),
+        ),
+        tagRepository: FakeTagRepository = FakeTagRepository(),
         transactionId: String,
     ): TransactionDetailViewModel = TransactionDetailViewModel(
         transactionRepository = transactionRepository,
@@ -227,5 +265,16 @@ class TransactionDetailViewModelTest {
         savedStateHandle = SavedStateHandle(
             mapOf(TransactionRoutes.TransactionIdArg to transactionId),
         ),
+    )
+
+    private fun testTransaction() = testLedgerTransaction(
+        id = "transaction-1",
+        amountMinor = -4_250,
+        categoryId = "food",
+        merchant = "Coffee Shop",
+        note = "Team breakfast",
+        occurredAt = TestClock.November14,
+        createdAt = TestClock.CreatedAt,
+        updatedAt = TestClock.UpdatedAt,
     )
 }

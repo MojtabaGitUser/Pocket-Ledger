@@ -26,6 +26,7 @@ class FakeTransactionRepository(
     var upsertCalls: Int = 0
         private set
     var throwOnDeleteById: Boolean = false
+    var throwOnUpsert: Boolean = false
     var forcedDeleteByIdResult: Boolean? = null
 
     override val repositoryName: String = "fake-transactions"
@@ -38,6 +39,9 @@ class FakeTransactionRepository(
 
     override suspend fun upsert(transaction: LedgerTransaction) {
         upsertCalls += 1
+        if (throwOnUpsert) {
+            error("Save failed")
+        }
         transactions.update { it + (transaction.id to transaction) }
     }
 
