@@ -26,6 +26,13 @@ class TransactionDetailScreenTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun loadingStateIsDisplayed() {
+        setContent(TransactionDetailUiState.Loading)
+
+        composeRule.onNodeWithText("Loading transaction").assertIsDisplayed()
+    }
+
+    @Test
     fun detailDisplaysStoredFields() {
         setContent(TransactionDetailUiState.Content(previewTransactionDetail))
 
@@ -44,6 +51,26 @@ class TransactionDetailScreenTest {
         composeRule.onNodeWithText("Transaction not found").assertIsDisplayed()
         composeRule.onNodeWithText("This transaction may have been deleted.").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Delete transaction").assertIsNotEnabled()
+    }
+
+    @Test
+    fun errorStateDisplaysMessageAndRetryAction() {
+        val harness = setContent(TransactionDetailUiState.Error("Local transaction unavailable"))
+
+        composeRule.onNodeWithText("Could not load transaction").assertIsDisplayed()
+        composeRule.onNodeWithText("Local transaction unavailable").assertIsDisplayed()
+        composeRule.onNodeWithText("Retry").performClick()
+
+        assertTrue(harness.retryClicked)
+    }
+
+    @Test
+    fun editActionIsEmittedFromContentState() {
+        val harness = setContent(TransactionDetailUiState.Content(previewTransactionDetail))
+
+        composeRule.onNodeWithText("Edit").performClick()
+
+        assertTrue(harness.editClicked)
     }
 
     @Test
@@ -114,6 +141,8 @@ class TransactionDetailScreenTest {
     private class ScreenHarness(initialUiState: TransactionDetailUiState) {
         var uiState by mutableStateOf(initialUiState)
         var deleteConfirmed = false
+        var editClicked = false
+        var retryClicked = false
         var undoClicked = false
         var showDeletedSnackbar by mutableStateOf(false)
 
@@ -131,9 +160,8 @@ class TransactionDetailScreenTest {
                     showDeletedSnackbar = true
                 }
                 TransactionDetailAction.UndoDeleteClicked -> undoClicked = true
-                TransactionDetailAction.EditClicked,
-                TransactionDetailAction.RetryClicked,
-                -> Unit
+                TransactionDetailAction.EditClicked -> editClicked = true
+                TransactionDetailAction.RetryClicked -> retryClicked = true
             }
         }
 

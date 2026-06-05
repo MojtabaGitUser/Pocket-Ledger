@@ -14,6 +14,13 @@ class TransactionListScreenTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun loadingStateIsDisplayed() {
+        setContent(TransactionListUiState.Loading)
+
+        composeRule.onNodeWithText("Loading transactions").assertIsDisplayed()
+    }
+
+    @Test
     fun emptyStateIsDisplayed() {
         setContent(TransactionListUiState.Empty)
 
@@ -38,6 +45,18 @@ class TransactionListScreenTest {
         composeRule.onNodeWithText("Coffee Shop").performClick()
 
         assertEquals(TransactionListAction.TransactionClicked("transaction-1"), actions.single())
+    }
+
+    @Test
+    fun errorStateDisplaysMessageAndRetryAction() {
+        val actions = mutableListOf<TransactionListAction>()
+        setContent(TransactionListUiState.Error("Local ledger unavailable"), actions::add)
+
+        composeRule.onNodeWithText("Could not load transactions").assertIsDisplayed()
+        composeRule.onNodeWithText("Local ledger unavailable").assertIsDisplayed()
+        composeRule.onNodeWithText("Retry").performClick()
+
+        assertEquals(TransactionListAction.RetryClicked, actions.single())
     }
 
     private fun setContent(

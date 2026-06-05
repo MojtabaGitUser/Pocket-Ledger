@@ -17,13 +17,13 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Locale
 import java.util.UUID
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -46,8 +46,8 @@ class TransactionEditorViewModel(
     )
     val uiState: StateFlow<TransactionEditorUiState> = _uiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<TransactionEditorEvent>()
-    val events: SharedFlow<TransactionEditorEvent> = _events.asSharedFlow()
+    private val _events = Channel<TransactionEditorEvent>(Channel.BUFFERED)
+    val events: Flow<TransactionEditorEvent> = _events.receiveAsFlow()
 
     init {
         updateValidation()
@@ -113,14 +113,14 @@ class TransactionEditorViewModel(
             val transactionId = _uiState.value.formState.transactionId
             if (transactionId.isNullOrBlank()) {
                 _uiState.update { it.copy(isLoading = false) }
-                _events.emit(TransactionEditorEvent.ShowSnackbar("Transaction id is required for editing."))
+                _events.send(TransactionEditorEvent.ShowSnackbar("Transaction id is required for editing."))
                 return@launch
             }
 
             val transaction = transactionRepository.getById(transactionId)
             if (transaction == null) {
                 _uiState.update { it.copy(isLoading = false) }
-                _events.emit(TransactionEditorEvent.ShowSnackbar("Transaction was not found."))
+                _events.send(TransactionEditorEvent.ShowSnackbar("Transaction was not found."))
                 return@launch
             }
 
@@ -154,7 +154,7 @@ class TransactionEditorViewModel(
         if (!validation.isValid) {
             _uiState.update { it.copy(validationResult = validation) }
             viewModelScope.launch {
-                _events.emit(TransactionEditorEvent.ShowSnackbar("Fix validation errors before saving."))
+                _events.send(TransactionEditorEvent.ShowSnackbar("Fix validation errors before saving."))
             }
             return
         }
@@ -166,10 +166,10 @@ class TransactionEditorViewModel(
                 saveValidatedInput(input, currentState.formState.mode, currentState.selectedTagIds)
             }.onSuccess {
                 _uiState.update { it.copy(isSaving = false) }
-                _events.emit(TransactionEditorEvent.SaveCompleted)
+                _events.send(TransactionEditorEvent.SaveCompleted)
             }.onFailure { throwable ->
                 _uiState.update { it.copy(isSaving = false) }
-                _events.emit(
+                _events.send(
                     TransactionEditorEvent.ShowSnackbar(
                         throwable.message ?: "Unable to save transaction.",
                     ),
