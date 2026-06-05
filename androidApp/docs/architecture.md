@@ -13,12 +13,22 @@ Current scope:
 - `DashboardSummaryCalculator`, a side-effect-free calculator that accepts in-memory core data models.
 - Deterministic insight generation such as cash-flow status, concentrated category spending, and budget progress signals.
 - Material 3 dashboard rendering components for cash flow, category spend, budget progress, recent transactions, and deterministic insights.
+- Simple offline-first budget setup UI and state for local monthly budgets.
 
 Out of scope for the current dashboard implementation:
-- Repository orchestration.
 - Room/database access.
 - Cloud sync.
 - AI or LLM-generated insights.
+- Advanced budget schedules, custom recurrence, alerts, and notifications.
+
+Budget setup is owned by `:feature:dashboard` because budgets feed dashboard
+progress and non-AI insights. The MVP is local-only and monthly-only: users can
+create or edit stored budgets with a name, amount, currency, optional category,
+period start/end, and active state. The feature validates input in pure Kotlin
+before calling `BudgetRepository`; it does not create default budgets or seed
+production data. Dashboard progress summaries consume stored budgets through
+the core data layer, while future custom schedules, alerts, and sync remain
+deferred.
 
 Dependency rules:
 - `:feature:dashboard` may depend on `:core:data` for reusable ledger models.

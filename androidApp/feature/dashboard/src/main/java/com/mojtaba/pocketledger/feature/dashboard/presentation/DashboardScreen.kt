@@ -77,7 +77,9 @@ private fun DashboardContent(
             LoadingState(message = "Loading dashboard")
         }
         DashboardUiState.Empty -> Centered(modifier) {
-            DashboardEmptyState()
+            DashboardEmptyState(
+                onSetBudgetClick = { onAction(DashboardAction.SetBudgetClicked) },
+            )
         }
         is DashboardUiState.Error -> Centered(modifier) {
             ErrorState(
@@ -88,6 +90,7 @@ private fun DashboardContent(
         }
         is DashboardUiState.Content -> DashboardSummaryContent(
             summary = uiState.summary,
+            onSetBudgetClick = { onAction(DashboardAction.SetBudgetClicked) },
             modifier = modifier,
         )
     }
@@ -96,6 +99,7 @@ private fun DashboardContent(
 @Composable
 private fun DashboardSummaryContent(
     summary: DashboardSummary,
+    onSetBudgetClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
@@ -135,6 +139,7 @@ private fun DashboardSummaryContent(
                         )
                         BudgetProgressCard(
                             budgets = summary.budgetProgress,
+                            onSetBudgetClick = onSetBudgetClick,
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -164,6 +169,7 @@ private fun DashboardSummaryContent(
                 item {
                     BudgetProgressCard(
                         budgets = summary.budgetProgress,
+                        onSetBudgetClick = onSetBudgetClick,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

@@ -5,9 +5,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.room.Room
+import com.mojtaba.pocketledger.core.data.repository.BudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
+import com.mojtaba.pocketledger.core.data.repository.local.LocalBudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
@@ -23,6 +25,7 @@ fun rememberPocketLedgerAppGraph(): PocketLedgerAppGraph {
 
 class PocketLedgerAppGraph private constructor(
     val transactionRepository: TransactionRepository,
+    val budgetRepository: BudgetRepository,
     val categoryRepository: CategoryRepository,
     val tagRepository: TagRepository,
 ) {
@@ -36,6 +39,7 @@ class PocketLedgerAppGraph private constructor(
 
             return PocketLedgerAppGraph(
                 transactionRepository = LocalTransactionRepository(database.transactionDao()),
+                budgetRepository = LocalBudgetRepository(database.budgetDao()),
                 categoryRepository = LocalCategoryRepository(database.categoryDao()),
                 tagRepository = LocalTagRepository(database.tagDao()),
             )
