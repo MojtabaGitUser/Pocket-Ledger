@@ -49,6 +49,17 @@ private fun DashboardPhoneContentPreview() {
     }
 }
 
+@Preview(showBackground = true, widthDp = 420, heightDp = 900)
+@Composable
+private fun DashboardEmptyListsContentPreview() {
+    PocketLedgerPreviewTheme {
+        DashboardScreen(
+            uiState = DashboardUiState.Content(DashboardPreviewFixtures.emptySummary),
+            onAction = {},
+        )
+    }
+}
+
 @Preview(showBackground = true, widthDp = 900, heightDp = 760)
 @Composable
 private fun DashboardTabletContentPreview() {
