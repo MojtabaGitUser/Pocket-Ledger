@@ -26,6 +26,10 @@ internal fun testTransaction(
     amountMinor: Long = -1_250,
     occurredAt: Long = 1_700_000_100_000,
     categoryId: String? = "category-food",
+    merchant: String? = "Coffee Shop",
+    note: String? = "Latte",
+    source: String? = "manual",
+    updatedAt: Long = occurredAt,
 ): TransactionEntity = TransactionEntity(
     id = id,
     amountMinor = amountMinor,
@@ -33,12 +37,12 @@ internal fun testTransaction(
     type = "expense",
     occurredAt = occurredAt,
     categoryId = categoryId,
-    merchant = "Coffee Shop",
-    note = "Latte",
-    source = "manual",
+    merchant = merchant,
+    note = note,
+    source = source,
     isRecurring = false,
     createdAt = 1_700_000_100_000,
-    updatedAt = 1_700_000_100_000,
+    updatedAt = updatedAt,
 )
 
 internal fun testBudget(

@@ -8,6 +8,8 @@ import com.mojtaba.pocketledger.core.testing.fixture.testLedgerCategory
 import com.mojtaba.pocketledger.core.testing.fixture.testLedgerTag
 import com.mojtaba.pocketledger.core.testing.fixture.testLedgerTransaction
 import com.mojtaba.pocketledger.core.testing.fixture.testTransactionTagLink
+import com.mojtaba.pocketledger.core.data.search.SearchQuery
+import com.mojtaba.pocketledger.core.data.search.SearchSort
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -57,6 +59,56 @@ class FakeRepositoryTest {
         assertEquals(listOf("older"), repository.observeTransactionsByCategory(TestIds.CategoryGroceries).first().map { it.id })
         assertEquals(listOf("newer", "older"), repository.observeTransactionsByType("expense").first().map { it.id })
         assertEquals(listOf("newer"), repository.observeTransactionsByTag(TestIds.TagWeekend).first().map { it.id })
+    }
+
+    @Test
+    fun transactionRepositorySearchesKeywordPrefixAndSorts() = runTest {
+        val repository = FakeTransactionRepository(
+            initialTransactions = listOf(
+                testLedgerTransaction(
+                    id = "small",
+                    amountMinor = -100,
+                    merchant = "Coffee Shop",
+                ),
+                testLedgerTransaction(
+                    id = "large",
+                    amountMinor = -900,
+                    merchant = "Coffee Cart",
+                    occurredAt = TestClock.November16,
+                ),
+                testLedgerTransaction(
+                    id = "other",
+                    amountMinor = -500,
+                    merchant = "Grocery Store",
+                ),
+            ),
+        )
+
+        val observedIds = repository
+            .searchTransactions(
+                SearchQuery(
+                    text = "  coffee ",
+                    sort = SearchSort.AmountAscending,
+                ),
+            )
+            .first()
+            .map { it.id }
+
+        assertEquals(listOf("large", "small"), observedIds)
+    }
+
+    @Test
+    fun transactionRepositorySearchReturnsEmptyForInvalidQuery() = runTest {
+        val repository = FakeTransactionRepository(
+            initialTransactions = listOf(testLedgerTransaction(merchant = "Coffee Shop")),
+        )
+
+        val observedIds = repository
+            .searchTransactions(SearchQuery(text = "a".repeat(SearchQuery.MAX_TEXT_LENGTH + 1)))
+            .first()
+            .map { it.id }
+
+        assertEquals(emptyList<String>(), observedIds)
     }
 
     @Test
