@@ -91,72 +91,228 @@ interface TransactionDao {
     @Query(
         """
         SELECT * FROM transactions
-        WHERE :keywordPattern IS NULL
+        WHERE (:keywordPattern IS NULL
             OR merchant LIKE :keywordPattern ESCAPE '\'
             OR note LIKE :keywordPattern ESCAPE '\'
-            OR source LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\')
+        AND (:typeCount = 0 OR type IN (:types))
+        AND (:categoryCount = 0 OR category_id IN (:categoryIds))
+        AND (:startMillis IS NULL OR occurred_at >= :startMillis)
+        AND (:endMillis IS NULL OR occurred_at <= :endMillis)
+        AND (:minAmountMinor IS NULL OR ABS(amount_minor) >= :minAmountMinor)
+        AND (:maxAmountMinor IS NULL OR ABS(amount_minor) <= :maxAmountMinor)
+        AND (
+            :tagCount = 0 OR id IN (
+                SELECT transaction_id FROM transaction_tags
+                WHERE tag_id IN (:tagIds)
+                GROUP BY transaction_id
+                HAVING COUNT(DISTINCT tag_id) = :tagCount
+            )
+        )
         ORDER BY occurred_at DESC, created_at DESC, id ASC
         """,
     )
-    fun searchTransactionsByDateDescending(keywordPattern: String?): Flow<List<TransactionEntity>>
+    fun searchTransactionsByDateDescending(
+        keywordPattern: String?,
+        types: Set<String>,
+        typeCount: Int,
+        categoryIds: Set<String>,
+        categoryCount: Int,
+        tagIds: Set<String>,
+        tagCount: Int,
+        startMillis: Long?,
+        endMillis: Long?,
+        minAmountMinor: Long?,
+        maxAmountMinor: Long?,
+    ): Flow<List<TransactionEntity>>
 
     @Query(
         """
         SELECT * FROM transactions
-        WHERE :keywordPattern IS NULL
+        WHERE (:keywordPattern IS NULL
             OR merchant LIKE :keywordPattern ESCAPE '\'
             OR note LIKE :keywordPattern ESCAPE '\'
-            OR source LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\')
+        AND (:typeCount = 0 OR type IN (:types))
+        AND (:categoryCount = 0 OR category_id IN (:categoryIds))
+        AND (:startMillis IS NULL OR occurred_at >= :startMillis)
+        AND (:endMillis IS NULL OR occurred_at <= :endMillis)
+        AND (:minAmountMinor IS NULL OR ABS(amount_minor) >= :minAmountMinor)
+        AND (:maxAmountMinor IS NULL OR ABS(amount_minor) <= :maxAmountMinor)
+        AND (
+            :tagCount = 0 OR id IN (
+                SELECT transaction_id FROM transaction_tags
+                WHERE tag_id IN (:tagIds)
+                GROUP BY transaction_id
+                HAVING COUNT(DISTINCT tag_id) = :tagCount
+            )
+        )
         ORDER BY occurred_at ASC, created_at ASC, id ASC
         """,
     )
-    fun searchTransactionsByDateAscending(keywordPattern: String?): Flow<List<TransactionEntity>>
+    fun searchTransactionsByDateAscending(
+        keywordPattern: String?,
+        types: Set<String>,
+        typeCount: Int,
+        categoryIds: Set<String>,
+        categoryCount: Int,
+        tagIds: Set<String>,
+        tagCount: Int,
+        startMillis: Long?,
+        endMillis: Long?,
+        minAmountMinor: Long?,
+        maxAmountMinor: Long?,
+    ): Flow<List<TransactionEntity>>
 
     @Query(
         """
         SELECT * FROM transactions
-        WHERE :keywordPattern IS NULL
+        WHERE (:keywordPattern IS NULL
             OR merchant LIKE :keywordPattern ESCAPE '\'
             OR note LIKE :keywordPattern ESCAPE '\'
-            OR source LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\')
+        AND (:typeCount = 0 OR type IN (:types))
+        AND (:categoryCount = 0 OR category_id IN (:categoryIds))
+        AND (:startMillis IS NULL OR occurred_at >= :startMillis)
+        AND (:endMillis IS NULL OR occurred_at <= :endMillis)
+        AND (:minAmountMinor IS NULL OR ABS(amount_minor) >= :minAmountMinor)
+        AND (:maxAmountMinor IS NULL OR ABS(amount_minor) <= :maxAmountMinor)
+        AND (
+            :tagCount = 0 OR id IN (
+                SELECT transaction_id FROM transaction_tags
+                WHERE tag_id IN (:tagIds)
+                GROUP BY transaction_id
+                HAVING COUNT(DISTINCT tag_id) = :tagCount
+            )
+        )
         ORDER BY amount_minor DESC, occurred_at DESC, id ASC
         """,
     )
-    fun searchTransactionsByAmountDescending(keywordPattern: String?): Flow<List<TransactionEntity>>
+    fun searchTransactionsByAmountDescending(
+        keywordPattern: String?,
+        types: Set<String>,
+        typeCount: Int,
+        categoryIds: Set<String>,
+        categoryCount: Int,
+        tagIds: Set<String>,
+        tagCount: Int,
+        startMillis: Long?,
+        endMillis: Long?,
+        minAmountMinor: Long?,
+        maxAmountMinor: Long?,
+    ): Flow<List<TransactionEntity>>
 
     @Query(
         """
         SELECT * FROM transactions
-        WHERE :keywordPattern IS NULL
+        WHERE (:keywordPattern IS NULL
             OR merchant LIKE :keywordPattern ESCAPE '\'
             OR note LIKE :keywordPattern ESCAPE '\'
-            OR source LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\')
+        AND (:typeCount = 0 OR type IN (:types))
+        AND (:categoryCount = 0 OR category_id IN (:categoryIds))
+        AND (:startMillis IS NULL OR occurred_at >= :startMillis)
+        AND (:endMillis IS NULL OR occurred_at <= :endMillis)
+        AND (:minAmountMinor IS NULL OR ABS(amount_minor) >= :minAmountMinor)
+        AND (:maxAmountMinor IS NULL OR ABS(amount_minor) <= :maxAmountMinor)
+        AND (
+            :tagCount = 0 OR id IN (
+                SELECT transaction_id FROM transaction_tags
+                WHERE tag_id IN (:tagIds)
+                GROUP BY transaction_id
+                HAVING COUNT(DISTINCT tag_id) = :tagCount
+            )
+        )
         ORDER BY amount_minor ASC, occurred_at DESC, id ASC
         """,
     )
-    fun searchTransactionsByAmountAscending(keywordPattern: String?): Flow<List<TransactionEntity>>
+    fun searchTransactionsByAmountAscending(
+        keywordPattern: String?,
+        types: Set<String>,
+        typeCount: Int,
+        categoryIds: Set<String>,
+        categoryCount: Int,
+        tagIds: Set<String>,
+        tagCount: Int,
+        startMillis: Long?,
+        endMillis: Long?,
+        minAmountMinor: Long?,
+        maxAmountMinor: Long?,
+    ): Flow<List<TransactionEntity>>
 
     @Query(
         """
         SELECT * FROM transactions
-        WHERE :keywordPattern IS NULL
+        WHERE (:keywordPattern IS NULL
             OR merchant LIKE :keywordPattern ESCAPE '\'
             OR note LIKE :keywordPattern ESCAPE '\'
-            OR source LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\')
+        AND (:typeCount = 0 OR type IN (:types))
+        AND (:categoryCount = 0 OR category_id IN (:categoryIds))
+        AND (:startMillis IS NULL OR occurred_at >= :startMillis)
+        AND (:endMillis IS NULL OR occurred_at <= :endMillis)
+        AND (:minAmountMinor IS NULL OR ABS(amount_minor) >= :minAmountMinor)
+        AND (:maxAmountMinor IS NULL OR ABS(amount_minor) <= :maxAmountMinor)
+        AND (
+            :tagCount = 0 OR id IN (
+                SELECT transaction_id FROM transaction_tags
+                WHERE tag_id IN (:tagIds)
+                GROUP BY transaction_id
+                HAVING COUNT(DISTINCT tag_id) = :tagCount
+            )
+        )
         ORDER BY category_id ASC, occurred_at DESC, id ASC
         """,
     )
-    fun searchTransactionsByCategoryAscending(keywordPattern: String?): Flow<List<TransactionEntity>>
+    fun searchTransactionsByCategoryAscending(
+        keywordPattern: String?,
+        types: Set<String>,
+        typeCount: Int,
+        categoryIds: Set<String>,
+        categoryCount: Int,
+        tagIds: Set<String>,
+        tagCount: Int,
+        startMillis: Long?,
+        endMillis: Long?,
+        minAmountMinor: Long?,
+        maxAmountMinor: Long?,
+    ): Flow<List<TransactionEntity>>
 
     @Query(
         """
         SELECT * FROM transactions
-        WHERE :keywordPattern IS NULL
+        WHERE (:keywordPattern IS NULL
             OR merchant LIKE :keywordPattern ESCAPE '\'
             OR note LIKE :keywordPattern ESCAPE '\'
-            OR source LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\')
+        AND (:typeCount = 0 OR type IN (:types))
+        AND (:categoryCount = 0 OR category_id IN (:categoryIds))
+        AND (:startMillis IS NULL OR occurred_at >= :startMillis)
+        AND (:endMillis IS NULL OR occurred_at <= :endMillis)
+        AND (:minAmountMinor IS NULL OR ABS(amount_minor) >= :minAmountMinor)
+        AND (:maxAmountMinor IS NULL OR ABS(amount_minor) <= :maxAmountMinor)
+        AND (
+            :tagCount = 0 OR id IN (
+                SELECT transaction_id FROM transaction_tags
+                WHERE tag_id IN (:tagIds)
+                GROUP BY transaction_id
+                HAVING COUNT(DISTINCT tag_id) = :tagCount
+            )
+        )
         ORDER BY updated_at DESC, id ASC
         """,
     )
-    fun searchTransactionsByRecentlyUpdated(keywordPattern: String?): Flow<List<TransactionEntity>>
+    fun searchTransactionsByRecentlyUpdated(
+        keywordPattern: String?,
+        types: Set<String>,
+        typeCount: Int,
+        categoryIds: Set<String>,
+        categoryCount: Int,
+        tagIds: Set<String>,
+        tagCount: Int,
+        startMillis: Long?,
+        endMillis: Long?,
+        minAmountMinor: Long?,
+        maxAmountMinor: Long?,
+    ): Flow<List<TransactionEntity>>
 }

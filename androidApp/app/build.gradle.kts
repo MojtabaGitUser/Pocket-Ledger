@@ -70,6 +70,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:database"))
     implementation(project(":feature:dashboard"))
+    implementation(project(":feature:search"))
     implementation(project(":feature:transaction"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

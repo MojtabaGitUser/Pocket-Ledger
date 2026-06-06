@@ -5,9 +5,12 @@ import com.mojtaba.pocketledger.core.data.model.TransactionTagLink
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
 import com.mojtaba.pocketledger.core.data.repository.contract.SyncState
 import com.mojtaba.pocketledger.core.data.search.SearchQuery
+import com.mojtaba.pocketledger.core.data.search.SearchRecurringFilter
 import com.mojtaba.pocketledger.core.data.search.SearchSort
+import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -29,6 +32,7 @@ class FakeTransactionRepository(
         private set
     var throwOnDeleteById: Boolean = false
     var throwOnUpsert: Boolean = false
+    var throwOnSearch: Boolean = false
     var forcedDeleteByIdResult: Boolean? = null
 
     override val repositoryName: String = "fake-transactions"
@@ -100,6 +104,10 @@ class FakeTransactionRepository(
         }
 
     override fun searchTransactions(query: SearchQuery): Flow<List<LedgerTransaction>> {
+        if (throwOnSearch) {
+            return flow { error("Search failed") }
+        }
+
         val normalizedQuery = query.normalized()
         if (!normalizedQuery.validate().isValid) {
             return flowOf(emptyList())
@@ -108,6 +116,7 @@ class FakeTransactionRepository(
         return transactions.map { transactionMap ->
             transactionMap.values
                 .filter { transaction -> transaction.matchesKeywordPrefix(normalizedQuery.text) }
+                .filter { transaction -> transaction.matchesFilters(normalizedQuery) }
                 .sortedForSearch(normalizedQuery.sort)
         }
     }
@@ -141,6 +150,60 @@ class FakeTransactionRepository(
 
     private fun String?.startsWithKeyword(keyword: String): Boolean =
         this?.startsWith(keyword, ignoreCase = true) == true
+
+    private fun LedgerTransaction.matchesFilters(query: SearchQuery): Boolean {
+        val filters = query.filters
+        if (filters.transactionTypes.isNotEmpty() && type.normalizedType() !in filters.transactionTypes) {
+            return false
+        }
+        if (filters.categoryIds.isNotEmpty() && categoryId !in filters.categoryIds) {
+            return false
+        }
+        if (filters.tagIds.isNotEmpty()) {
+            val linkedTagIds = transactionTagIds.value[id].orEmpty()
+            if (!linkedTagIds.containsAll(filters.tagIds)) {
+                return false
+            }
+        }
+        filters.dateRange?.let { range ->
+            val startMillis = range.startMillis
+            val endMillis = range.endMillis
+            if (startMillis != null && occurredAt < startMillis) {
+                return false
+            }
+            if (endMillis != null && occurredAt > endMillis) {
+                return false
+            }
+        }
+        filters.amountRange?.let { range ->
+            val absoluteAmount = kotlin.math.abs(amountMinor)
+            val minMinor = range.minMinor
+            val maxMinor = range.maxMinor
+            if (minMinor != null && absoluteAmount < minMinor) {
+                return false
+            }
+            if (maxMinor != null && absoluteAmount > maxMinor) {
+                return false
+            }
+        }
+        filters.currencyCode?.let { currency ->
+            if (!currencyCode.equals(currency, ignoreCase = true)) {
+                return false
+            }
+        }
+        return when (filters.recurring) {
+            SearchRecurringFilter.Any -> true
+            SearchRecurringFilter.RecurringOnly -> isRecurring
+            SearchRecurringFilter.NonRecurringOnly -> !isRecurring
+        }
+    }
+
+    private fun String.normalizedType(): SearchTransactionType? =
+        when {
+            equals("income", ignoreCase = true) -> SearchTransactionType.Income
+            equals("expense", ignoreCase = true) -> SearchTransactionType.Expense
+            else -> null
+        }
 
     private fun Iterable<LedgerTransaction>.sortedForSearch(sort: SearchSort): List<LedgerTransaction> =
         when (sort) {
