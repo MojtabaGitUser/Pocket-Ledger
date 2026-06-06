@@ -57,6 +57,15 @@ validation reports structured errors for invalid ranges, invalid currency codes,
 blank raw IDs, and abusive text length. UI entry points and actual Room query
 execution are deferred to future search and filtering tasks.
 
+T-E05-02 adds the first repository-backed execution path for transaction
+keyword search. `TransactionRepository.searchTransactions(SearchQuery)` observes
+local Room results as a `Flow` and normalizes/validates the query before
+execution. The MVP searches transaction `merchant`, `note`, and `source` fields
+with escaped prefix `LIKE` patterns and deterministic DAO-level sorting. Room
+B-tree indices exist on those text columns, which supports prefix searches such
+as `coffee%`; arbitrary contains searches such as `%coffee%`, FTS ranking,
+category-name keyword search, and tag-name keyword search are deferred.
+
 ## Core Database
 
 `:core:database` owns the Room database, entities, DAOs, exported schema snapshots, and migration registration.

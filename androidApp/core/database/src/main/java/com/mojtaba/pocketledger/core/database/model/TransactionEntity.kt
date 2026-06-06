@@ -22,6 +22,9 @@ import androidx.room.PrimaryKey
         Index(value = ["occurred_at"]),
         Index(value = ["type", "occurred_at"]),
         Index(value = ["category_id", "occurred_at"]),
+        Index(value = ["merchant"]),
+        Index(value = ["note"]),
+        Index(value = ["source"]),
     ],
 )
 data class TransactionEntity(

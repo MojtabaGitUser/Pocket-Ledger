@@ -87,4 +87,76 @@ interface TransactionDao {
         """,
     )
     fun observeTransactionsByTag(tagId: String): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE :keywordPattern IS NULL
+            OR merchant LIKE :keywordPattern ESCAPE '\'
+            OR note LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\'
+        ORDER BY occurred_at DESC, created_at DESC, id ASC
+        """,
+    )
+    fun searchTransactionsByDateDescending(keywordPattern: String?): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE :keywordPattern IS NULL
+            OR merchant LIKE :keywordPattern ESCAPE '\'
+            OR note LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\'
+        ORDER BY occurred_at ASC, created_at ASC, id ASC
+        """,
+    )
+    fun searchTransactionsByDateAscending(keywordPattern: String?): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE :keywordPattern IS NULL
+            OR merchant LIKE :keywordPattern ESCAPE '\'
+            OR note LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\'
+        ORDER BY amount_minor DESC, occurred_at DESC, id ASC
+        """,
+    )
+    fun searchTransactionsByAmountDescending(keywordPattern: String?): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE :keywordPattern IS NULL
+            OR merchant LIKE :keywordPattern ESCAPE '\'
+            OR note LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\'
+        ORDER BY amount_minor ASC, occurred_at DESC, id ASC
+        """,
+    )
+    fun searchTransactionsByAmountAscending(keywordPattern: String?): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE :keywordPattern IS NULL
+            OR merchant LIKE :keywordPattern ESCAPE '\'
+            OR note LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\'
+        ORDER BY category_id ASC, occurred_at DESC, id ASC
+        """,
+    )
+    fun searchTransactionsByCategoryAscending(keywordPattern: String?): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE :keywordPattern IS NULL
+            OR merchant LIKE :keywordPattern ESCAPE '\'
+            OR note LIKE :keywordPattern ESCAPE '\'
+            OR source LIKE :keywordPattern ESCAPE '\'
+        ORDER BY updated_at DESC, id ASC
+        """,
+    )
+    fun searchTransactionsByRecentlyUpdated(keywordPattern: String?): Flow<List<TransactionEntity>>
 }

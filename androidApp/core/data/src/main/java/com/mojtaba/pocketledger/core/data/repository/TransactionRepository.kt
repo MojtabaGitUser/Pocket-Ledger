@@ -2,6 +2,7 @@ package com.mojtaba.pocketledger.core.data.repository
 
 import com.mojtaba.pocketledger.core.data.model.LedgerTransaction
 import com.mojtaba.pocketledger.core.data.repository.contract.OfflineFirstRepository
+import com.mojtaba.pocketledger.core.data.search.SearchQuery
 import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository : OfflineFirstRepository {
@@ -35,4 +36,12 @@ interface TransactionRepository : OfflineFirstRepository {
     fun observeTransactionsByType(type: String): Flow<List<LedgerTransaction>>
 
     fun observeTransactionsByTag(tagId: String): Flow<List<LedgerTransaction>>
+
+    /**
+     * Observes local transaction keyword search results for the supplied query.
+     *
+     * Current MVP execution searches transaction text fields by normalized prefix keyword.
+     * Additional SearchQuery filters are reserved for future repository query expansion.
+     */
+    fun searchTransactions(query: SearchQuery): Flow<List<LedgerTransaction>>
 }

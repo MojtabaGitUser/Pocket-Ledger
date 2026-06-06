@@ -4,6 +4,8 @@ import com.mojtaba.pocketledger.core.data.model.LedgerTransaction
 import com.mojtaba.pocketledger.core.data.model.TransactionTagLink
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
 import com.mojtaba.pocketledger.core.data.repository.contract.SyncState
+import com.mojtaba.pocketledger.core.data.search.SearchQuery
+import com.mojtaba.pocketledger.core.data.search.SearchSort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -97,6 +99,19 @@ class FakeTransactionRepository(
             transactionMap.values.filter { it.id in matchingIds }.sortedForDisplay()
         }
 
+    override fun searchTransactions(query: SearchQuery): Flow<List<LedgerTransaction>> {
+        val normalizedQuery = query.normalized()
+        if (!normalizedQuery.validate().isValid) {
+            return flowOf(emptyList())
+        }
+
+        return transactions.map { transactionMap ->
+            transactionMap.values
+                .filter { transaction -> transaction.matchesKeywordPrefix(normalizedQuery.text) }
+                .sortedForSearch(normalizedQuery.sort)
+        }
+    }
+
     fun containsTransaction(id: String): Boolean = id in transactions.value
 
     fun snapshot(): List<LedgerTransaction> = transactions.value.values.sortedForDisplay()
@@ -113,4 +128,46 @@ class FakeTransactionRepository(
                 .thenByDescending { it.createdAt }
                 .thenBy { it.id },
         )
+
+    private fun LedgerTransaction.matchesKeywordPrefix(keyword: String): Boolean {
+        if (keyword.isBlank()) {
+            return true
+        }
+
+        return merchant.startsWithKeyword(keyword) ||
+            note.startsWithKeyword(keyword) ||
+            source.startsWithKeyword(keyword)
+    }
+
+    private fun String?.startsWithKeyword(keyword: String): Boolean =
+        this?.startsWith(keyword, ignoreCase = true) == true
+
+    private fun Iterable<LedgerTransaction>.sortedForSearch(sort: SearchSort): List<LedgerTransaction> =
+        when (sort) {
+            SearchSort.DateDescending -> sortedForDisplay()
+            SearchSort.DateAscending -> sortedWith(
+                compareBy<LedgerTransaction> { it.occurredAt }
+                    .thenBy { it.createdAt }
+                    .thenBy { it.id },
+            )
+            SearchSort.AmountDescending -> sortedWith(
+                compareByDescending<LedgerTransaction> { it.amountMinor }
+                    .thenByDescending { it.occurredAt }
+                    .thenBy { it.id },
+            )
+            SearchSort.AmountAscending -> sortedWith(
+                compareBy<LedgerTransaction> { it.amountMinor }
+                    .thenByDescending { it.occurredAt }
+                    .thenBy { it.id },
+            )
+            SearchSort.CategoryAscending -> sortedWith(
+                compareBy<LedgerTransaction> { it.categoryId }
+                    .thenByDescending { it.occurredAt }
+                    .thenBy { it.id },
+            )
+            SearchSort.RecentlyUpdated -> sortedWith(
+                compareByDescending<LedgerTransaction> { it.updatedAt }
+                    .thenBy { it.id },
+            )
+        }
 }

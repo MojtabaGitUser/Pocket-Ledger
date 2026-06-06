@@ -1,9 +1,10 @@
 package com.mojtaba.pocketledger.core.database
 
 import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
- * Room schema version 1 is the initial schema. Future migrations should start at 1 -> 2.
+ * Room schema version 1 is the initial schema.
  *
  * Migration workflow for future schema changes:
  * 1. Change the Room entity or DAO schema surface.
@@ -19,7 +20,15 @@ import androidx.room.migration.Migration
 object DatabaseMigrations {
     const val INITIAL_VERSION: Int = 1
 
-    const val CURRENT_VERSION: Int = 1
+    const val CURRENT_VERSION: Int = 2
 
-    val ALL: Array<Migration> = emptyArray()
+    val MIGRATION_1_2: Migration = object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_merchant` ON `transactions` (`merchant`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_note` ON `transactions` (`note`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_source` ON `transactions` (`source`)")
+        }
+    }
+
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
 }

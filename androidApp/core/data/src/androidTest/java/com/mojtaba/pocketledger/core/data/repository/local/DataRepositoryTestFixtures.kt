@@ -27,6 +27,10 @@ internal fun testTransaction(
     amountMinor: Long = -1_250,
     occurredAt: Long = TEST_OCCURRED_AT,
     categoryId: String? = "category-food",
+    merchant: String? = "Coffee Shop",
+    note: String? = "Latte",
+    source: String? = "manual",
+    updatedAt: Long = occurredAt,
 ): LedgerTransaction = LedgerTransaction(
     id = id,
     amountMinor = amountMinor,
@@ -34,12 +38,12 @@ internal fun testTransaction(
     type = "expense",
     occurredAt = occurredAt,
     categoryId = categoryId,
-    merchant = "Coffee Shop",
-    note = "Latte",
-    source = "manual",
+    merchant = merchant,
+    note = note,
+    source = source,
     isRecurring = false,
     createdAt = occurredAt,
-    updatedAt = occurredAt,
+    updatedAt = updatedAt,
 )
 
 internal fun testBudget(

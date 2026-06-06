@@ -5,6 +5,8 @@ import com.mojtaba.pocketledger.core.data.mapper.asExternalModel
 import com.mojtaba.pocketledger.core.data.model.LedgerTransaction
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
 import com.mojtaba.pocketledger.core.data.repository.contract.SyncState
+import com.mojtaba.pocketledger.core.data.search.SearchQuery
+import com.mojtaba.pocketledger.core.data.search.SearchSort
 import com.mojtaba.pocketledger.core.database.dao.TransactionDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -76,4 +78,45 @@ class LocalTransactionRepository(
         transactionDao.observeTransactionsByTag(tagId).map { entities ->
             entities.map { it.asExternalModel() }
         }
+
+    override fun searchTransactions(query: SearchQuery): Flow<List<LedgerTransaction>> {
+        val normalizedQuery = query.normalized()
+        if (!normalizedQuery.validate().isValid) {
+            return flowOf(emptyList())
+        }
+
+        val keywordPattern = normalizedQuery.toKeywordPrefixLikePattern()
+        return transactionDao.searchTransactions(keywordPattern, normalizedQuery.sort).map { entities ->
+            entities.map { it.asExternalModel() }
+        }
+    }
 }
+
+private fun TransactionDao.searchTransactions(
+    keywordPattern: String?,
+    sort: SearchSort,
+): Flow<List<com.mojtaba.pocketledger.core.database.model.TransactionEntity>> =
+    when (sort) {
+        SearchSort.DateDescending -> searchTransactionsByDateDescending(keywordPattern)
+        SearchSort.DateAscending -> searchTransactionsByDateAscending(keywordPattern)
+        SearchSort.AmountDescending -> searchTransactionsByAmountDescending(keywordPattern)
+        SearchSort.AmountAscending -> searchTransactionsByAmountAscending(keywordPattern)
+        SearchSort.CategoryAscending -> searchTransactionsByCategoryAscending(keywordPattern)
+        SearchSort.RecentlyUpdated -> searchTransactionsByRecentlyUpdated(keywordPattern)
+    }
+
+private fun SearchQuery.toKeywordPrefixLikePattern(): String? =
+    text
+        .takeIf { it.isNotBlank() }
+        ?.escapeSqlLike()
+        ?.plus("%")
+
+private fun String.escapeSqlLike(): String =
+    buildString(length) {
+        this@escapeSqlLike.forEach { char ->
+            when (char) {
+                '\\', '%', '_' -> append('\\')
+            }
+            append(char)
+        }
+    }

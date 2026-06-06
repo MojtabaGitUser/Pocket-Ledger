@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
+import com.mojtaba.pocketledger.core.data.search.SearchQuery
+import com.mojtaba.pocketledger.core.data.search.SearchSort
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -37,10 +39,10 @@ class LocalTransactionRepositoryTest {
         categoryRepository.insert(testCategory())
         transactionRepository.insert(testTransaction())
 
-        assertEquals(-1_250, transactionRepository.getById("transaction-1")?.amountMinor)
+        assertEquals(-1_250L, transactionRepository.getById("transaction-1")?.amountMinor)
 
         transactionRepository.update(testTransaction(amountMinor = -2_000))
-        assertEquals(-2_000, transactionRepository.getById("transaction-1")?.amountMinor)
+        assertEquals(-2_000L, transactionRepository.getById("transaction-1")?.amountMinor)
 
         val deleted = transactionRepository.deleteById("transaction-1")
 
@@ -72,5 +74,104 @@ class LocalTransactionRepositoryTest {
         val observedIds = transactionRepository.observeTransactionsByCategory("food").first().map { it.id }
 
         assertEquals(listOf("food-1"), observedIds)
+    }
+
+    @Test
+    fun searchTransactions_normalizesQueryBeforeSearching() = runTest {
+        categoryRepository.insert(testCategory())
+        transactionRepository.insert(testTransaction(id = "coffee", merchant = "Coffee Shop"))
+
+        val observedIds = transactionRepository
+            .searchTransactions(SearchQuery(text = "  coffee   "))
+            .first()
+            .map { it.id }
+
+        assertEquals(listOf("coffee"), observedIds)
+    }
+
+    @Test
+    fun searchTransactions_invalidQueryReturnsEmptyList() = runTest {
+        categoryRepository.insert(testCategory())
+        transactionRepository.insert(testTransaction(id = "coffee", merchant = "Coffee Shop"))
+
+        val observedIds = transactionRepository
+            .searchTransactions(SearchQuery(text = "a".repeat(SearchQuery.MAX_TEXT_LENGTH + 1)))
+            .first()
+            .map { it.id }
+
+        assertEquals(emptyList<String>(), observedIds)
+    }
+
+    @Test
+    fun searchTransactions_mapsResultsToLedgerTransactions() = runTest {
+        categoryRepository.insert(testCategory())
+        transactionRepository.insert(
+            testTransaction(
+                id = "coffee",
+                amountMinor = -625,
+                merchant = "Coffee Shop",
+                note = "Latte",
+            ),
+        )
+
+        val observed = transactionRepository
+            .searchTransactions(SearchQuery(text = "coffee"))
+            .first()
+            .single()
+
+        assertEquals("coffee", observed.id)
+        assertEquals(-625, observed.amountMinor)
+        assertEquals("Coffee Shop", observed.merchant)
+        assertEquals("Latte", observed.note)
+    }
+
+    @Test
+    fun searchTransactions_returnsMatchingTransactionAfterInsert() = runTest {
+        categoryRepository.insert(testCategory())
+
+        assertEquals(
+            emptyList<String>(),
+            transactionRepository.searchTransactions(SearchQuery(text = "coffee")).first().map { it.id },
+        )
+
+        transactionRepository.insert(testTransaction(id = "coffee", merchant = "Coffee Shop"))
+
+        assertEquals(
+            listOf("coffee"),
+            transactionRepository.searchTransactions(SearchQuery(text = "coffee")).first().map { it.id },
+        )
+    }
+
+    @Test
+    fun searchTransactions_appliesSortOrder() = runTest {
+        categoryRepository.insert(testCategory())
+        transactionRepository.insert(
+            testTransaction(
+                id = "small",
+                amountMinor = -100,
+                merchant = "Coffee Shop",
+                occurredAt = 1_700_000_000_000,
+            ),
+        )
+        transactionRepository.insert(
+            testTransaction(
+                id = "large",
+                amountMinor = -900,
+                merchant = "Coffee Shop",
+                occurredAt = 1_700_000_100_000,
+            ),
+        )
+
+        val observedIds = transactionRepository
+            .searchTransactions(
+                SearchQuery(
+                    text = "coffee",
+                    sort = SearchSort.AmountAscending,
+                ),
+            )
+            .first()
+            .map { it.id }
+
+        assertEquals(listOf("large", "small"), observedIds)
     }
 }

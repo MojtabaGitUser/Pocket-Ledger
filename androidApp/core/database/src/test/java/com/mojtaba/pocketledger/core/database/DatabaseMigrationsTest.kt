@@ -11,8 +11,16 @@ class DatabaseMigrationsTest {
     }
 
     @Test
-    fun currentVersion_isCurrentInitialSchemaVersion() {
-        assertEquals(1, DatabaseMigrations.CURRENT_VERSION)
+    fun currentVersion_isVersionTwo() {
+        assertEquals(2, DatabaseMigrations.CURRENT_VERSION)
+    }
+
+    @Test
+    fun migrationOneToTwo_isRegistered() {
+        assertEquals(
+            listOf(1 to 2),
+            DatabaseMigrations.ALL.map { it.startVersion to it.endVersion },
+        )
     }
 
     @Test

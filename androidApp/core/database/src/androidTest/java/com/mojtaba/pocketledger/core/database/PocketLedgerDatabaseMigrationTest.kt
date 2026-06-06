@@ -130,6 +130,30 @@ class PocketLedgerDatabaseMigrationTest {
     }
 
     @Test
+    fun migrateOneToTwo_addsTransactionSearchIndices() {
+        val databaseName = uniqueDatabaseName()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        helper.createDatabase(databaseName, 1).close()
+
+        val database = Room.databaseBuilder(context, PocketLedgerDatabase::class.java, databaseName)
+            .addMigrations(*DatabaseMigrations.ALL)
+            .allowMainThreadQueries()
+            .build()
+
+        try {
+            val sqliteDatabase = database.openHelper.writableDatabase
+
+            sqliteDatabase.assertHasIndex("transactions", listOf("merchant"))
+            sqliteDatabase.assertHasIndex("transactions", listOf("note"))
+            sqliteDatabase.assertHasIndex("transactions", listOf("source"))
+        } finally {
+            database.close()
+            context.deleteDatabase(databaseName)
+        }
+    }
+
+    @Test
     fun allMigrations_areRegisteredForCurrentVersion() {
         if (DatabaseMigrations.CURRENT_VERSION == DatabaseMigrations.INITIAL_VERSION) {
             assertTrue(DatabaseMigrations.ALL.isEmpty())
