@@ -1,0 +1,10 @@
+package com.mojtaba.pocketledger.core.data.search
+
+enum class SearchSort {
+    DateDescending,
+    DateAscending,
+    AmountDescending,
+    AmountAscending,
+    CategoryAscending,
+    RecentlyUpdated,
+}
