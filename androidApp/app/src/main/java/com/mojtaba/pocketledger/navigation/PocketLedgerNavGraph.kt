@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
 import com.mojtaba.pocketledger.feature.dashboard.navigation.dashboardGraph
+import com.mojtaba.pocketledger.feature.search.navigation.searchGraph
+import com.mojtaba.pocketledger.feature.transaction.navigation.TransactionRoutes
 import com.mojtaba.pocketledger.feature.transaction.navigation.transactionGraph
 
 @Composable
@@ -37,9 +39,15 @@ fun PocketLedgerNavGraph(
             tagRepository = appGraph.tagRepository,
             deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
         )
-        placeholderDestination(AppDestination.Search) {
-            SearchPlaceholderScreen()
-        }
+        searchGraph(
+            transactionRepository = appGraph.transactionRepository,
+            categoryRepository = appGraph.categoryRepository,
+            tagRepository = appGraph.tagRepository,
+            deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
+            onOpenTransaction = { transactionId ->
+                navController.navigate(TransactionRoutes.detailRoute(transactionId))
+            },
+        )
         placeholderDestination(AppDestination.Insights) {
             InsightsPlaceholderScreen()
         }

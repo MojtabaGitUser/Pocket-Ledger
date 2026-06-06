@@ -7,6 +7,7 @@ import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
 import com.mojtaba.pocketledger.core.data.repository.contract.SyncState
 import com.mojtaba.pocketledger.core.data.search.SearchQuery
 import com.mojtaba.pocketledger.core.data.search.SearchSort
+import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 import com.mojtaba.pocketledger.core.database.dao.TransactionDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -85,31 +86,140 @@ class LocalTransactionRepository(
             return flowOf(emptyList())
         }
 
-        val keywordPattern = normalizedQuery.toKeywordPrefixLikePattern()
-        return transactionDao.searchTransactions(keywordPattern, normalizedQuery.sort).map { entities ->
+        val parameters = normalizedQuery.toSearchParameters()
+        return transactionDao.searchTransactions(parameters, normalizedQuery.sort).map { entities ->
             entities.map { it.asExternalModel() }
         }
     }
 }
 
 private fun TransactionDao.searchTransactions(
-    keywordPattern: String?,
+    parameters: SearchParameters,
     sort: SearchSort,
 ): Flow<List<com.mojtaba.pocketledger.core.database.model.TransactionEntity>> =
     when (sort) {
-        SearchSort.DateDescending -> searchTransactionsByDateDescending(keywordPattern)
-        SearchSort.DateAscending -> searchTransactionsByDateAscending(keywordPattern)
-        SearchSort.AmountDescending -> searchTransactionsByAmountDescending(keywordPattern)
-        SearchSort.AmountAscending -> searchTransactionsByAmountAscending(keywordPattern)
-        SearchSort.CategoryAscending -> searchTransactionsByCategoryAscending(keywordPattern)
-        SearchSort.RecentlyUpdated -> searchTransactionsByRecentlyUpdated(keywordPattern)
+        SearchSort.DateDescending -> searchTransactionsByDateDescending(
+            keywordPattern = parameters.keywordPattern,
+            types = parameters.types,
+            typeCount = parameters.typeCount,
+            categoryIds = parameters.categoryIds,
+            categoryCount = parameters.categoryCount,
+            tagIds = parameters.tagIds,
+            tagCount = parameters.tagCount,
+            startMillis = parameters.startMillis,
+            endMillis = parameters.endMillis,
+            minAmountMinor = parameters.minAmountMinor,
+            maxAmountMinor = parameters.maxAmountMinor,
+        )
+        SearchSort.DateAscending -> searchTransactionsByDateAscending(
+            keywordPattern = parameters.keywordPattern,
+            types = parameters.types,
+            typeCount = parameters.typeCount,
+            categoryIds = parameters.categoryIds,
+            categoryCount = parameters.categoryCount,
+            tagIds = parameters.tagIds,
+            tagCount = parameters.tagCount,
+            startMillis = parameters.startMillis,
+            endMillis = parameters.endMillis,
+            minAmountMinor = parameters.minAmountMinor,
+            maxAmountMinor = parameters.maxAmountMinor,
+        )
+        SearchSort.AmountDescending -> searchTransactionsByAmountDescending(
+            keywordPattern = parameters.keywordPattern,
+            types = parameters.types,
+            typeCount = parameters.typeCount,
+            categoryIds = parameters.categoryIds,
+            categoryCount = parameters.categoryCount,
+            tagIds = parameters.tagIds,
+            tagCount = parameters.tagCount,
+            startMillis = parameters.startMillis,
+            endMillis = parameters.endMillis,
+            minAmountMinor = parameters.minAmountMinor,
+            maxAmountMinor = parameters.maxAmountMinor,
+        )
+        SearchSort.AmountAscending -> searchTransactionsByAmountAscending(
+            keywordPattern = parameters.keywordPattern,
+            types = parameters.types,
+            typeCount = parameters.typeCount,
+            categoryIds = parameters.categoryIds,
+            categoryCount = parameters.categoryCount,
+            tagIds = parameters.tagIds,
+            tagCount = parameters.tagCount,
+            startMillis = parameters.startMillis,
+            endMillis = parameters.endMillis,
+            minAmountMinor = parameters.minAmountMinor,
+            maxAmountMinor = parameters.maxAmountMinor,
+        )
+        SearchSort.CategoryAscending -> searchTransactionsByCategoryAscending(
+            keywordPattern = parameters.keywordPattern,
+            types = parameters.types,
+            typeCount = parameters.typeCount,
+            categoryIds = parameters.categoryIds,
+            categoryCount = parameters.categoryCount,
+            tagIds = parameters.tagIds,
+            tagCount = parameters.tagCount,
+            startMillis = parameters.startMillis,
+            endMillis = parameters.endMillis,
+            minAmountMinor = parameters.minAmountMinor,
+            maxAmountMinor = parameters.maxAmountMinor,
+        )
+        SearchSort.RecentlyUpdated -> searchTransactionsByRecentlyUpdated(
+            keywordPattern = parameters.keywordPattern,
+            types = parameters.types,
+            typeCount = parameters.typeCount,
+            categoryIds = parameters.categoryIds,
+            categoryCount = parameters.categoryCount,
+            tagIds = parameters.tagIds,
+            tagCount = parameters.tagCount,
+            startMillis = parameters.startMillis,
+            endMillis = parameters.endMillis,
+            minAmountMinor = parameters.minAmountMinor,
+            maxAmountMinor = parameters.maxAmountMinor,
+        )
     }
 
-private fun SearchQuery.toKeywordPrefixLikePattern(): String? =
-    text
-        .takeIf { it.isNotBlank() }
-        ?.escapeSqlLike()
-        ?.plus("%")
+private data class SearchParameters(
+    val keywordPattern: String?,
+    val types: Set<String>,
+    val typeCount: Int,
+    val categoryIds: Set<String>,
+    val categoryCount: Int,
+    val tagIds: Set<String>,
+    val tagCount: Int,
+    val startMillis: Long?,
+    val endMillis: Long?,
+    val minAmountMinor: Long?,
+    val maxAmountMinor: Long?,
+)
+
+private fun SearchQuery.toSearchParameters(): SearchParameters {
+    val typeValues = filters.transactionTypes.map { it.databaseValue() }.toSet()
+    return SearchParameters(
+        keywordPattern = text
+            .takeIf { it.isNotBlank() }
+            ?.escapeSqlLike()
+            ?.plus("%"),
+        types = typeValues.orPlaceholder(),
+        typeCount = typeValues.size,
+        categoryIds = filters.categoryIds.orPlaceholder(),
+        categoryCount = filters.categoryIds.size,
+        tagIds = filters.tagIds.orPlaceholder(),
+        tagCount = filters.tagIds.size,
+        startMillis = filters.dateRange?.startMillis,
+        endMillis = filters.dateRange?.endMillis,
+        minAmountMinor = filters.amountRange?.minMinor,
+        maxAmountMinor = filters.amountRange?.maxMinor,
+    )
+}
+
+private fun SearchTransactionType.databaseValue(): String =
+    when (this) {
+        SearchTransactionType.Income -> "income"
+        SearchTransactionType.Expense -> "expense"
+    }
+
+private fun Set<String>.orPlaceholder(): Set<String> =
+    if (isEmpty()) setOf(NO_FILTER_PLACEHOLDER) else this
 
 private fun String.escapeSqlLike(): String =
     buildString(length) {
@@ -120,3 +230,5 @@ private fun String.escapeSqlLike(): String =
             append(char)
         }
     }
+
+private const val NO_FILTER_PLACEHOLDER = "__pocket_ledger_no_filter__"

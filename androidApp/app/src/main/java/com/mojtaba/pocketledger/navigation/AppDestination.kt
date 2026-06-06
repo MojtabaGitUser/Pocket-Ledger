@@ -1,6 +1,7 @@
 package com.mojtaba.pocketledger.navigation
 
 import com.mojtaba.pocketledger.feature.dashboard.navigation.DashboardRoutes
+import com.mojtaba.pocketledger.feature.search.navigation.SearchRoutes
 import com.mojtaba.pocketledger.feature.transaction.navigation.TransactionRoutes
 
 sealed interface AppDestination {
@@ -17,7 +18,7 @@ sealed interface AppDestination {
     }
 
     data object Search : AppDestination {
-        override val route = "search"
+        override val route = SearchRoutes.SearchRoute
     }
 
     data object Insights : AppDestination {

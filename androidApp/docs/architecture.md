@@ -38,6 +38,33 @@ Dependency rules:
 
 The calculator uses a single-currency MVP rule: `DashboardSummaryInput.currencyCode` selects the summary currency, and records in other currencies are excluded rather than converted or combined.
 
+### `:feature:search`
+
+The search feature module owns the offline transaction search UI, Compose state
+handling, filter controls, result mapping, and result-to-detail navigation
+boundary. It consumes `SearchQuery` and filter models from `:core:data` and
+does not define a parallel ad hoc query contract.
+
+Current scope:
+- Keyword transaction search.
+- Transaction type, category, tag, date range, and amount range filters.
+- Local repository-backed loading, empty-ledger, no-results, and error states.
+- Accessible result rows and filter controls.
+
+Out of scope:
+- AI or semantic search.
+- OCR search.
+- Cloud search.
+- Remote sync.
+- Advanced ranking beyond the shared search and deterministic sort rules.
+
+Indexed local search execution is provided by `:core:data` over
+`:core:database`. `:feature:search` depends on `:core:data` and
+`:core:designsystem`; it must not depend on `:app` or access Room directly.
+Future AI/semantic search support is deferred to E-12/T-E05-04 and must remain
+feature-flagged with a normal offline fallback before any UI suggests that it is
+active.
+
 ## Core Data Search Models
 
 `:core:data` owns pure Kotlin search and filter query models under
