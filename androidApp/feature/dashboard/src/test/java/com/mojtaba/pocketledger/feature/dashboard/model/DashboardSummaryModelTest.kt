@@ -30,4 +30,26 @@ class DashboardSummaryModelTest {
             )
         }
     }
+
+    @Test
+    fun summariesUseValueSemantics() {
+        val cashFlow = CashFlowSummary(
+            incomeMinor = 100L,
+            expenseMinor = 40L,
+            netMinor = 60L,
+            currencyCode = "USD",
+        )
+        val summary = DashboardSummary(
+            period = DashboardPeriod(1L, 2L, "Period"),
+            cashFlow = cashFlow,
+            topCategories = emptyList(),
+            budgetProgress = emptyList(),
+            recentTransactions = emptyList(),
+            insights = listOf(DashboardInsight.NoData),
+            generatedAt = 3L,
+        )
+
+        assertEquals(summary, summary.copy())
+        assertEquals(70L, cashFlow.copy(netMinor = 70L).netMinor)
+    }
 }

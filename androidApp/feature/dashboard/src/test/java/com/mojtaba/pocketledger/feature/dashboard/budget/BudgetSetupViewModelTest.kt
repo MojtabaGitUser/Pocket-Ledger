@@ -149,6 +149,48 @@ class BudgetSetupViewModelTest {
     }
 
     @Test
+    fun missingEditBudgetStopsLoadingAndEmitsError() = runTest {
+        val viewModel = newViewModel(
+            mode = BudgetSetupMode.EDIT,
+            budgetId = "missing",
+        )
+        val events = mutableListOf<BudgetSetupEvent>()
+        val eventJob = launch { viewModel.events.collect(events::add) }
+
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(
+            BudgetSetupEvent.ShowSnackbar("Budget was not found."),
+            events.single(),
+        )
+        eventJob.cancel()
+    }
+
+    @Test
+    fun savedStateHandleRestoresDraftState() = runTest {
+        val savedStateHandle = SavedStateHandle()
+        val firstViewModel = newViewModel(savedStateHandle = savedStateHandle)
+
+        firstViewModel.onAction(BudgetSetupAction.NameChanged("Draft budget"))
+        firstViewModel.onAction(BudgetSetupAction.AmountChanged("75.25"))
+        firstViewModel.onAction(BudgetSetupAction.CurrencyChanged("CAD"))
+        firstViewModel.onAction(BudgetSetupAction.CategorySelected("food"))
+        firstViewModel.onAction(BudgetSetupAction.ActiveChanged(false))
+        advanceUntilIdle()
+
+        val restoredViewModel = newViewModel(savedStateHandle = savedStateHandle)
+        advanceUntilIdle()
+
+        val state = restoredViewModel.uiState.value.formState
+        assertEquals("Draft budget", state.nameInput)
+        assertEquals("75.25", state.amountInput)
+        assertEquals("CAD", state.currencyCode)
+        assertEquals("food", state.categoryId)
+        assertFalse(state.isActive)
+    }
+
+    @Test
     fun editSavePreservesCreatedAtAndUpdatesBudget() = runTest {
         val budgetRepository = FakeBudgetRepository(
             initialBudgets = listOf(

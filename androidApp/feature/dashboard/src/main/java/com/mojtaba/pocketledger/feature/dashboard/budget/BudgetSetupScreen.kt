@@ -2,8 +2,6 @@ package com.mojtaba.pocketledger.feature.dashboard.budget
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -188,7 +186,6 @@ private fun BudgetSetupContent(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CategorySelector(
     categories: List<BudgetCategoryOption>,
@@ -203,8 +200,7 @@ private fun CategorySelector(
         modifier = modifier,
     ) {
         Text("Category")
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(spacing.small),
+        Column(
             verticalArrangement = Arrangement.spacedBy(spacing.small),
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -314,6 +310,7 @@ private fun ActiveToggle(
         Switch(
             checked = isActive,
             onCheckedChange = onActiveChanged,
+            modifier = Modifier.semantics { contentDescription = "Active budget switch" },
         )
     }
 }
