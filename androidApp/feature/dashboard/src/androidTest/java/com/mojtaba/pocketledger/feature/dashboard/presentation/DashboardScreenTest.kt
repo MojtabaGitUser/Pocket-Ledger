@@ -1,12 +1,16 @@
 package com.mojtaba.pocketledger.feature.dashboard.presentation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.unit.dp
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
 import com.mojtaba.pocketledger.feature.dashboard.presentation.preview.DashboardPreviewFixtures
 import org.junit.Assert.assertEquals
@@ -43,6 +47,20 @@ class DashboardScreenTest {
         composeRule.onNodeWithText("No dashboard data yet").assertIsDisplayed()
         composeRule.onNodeWithText("Add transactions and budgets to see cash flow, spending, and insights.")
             .assertIsDisplayed()
+        composeRule.onNodeWithText("Set budget").assertIsDisplayed()
+    }
+
+    @Test
+    fun setBudgetActionsInvokeDashboardAction() {
+        val actions = mutableListOf<DashboardAction>()
+        setContent(
+            uiState = DashboardUiState.Empty,
+            onAction = actions::add,
+        )
+
+        composeRule.onNodeWithText("Set budget").performClick()
+
+        assertEquals(listOf(DashboardAction.SetBudgetClicked), actions)
     }
 
     @Test
@@ -55,8 +73,9 @@ class DashboardScreenTest {
         composeRule.onNodeWithText("\$1,250.00 (54%)").assertIsDisplayed()
         composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Budgets"))
         composeRule.onNodeWithText("Budgets").assertIsDisplayed()
+        composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Food budget"))
         composeRule.onNodeWithText("Food budget").assertIsDisplayed()
-        composeRule.onNodeWithText("Near limit").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Near limit")[0].assertIsDisplayed()
     }
 
     @Test
@@ -85,6 +104,67 @@ class DashboardScreenTest {
         composeRule.onNodeWithText("No recent transactions").assertIsDisplayed()
         composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("No data yet"))
         composeRule.onNodeWithText("No data yet").assertIsDisplayed()
+        composeRule.onNodeWithText("Set budget").assertIsDisplayed()
+    }
+
+    @Test
+    fun contentSetBudgetActionInvokesDashboardAction() {
+        val actions = mutableListOf<DashboardAction>()
+        setContent(
+            uiState = DashboardUiState.Content(DashboardPreviewFixtures.summary),
+            onAction = actions::add,
+        )
+
+        composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Add budget"))
+        composeRule.onNodeWithText("Add budget").performClick()
+
+        assertEquals(listOf(DashboardAction.SetBudgetClicked), actions)
+    }
+
+    @Test
+    fun contentWithLongTextDoesNotCrash() {
+        val longText = "Very long dashboard label ".repeat(8)
+        val summary = DashboardPreviewFixtures.summary.copy(
+            topCategories = DashboardPreviewFixtures.summary.topCategories.mapIndexed { index, category ->
+                if (index == 0) category.copy(categoryName = longText) else category
+            },
+            budgetProgress = DashboardPreviewFixtures.summary.budgetProgress.mapIndexed { index, budget ->
+                if (index == 0) budget.copy(budgetName = longText, categoryName = longText) else budget
+            },
+            recentTransactions = DashboardPreviewFixtures.summary.recentTransactions.mapIndexed { index, transaction ->
+                if (index == 0) transaction.copy(categoryName = longText, notePreview = longText) else transaction
+            },
+        )
+
+        setContent(DashboardUiState.Content(summary))
+
+        composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
+        composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Recent transactions"))
+        composeRule.onNodeWithText("Recent transactions").assertIsDisplayed()
+    }
+
+    @Test
+    fun contentRendersInCompactWidth() {
+        setContent(
+            uiState = DashboardUiState.Content(DashboardPreviewFixtures.summary),
+            widthDp = 360,
+        )
+
+        composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
+        composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Recent transactions"))
+        composeRule.onNodeWithText("Recent transactions").assertIsDisplayed()
+    }
+
+    @Test
+    fun contentRendersInWideWidth() {
+        setContent(
+            uiState = DashboardUiState.Content(DashboardPreviewFixtures.summary),
+            widthDp = 960,
+        )
+
+        composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
+        composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Food budget"))
+        composeRule.onNodeWithText("Food budget").assertIsDisplayed()
     }
 
     @Test
@@ -130,14 +210,24 @@ class DashboardScreenTest {
 
     private fun setContent(
         uiState: DashboardUiState,
-        onAction: (DashboardAction) -> Unit,
+        onAction: (DashboardAction) -> Unit = {},
+        widthDp: Int? = null,
     ) {
         composeRule.setContent {
             PocketLedgerTheme(dynamicColor = false) {
-                DashboardScreen(
-                    uiState = uiState,
-                    onAction = onAction,
-                )
+                if (widthDp == null) {
+                    DashboardScreen(
+                        uiState = uiState,
+                        onAction = onAction,
+                    )
+                } else {
+                    Box(modifier = androidx.compose.ui.Modifier.width(widthDp.dp)) {
+                        DashboardScreen(
+                            uiState = uiState,
+                            onAction = onAction,
+                        )
+                    }
+                }
             }
         }
     }

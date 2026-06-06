@@ -71,7 +71,7 @@ class BudgetSetupScreenTest {
         val harness = setBudgetContent()
 
         composeRule.onNodeWithText("Food").performClick()
-        composeRule.onNodeWithContentDescription("Active budget").performClick()
+        composeRule.onNodeWithContentDescription("Active budget switch").performClick()
 
         assertEquals("food", harness.state.formState.categoryId)
         assertFalse(harness.state.formState.isActive)
