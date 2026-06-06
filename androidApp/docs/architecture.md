@@ -38,6 +38,25 @@ Dependency rules:
 
 The calculator uses a single-currency MVP rule: `DashboardSummaryInput.currencyCode` selects the summary currency, and records in other currencies are excluded rather than converted or combined.
 
+## Core Data Search Models
+
+`:core:data` owns pure Kotlin search and filter query models under
+`com.mojtaba.pocketledger.core.data.search`. These models describe a
+type-safe, offline-first query contract for future local transaction search and
+repository/Room query mapping.
+
+`SearchQuery` supports free text, transaction type filters, category and tag
+filters, optional date and amount ranges, optional currency filtering, recurring
+transaction filtering, and deterministic sort options. Search models do not
+depend on Android UI, Compose, Room annotations, feature modules, network
+services, or AI/LLM behavior.
+
+Callers should normalize and validate a `SearchQuery` before repository
+execution. Normalization handles whitespace, ID cleanup, and currency casing;
+validation reports structured errors for invalid ranges, invalid currency codes,
+blank raw IDs, and abusive text length. UI entry points and actual Room query
+execution are deferred to future search and filtering tasks.
+
 ## Core Database
 
 `:core:database` owns the Room database, entities, DAOs, exported schema snapshots, and migration registration.

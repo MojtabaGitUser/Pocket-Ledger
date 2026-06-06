@@ -10,6 +10,8 @@ dependencies {
     implementation(project(":core:database"))
     implementation(libs.kotlinx.coroutines.core)
 
+    testImplementation(libs.junit)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.room.runtime)
     androidTestImplementation(libs.androidx.test.core)
