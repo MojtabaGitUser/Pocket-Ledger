@@ -2,6 +2,7 @@ package com.mojtaba.pocketledger.feature.transaction.presentation.list
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
@@ -48,6 +49,18 @@ class TransactionListScreenTest {
     }
 
     @Test
+    fun selectedRowExposesAccessibleSelectionState() {
+        setContent(
+            uiState = TransactionListUiState.Content(previewTransactions),
+            selectedTransactionId = "transaction-1",
+        )
+
+        composeRule
+            .onNodeWithContentDescription("Selected transaction, Coffee Shop", substring = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun errorStateDisplaysMessageAndRetryAction() {
         val actions = mutableListOf<TransactionListAction>()
         setContent(TransactionListUiState.Error("Local ledger unavailable"), actions::add)
@@ -62,12 +75,14 @@ class TransactionListScreenTest {
     private fun setContent(
         uiState: TransactionListUiState,
         onAction: (TransactionListAction) -> Unit = {},
+        selectedTransactionId: String? = null,
     ) {
         composeRule.setContent {
             PocketLedgerTheme(dynamicColor = false) {
                 TransactionListScreen(
                     uiState = uiState,
                     onAction = onAction,
+                    selectedTransactionId = selectedTransactionId,
                 )
             }
         }

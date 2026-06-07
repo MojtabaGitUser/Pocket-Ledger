@@ -45,34 +45,40 @@ fun TransactionDetailScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    showTopBar: Boolean = true,
+    showBackAction: Boolean = true,
 ) {
     val contentState = uiState as? TransactionDetailUiState.Content
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Transaction Detail") },
-                navigationIcon = {
-                    TextButton(onClick = onNavigateBack) {
-                        Text("Back")
-                    }
-                },
-                actions = {
-                    TextButton(
-                        onClick = { onAction(TransactionDetailAction.EditClicked) },
-                        enabled = uiState is TransactionDetailUiState.Content,
-                    ) {
-                        Text("Edit")
-                    }
-                    TextButton(
-                        onClick = { onAction(TransactionDetailAction.DeleteClicked) },
-                        enabled = uiState is TransactionDetailUiState.Content,
-                        modifier = Modifier.semantics { contentDescription = "Delete transaction" },
-                    ) {
-                        Text("Delete")
-                    }
-                },
-            )
+            if (showTopBar) {
+                TopAppBar(
+                    title = { Text("Transaction Detail") },
+                    navigationIcon = {
+                        if (showBackAction) {
+                            TextButton(onClick = onNavigateBack) {
+                                Text("Back")
+                            }
+                        }
+                    },
+                    actions = {
+                        TextButton(
+                            onClick = { onAction(TransactionDetailAction.EditClicked) },
+                            enabled = uiState is TransactionDetailUiState.Content,
+                        ) {
+                            Text("Edit")
+                        }
+                        TextButton(
+                            onClick = { onAction(TransactionDetailAction.DeleteClicked) },
+                            enabled = uiState is TransactionDetailUiState.Content,
+                            modifier = Modifier.semantics { contentDescription = "Delete transaction" },
+                        ) {
+                            Text("Delete")
+                        }
+                    },
+                )
+            }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = modifier.fillMaxSize(),
@@ -123,7 +129,7 @@ fun TransactionDetailScreen(
 }
 
 @Composable
-private fun TransactionDetailContent(
+fun TransactionDetailContent(
     uiState: TransactionDetailUiState,
     onAction: (TransactionDetailAction) -> Unit,
     modifier: Modifier = Modifier,

@@ -25,7 +25,10 @@ fun TransactionDetailRoute(
     transactionId: String?,
     onNavigateBack: () -> Unit,
     onEditTransaction: (String) -> Unit,
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    showTopBar: Boolean = true,
+    showBackAction: Boolean = true,
     viewModel: TransactionDetailViewModel = viewModel(
         factory = TransactionDetailViewModelFactory(
             transactionRepository = transactionRepository,
@@ -66,6 +69,9 @@ fun TransactionDetailRoute(
         onAction = viewModel::onAction,
         onNavigateBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
+        showTopBar = showTopBar,
+        showBackAction = showBackAction,
+        modifier = modifier,
     )
 }
 

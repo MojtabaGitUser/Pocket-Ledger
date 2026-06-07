@@ -11,6 +11,8 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import com.mojtaba.pocketledger.core.designsystem.component.TransactionRow
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import com.mojtaba.pocketledger.feature.transaction.model.TransactionListItemUiModel
@@ -20,11 +22,18 @@ fun TransactionListItem(
     transaction: TransactionListItemUiModel,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    selected: Boolean = false,
     showDivider: Boolean = true,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics {
+                this.selected = selected
+            },
+    ) {
         TransactionRow(
             title = transaction.title,
             amount = transaction.amount,
@@ -34,6 +43,7 @@ fun TransactionListItem(
             onClick = onClick,
             showDivider = showDivider && transaction.tagLabels.isEmpty(),
             contentDescription = listOfNotNull(
+                if (selected) "Selected transaction" else null,
                 transaction.title,
                 transaction.typeLabel,
                 transaction.categoryLabel,

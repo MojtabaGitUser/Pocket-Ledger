@@ -95,6 +95,33 @@ Future AI/semantic search support is deferred to E-12/T-E05-04 and must remain
 feature-flagged with a normal offline fallback before any UI suggests that it is
 active.
 
+### `:feature:transaction`
+
+The transaction feature owns transaction list, detail, editor, and adaptive
+list/detail composition. T-E06-02 adapts the existing list and detail screens
+without replacing their repository-backed state holders or compact navigation
+flow.
+
+Compact widths use the original single-pane route behavior:
+`transactions/list` opens the list, and selecting a row navigates to
+`transactions/detail/{transactionId}` with normal back behavior. Medium and
+expanded widths route both the list destination and transaction detail deep
+links through `TransactionAdaptiveRoute`, which keeps the list visible and
+updates the detail pane from a saved `selectedTransactionId`.
+
+Selection state lives in `TransactionSelectionViewModel` with `SavedStateHandle`
+backing so selection survives recomposition, rotation, posture changes, and
+window resizing. If a selected transaction disappears from the locally observed
+list, the selection is cleared and the detail pane falls back to a safe
+"Select a transaction" placeholder. If a deep link targets a missing
+transaction, the existing detail not-found state is shown instead of crashing.
+
+The adaptive transaction screen consumes `AdaptivePaneType` from the T-E06-01
+design-system infrastructure. It does not duplicate window-size rules, foldable
+posture detection, or navigation chrome decisions. Search result clicks keep
+using the transaction detail route; on larger screens that route resolves to the
+adaptive list/detail experience with the selected transaction open.
+
 ## Core Data Search Models
 
 `:core:data` owns pure Kotlin search and filter query models under
