@@ -26,6 +26,7 @@ fun TransactionListScreen(
     uiState: TransactionListUiState,
     onAction: (TransactionListAction) -> Unit,
     modifier: Modifier = Modifier,
+    selectedTransactionId: String? = null,
 ) {
     Scaffold(
         topBar = {
@@ -42,6 +43,7 @@ fun TransactionListScreen(
             TransactionListContent(
                 uiState = uiState,
                 onAction = onAction,
+                selectedTransactionId = selectedTransactionId,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -49,10 +51,11 @@ fun TransactionListScreen(
 }
 
 @Composable
-private fun TransactionListContent(
+fun TransactionListContent(
     uiState: TransactionListUiState,
     onAction: (TransactionListAction) -> Unit,
     modifier: Modifier = Modifier,
+    selectedTransactionId: String? = null,
 ) {
     when (uiState) {
         TransactionListUiState.Loading -> Centered(modifier) {
@@ -83,6 +86,7 @@ private fun TransactionListContent(
                 ) { index, transaction ->
                     TransactionListItem(
                         transaction = transaction,
+                        selected = transaction.id == selectedTransactionId,
                         onClick = {
                             onAction(TransactionListAction.TransactionClicked(transaction.id))
                         },

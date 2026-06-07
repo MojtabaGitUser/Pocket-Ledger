@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import com.mojtaba.pocketledger.adaptive.LocalAdaptiveNavigationState
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
 import com.mojtaba.pocketledger.feature.dashboard.navigation.dashboardGraph
 import com.mojtaba.pocketledger.feature.search.navigation.searchGraph
@@ -21,6 +22,8 @@ fun PocketLedgerNavGraph(
     appGraph: PocketLedgerAppGraph,
     modifier: Modifier = Modifier,
 ) {
+    val adaptiveNavigationState = LocalAdaptiveNavigationState.current
+
     NavHost(
         navController = navController,
         startDestination = startDestination.route,
@@ -38,6 +41,7 @@ fun PocketLedgerNavGraph(
             categoryRepository = appGraph.categoryRepository,
             tagRepository = appGraph.tagRepository,
             deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
+            paneType = adaptiveNavigationState.paneType,
         )
         searchGraph(
             transactionRepository = appGraph.transactionRepository,

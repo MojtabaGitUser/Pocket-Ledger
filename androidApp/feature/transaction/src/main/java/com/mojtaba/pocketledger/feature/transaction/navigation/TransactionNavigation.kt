@@ -6,9 +6,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.mojtaba.pocketledger.core.designsystem.adaptive.AdaptivePaneType
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
+import com.mojtaba.pocketledger.feature.transaction.adaptive.TransactionAdaptiveRoute
 import com.mojtaba.pocketledger.feature.transaction.form.TransactionFormMode
 import com.mojtaba.pocketledger.feature.transaction.presentation.detail.TransactionDetailRoute
 import com.mojtaba.pocketledger.feature.transaction.presentation.editor.TransactionEditorRoute
@@ -20,6 +22,7 @@ fun NavGraphBuilder.transactionGraph(
     categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
     deepLinkBaseUri: String,
+    paneType: AdaptivePaneType = AdaptivePaneType.SinglePane,
 ) {
     composable(
         route = TransactionRoutes.ListRoute,
@@ -27,14 +30,24 @@ fun NavGraphBuilder.transactionGraph(
             navDeepLink { uriPattern = "$deepLinkBaseUri/${TransactionRoutes.ListRoute}" },
         ),
     ) {
-        TransactionListRoute(
-            transactionRepository = transactionRepository,
-            categoryRepository = categoryRepository,
-            tagRepository = tagRepository,
-            onOpenTransaction = { transactionId ->
-                navController.navigate(TransactionRoutes.detailRoute(transactionId))
-            },
-        )
+        if (paneType == AdaptivePaneType.ListDetail) {
+            TransactionAdaptiveRoute(
+                transactionRepository = transactionRepository,
+                categoryRepository = categoryRepository,
+                tagRepository = tagRepository,
+                initialSelectedTransactionId = null,
+                onEditTransaction = { id -> navController.navigate(TransactionRoutes.editRoute(id)) },
+            )
+        } else {
+            TransactionListRoute(
+                transactionRepository = transactionRepository,
+                categoryRepository = categoryRepository,
+                tagRepository = tagRepository,
+                onOpenTransaction = { transactionId ->
+                    navController.navigate(TransactionRoutes.detailRoute(transactionId))
+                },
+            )
+        }
     }
 
     composable(
@@ -51,14 +64,24 @@ fun NavGraphBuilder.transactionGraph(
         ),
     ) { backStackEntry ->
         val transactionId = backStackEntry.arguments?.getString(TransactionRoutes.TransactionIdArg)
-        TransactionDetailRoute(
-            transactionRepository = transactionRepository,
-            categoryRepository = categoryRepository,
-            tagRepository = tagRepository,
-            transactionId = transactionId,
-            onNavigateBack = navController::navigateUp,
-            onEditTransaction = { id -> navController.navigate(TransactionRoutes.editRoute(id)) },
-        )
+        if (paneType == AdaptivePaneType.ListDetail) {
+            TransactionAdaptiveRoute(
+                transactionRepository = transactionRepository,
+                categoryRepository = categoryRepository,
+                tagRepository = tagRepository,
+                initialSelectedTransactionId = transactionId,
+                onEditTransaction = { id -> navController.navigate(TransactionRoutes.editRoute(id)) },
+            )
+        } else {
+            TransactionDetailRoute(
+                transactionRepository = transactionRepository,
+                categoryRepository = categoryRepository,
+                tagRepository = tagRepository,
+                transactionId = transactionId,
+                onNavigateBack = navController::navigateUp,
+                onEditTransaction = { id -> navController.navigate(TransactionRoutes.editRoute(id)) },
+            )
+        }
     }
 
     composable(
