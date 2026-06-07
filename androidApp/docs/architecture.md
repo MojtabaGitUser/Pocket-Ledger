@@ -2,6 +2,36 @@
 
 Pocket Ledger is organized as a thin Android app shell over modular core and feature modules.
 
+## Adaptive UI Architecture
+
+T-E06-01 provides adaptive infrastructure only. It does not redesign
+transaction, dashboard, search, settings, or insight screens; feature-specific
+adaptive layouts belong to later tasks.
+
+Reusable adaptive decisions live in `:core:designsystem` under
+`com.mojtaba.pocketledger.core.designsystem.adaptive`. The app maps window
+width into a single `AdaptiveNavigationState`:
+
+- Compact widths use `AdaptiveNavigationType.BottomBar` and
+  `AdaptivePaneType.SinglePane`.
+- Medium widths use `AdaptiveNavigationType.NavigationRail` and are
+  `AdaptivePaneType.ListDetail` capable.
+- Expanded widths use `AdaptiveNavigationType.PermanentDrawer` and are
+  `AdaptivePaneType.ListDetail` capable.
+
+The `:app` module owns Android-specific adaptive integration. It calculates the
+adaptive navigation state, hosts `PocketLedgerAdaptiveApp`, and renders
+`AdaptiveNavigationScaffold`, which chooses bottom navigation, navigation rail,
+or permanent navigation drawer. The `NavHost` and feature navigation graphs do
+not know which navigation chrome is active.
+
+Foldable posture infrastructure also lives in `:app` because it depends on
+AndroidX WindowManager. `FoldableUiState` exposes flat, half-opened, book,
+tabletop, and unknown postures through composition locals with a safe flat
+fallback on non-foldable devices. Future list-detail feature work can consume
+the adaptive pane type and foldable state without adding window logic to feature
+modules.
+
 ## Feature Modules
 
 ### `:feature:dashboard`
