@@ -163,6 +163,61 @@ When adding a new flag:
 4. Keep remote config, analytics exposure tracking, persistence, and server
    rollout behavior behind future provider implementations.
 
+## Security Architecture
+
+T-E10-02 establishes encrypted sensitive preference infrastructure only. It
+does not add passkeys, login, cloud sync, biometric unlock, key rotation, or
+production storage of real user secrets.
+
+Sensitive preference storage is isolated in `:core:security` under
+`com.mojtaba.pocketledger.core.security.preferences`:
+
+```text
+UI / future use cases
+        |
+        v
+:core:security SensitivePreferences
+        |
+        v
+EncryptedSensitivePreferences
+        |
+        v
+AndroidX Security / Android Keystore
+```
+
+Business and feature code should depend on `SensitivePreferences` and typed
+keys such as `StringPreferenceKey`, `BooleanPreferenceKey`, and
+`LongPreferenceKey`. Consumers must not depend directly on `Context`,
+`SharedPreferences`, `EncryptedSharedPreferences`, `MasterKey`, or raw
+preference key strings.
+
+`DefaultSensitivePreferenceKeys` centralizes stable key definitions for future
+sensitive values such as passkey credential IDs, account session tokens, last
+security check timestamps, and biometric unlock state. Defining these keys does
+not write values or enable the related features.
+
+`EncryptedSensitivePreferences` uses AndroidX Security Crypto with an AES-256
+GCM `MasterKey`, encrypted preference keys, and encrypted preference values. It
+stores data in the stable app-private file
+`pocket_ledger_sensitive_prefs`, uses the application context, does not log
+sensitive values, and does not include keys or values in error messages.
+AndroidX Security Crypto is kept behind the `SensitivePreferences` abstraction
+so a future Android Keystore implementation or key-rotation strategy can replace
+it without changing feature code.
+
+`InMemorySensitivePreferences` provides deterministic non-Android storage for
+unit tests and future use-case tests. It supports the same typed API, returns
+defaults for missing values, and never persists data to disk.
+
+Security rules:
+- Never store tokens, credential IDs, account state, or biometric unlock state
+  in plain `SharedPreferences`, DataStore, logs, or Room.
+- Add new sensitive preference keys only in `DefaultSensitivePreferenceKeys`.
+- Inject `SensitivePreferences` through the existing dependency boundary when a
+  future passkey, account, or privacy feature needs sensitive local storage.
+- Keep remote sync, authentication, biometric prompts, analytics, and key
+  rotation out of this module until dedicated tasks define those requirements.
+
 ## Feature Modules
 
 ### `:feature:dashboard`
