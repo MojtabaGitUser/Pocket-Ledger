@@ -101,6 +101,68 @@ silently running placeholder work.
 tests. It records enqueued tasks and cancellations, exposes configurable task
 states, and never depends on WorkManager.
 
+## Feature Flags Architecture
+
+T-E13-01 establishes typed feature flag infrastructure only. It does not add
+remote config, Firebase, analytics, A/B testing, server-driven flags, or enable
+AI, passkey, cloud, sync, or screenshot testing behavior.
+
+Feature flag evaluation is split across a pure contract and local providers:
+
+```text
+UI / future use cases
+        |
+        v
+:core:featureflags FeatureFlagEvaluator
+        |
+        v
+:core:featureflags FeatureFlagProvider
+        |
+        v
+Local or test provider
+```
+
+`:core:featureflags` owns typed flag definitions and provider contracts under
+`com.mojtaba.pocketledger.core.featureflags`. App, feature, and business code
+should depend on `FeatureFlag`, `FeatureFlagProvider`, or
+`FeatureFlagEvaluator` rather than raw string keys, raw booleans, direct
+`BuildConfig` checks, or Android `Context`. The module has no dependency on
+`:app`, feature modules, database, WorkManager, networking, or remote
+configuration.
+
+Default flags for incomplete or optional capabilities live in
+`DefaultFeatureFlags` and use safe disabled defaults. Current defaults include
+semantic search, AI insights, passkey account flow, cloud sync, production
+background jobs, demo data tools, and screenshot testing. These flags are
+definitions only; adding a flag does not make the underlying feature visible or
+active.
+
+`LocalFeatureFlagProvider` accepts typed overrides and falls back to each flag's
+default value when no override is present. Type mismatches fail fast instead of
+coercing strings or silently changing behavior. Boolean flags can be queried
+through `FeatureFlagProvider.isEnabled` or `FeatureFlagEvaluator.isEnabled`:
+
+```kotlin
+if (featureFlags.isEnabled(DefaultFeatureFlags.SemanticSearchEnabled)) {
+    // Route to a future semantic search experience.
+}
+```
+
+Test-only overrides live in `:core:testing` through `FakeFeatureFlagProvider`.
+Tests can enable, disable, or set typed values deterministically without using
+Android framework APIs, remote services, or build-type checks.
+
+When adding a new flag:
+1. Define it once in `DefaultFeatureFlags` with a stable key, safe default, and
+   clear description.
+2. Add or update tests that verify metadata, default safety, and any gating
+   behavior.
+3. Inject `FeatureFlagEvaluator` or `FeatureFlagProvider` through the existing
+   dependency boundary instead of reading `BuildConfig` inside feature or
+   business logic.
+4. Keep remote config, analytics exposure tracking, persistence, and server
+   rollout behavior behind future provider implementations.
+
 ## Feature Modules
 
 ### `:feature:dashboard`

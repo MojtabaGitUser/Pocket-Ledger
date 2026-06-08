@@ -9,6 +9,7 @@ android {
 dependencies {
     api(project(":core:background"))
     api(project(":core:data"))
+    api(project(":core:featureflags"))
     api(libs.junit)
     api(libs.kotlinx.coroutines.test)
 
