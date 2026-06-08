@@ -3,16 +3,12 @@ plugins {
 }
 
 android {
-    namespace = "com.mojtaba.pocketledger.core.testing"
+    namespace = "com.mojtaba.pocketledger.core.background"
 }
 
 dependencies {
-    api(project(":core:background"))
-    api(project(":core:data"))
-    api(libs.junit)
-    api(libs.kotlinx.coroutines.test)
-
     implementation(libs.kotlinx.coroutines.core)
 
+    testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 }

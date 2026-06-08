@@ -66,6 +66,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:background"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:data"))
     implementation(project(":core:database"))
@@ -80,8 +81,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.window)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.work.testing)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
