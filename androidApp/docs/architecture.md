@@ -57,6 +57,50 @@ foldables the dashboard falls back to responsive, scrollable width-size-class
 behavior rather than hinge-aware pane placement. Adaptive transaction
 list/detail remains owned by T-E06-02.
 
+## Background Jobs Architecture
+
+T-E09-01 establishes scheduler infrastructure only. It does not add passkeys,
+sync, notifications, analytics, AI work, or production background jobs.
+
+Background scheduling is split across a pure contract and an Android adapter:
+
+```text
+UI / future use cases
+        |
+        v
+:core:background BackgroundTaskScheduler
+        |
+        v
+:app WorkManagerScheduler
+        |
+        v
+AndroidX WorkManager
+```
+
+`:core:background` owns domain-friendly scheduling models such as
+`BackgroundTaskId`, `ScheduledTask`, `TaskSchedule`, `TaskConstraints`,
+`TaskPolicy`, `TaskStatus`, and `SchedulerResult`. These APIs do not expose
+`Context`, `WorkManager`, `WorkRequest`, or Worker classes, so feature and
+business code can depend on scheduling without depending on Android background
+execution details.
+
+Typed task definitions live in `:core:background` under
+`com.mojtaba.pocketledger.core.background.tasks`. They centralize stable task
+IDs for future work such as sync, cleanup, and budget refresh. They are task
+definitions only; no worker behavior is implemented by T-E09-01.
+
+The Android implementation lives in `:app` because the app module is the
+composition root and already owns Android-specific construction. `AppGraph`
+creates a `WorkManagerScheduler`, which maps contract models to WorkManager
+requests and policies. A separate app-side `TaskWorkerRegistry` maps registered
+task IDs to concrete Worker classes. Until future tasks add real workers, that
+registry is empty and scheduling an unbound task returns a failure rather than
+silently running placeholder work.
+
+`:core:testing` provides `FakeScheduler` for future use-case and ViewModel
+tests. It records enqueued tasks and cancellations, exposes configurable task
+states, and never depends on WorkManager.
+
 ## Feature Modules
 
 ### `:feature:dashboard`
