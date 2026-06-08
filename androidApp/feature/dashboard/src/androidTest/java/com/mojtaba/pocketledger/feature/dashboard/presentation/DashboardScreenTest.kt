@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
+import com.mojtaba.pocketledger.core.designsystem.adaptive.PocketLedgerWindowWidthSizeClass
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
 import com.mojtaba.pocketledger.feature.dashboard.presentation.preview.DashboardPreviewFixtures
 import org.junit.Assert.assertEquals
@@ -148,6 +149,7 @@ class DashboardScreenTest {
         setContent(
             uiState = DashboardUiState.Content(DashboardPreviewFixtures.summary),
             widthDp = 360,
+            widthSizeClass = PocketLedgerWindowWidthSizeClass.Compact,
         )
 
         composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
@@ -156,10 +158,24 @@ class DashboardScreenTest {
     }
 
     @Test
-    fun contentRendersInWideWidth() {
+    fun contentRendersInMediumWidth() {
+        setContent(
+            uiState = DashboardUiState.Content(DashboardPreviewFixtures.summary),
+            widthDp = 720,
+            widthSizeClass = PocketLedgerWindowWidthSizeClass.Medium,
+        )
+
+        composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
+        composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Food budget"))
+        composeRule.onNodeWithText("Food budget").assertIsDisplayed()
+    }
+
+    @Test
+    fun contentRendersInExpandedWidth() {
         setContent(
             uiState = DashboardUiState.Content(DashboardPreviewFixtures.summary),
             widthDp = 960,
+            widthSizeClass = PocketLedgerWindowWidthSizeClass.Expanded,
         )
 
         composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
@@ -212,18 +228,21 @@ class DashboardScreenTest {
         uiState: DashboardUiState,
         onAction: (DashboardAction) -> Unit = {},
         widthDp: Int? = null,
+        widthSizeClass: PocketLedgerWindowWidthSizeClass = PocketLedgerWindowWidthSizeClass.Compact,
     ) {
         composeRule.setContent {
             PocketLedgerTheme(dynamicColor = false) {
                 if (widthDp == null) {
                     DashboardScreen(
                         uiState = uiState,
+                        widthSizeClass = widthSizeClass,
                         onAction = onAction,
                     )
                 } else {
                     Box(modifier = androidx.compose.ui.Modifier.width(widthDp.dp)) {
                         DashboardScreen(
                             uiState = uiState,
+                            widthSizeClass = widthSizeClass,
                             onAction = onAction,
                         )
                     }

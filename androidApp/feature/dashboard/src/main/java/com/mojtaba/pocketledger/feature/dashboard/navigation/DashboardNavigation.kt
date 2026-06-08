@@ -8,6 +8,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.mojtaba.pocketledger.core.data.repository.BudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
+import com.mojtaba.pocketledger.core.designsystem.adaptive.PocketLedgerWindowWidthSizeClass
 import com.mojtaba.pocketledger.feature.dashboard.budget.BudgetSetupMode
 import com.mojtaba.pocketledger.feature.dashboard.budget.BudgetSetupRoute
 import com.mojtaba.pocketledger.feature.dashboard.presentation.DashboardAction
@@ -18,6 +19,7 @@ fun NavGraphBuilder.dashboardGraph(
     budgetRepository: BudgetRepository,
     categoryRepository: CategoryRepository,
     deepLinkBaseUri: String,
+    widthSizeClass: PocketLedgerWindowWidthSizeClass = PocketLedgerWindowWidthSizeClass.Compact,
 ) {
     composable(
         route = DashboardRoutes.DashboardRoute,
@@ -26,6 +28,7 @@ fun NavGraphBuilder.dashboardGraph(
         ),
     ) {
         DashboardRoute(
+            widthSizeClass = widthSizeClass,
             onAction = { action ->
                 when (action) {
                     DashboardAction.RetryClicked -> Unit

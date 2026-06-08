@@ -34,6 +34,7 @@ fun PocketLedgerNavGraph(
             budgetRepository = appGraph.budgetRepository,
             categoryRepository = appGraph.categoryRepository,
             deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
+            widthSizeClass = adaptiveNavigationState.widthSizeClass,
         )
         transactionGraph(
             navController = navController,
