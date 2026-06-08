@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import com.mojtaba.pocketledger.feature.dashboard.model.BudgetProgressStatus
@@ -104,16 +103,12 @@ private fun BudgetProgressRow(
                     text = budget.budgetName,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = listOfNotNull(budget.categoryName, "$spent of $limit")
                         .joinToString(separator = " - "),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
             AssistChip(

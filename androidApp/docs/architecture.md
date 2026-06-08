@@ -32,6 +32,31 @@ fallback on non-foldable devices. Future list-detail feature work can consume
 the adaptive pane type and foldable state without adding window logic to feature
 modules.
 
+### Adaptive Dashboard Layout
+
+T-E06-03 adapts the existing dashboard UI from `:feature:dashboard` without
+replacing dashboard widgets or adding new summary logic. The app shell passes
+the existing `PocketLedgerWindowWidthSizeClass` from T-E06-01 into the
+dashboard navigation graph. Dashboard maps that size class to a feature-local
+layout mode only:
+
+- Compact widths use a single-column vertical dashboard with stacked widgets.
+- Medium widths keep the cash-flow summary prominent and place category spend
+  with budget progress, then insights with recent transactions, in two-column
+  rows.
+- Expanded widths use a dashboard grid: cash-flow metrics remain full-width,
+  category spend, budgets, and insights share the primary grid row, and recent
+  transactions use the available width below.
+
+Dashboard content stays in a vertical lazy container across all modes so
+landscape, desktop mode, posture changes, and large font scaling remain
+scrollable. Widget cards avoid fixed heights and allow text to wrap where user
+font scaling can otherwise clip labels. The feature module does not consume
+`FoldableUiState` directly because hinge geometry is currently app-local; on
+foldables the dashboard falls back to responsive, scrollable width-size-class
+behavior rather than hinge-aware pane placement. Adaptive transaction
+list/detail remains owned by T-E06-02.
+
 ## Feature Modules
 
 ### `:feature:dashboard`

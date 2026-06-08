@@ -2,9 +2,9 @@ package com.mojtaba.pocketledger.feature.dashboard.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,12 +16,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.mojtaba.pocketledger.core.designsystem.adaptive.PocketLedgerWindowWidthSizeClass
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
-import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.component.ErrorState
 import com.mojtaba.pocketledger.core.designsystem.component.LoadingState
 import com.mojtaba.pocketledger.core.designsystem.component.SectionHeader
@@ -34,14 +34,13 @@ import com.mojtaba.pocketledger.feature.dashboard.presentation.component.Dashboa
 import com.mojtaba.pocketledger.feature.dashboard.presentation.component.DashboardInsightCard
 import com.mojtaba.pocketledger.feature.dashboard.presentation.component.RecentTransactionsCard
 
-private val DashboardWideBreakpoint = 720.dp
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     uiState: DashboardUiState,
     onAction: (DashboardAction) -> Unit,
     modifier: Modifier = Modifier,
+    widthSizeClass: PocketLedgerWindowWidthSizeClass = PocketLedgerWindowWidthSizeClass.Compact,
 ) {
     Scaffold(
         topBar = {
@@ -59,6 +58,7 @@ fun DashboardScreen(
         ) {
             DashboardContent(
                 uiState = uiState,
+                layoutMode = dashboardLayoutMode(widthSizeClass),
                 onAction = onAction,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -69,6 +69,7 @@ fun DashboardScreen(
 @Composable
 private fun DashboardContent(
     uiState: DashboardUiState,
+    layoutMode: DashboardLayoutMode,
     onAction: (DashboardAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -90,6 +91,7 @@ private fun DashboardContent(
         }
         is DashboardUiState.Content -> DashboardSummaryContent(
             summary = uiState.summary,
+            layoutMode = layoutMode,
             onSetBudgetClick = { onAction(DashboardAction.SetBudgetClicked) },
             modifier = modifier,
         )
@@ -99,98 +101,164 @@ private fun DashboardContent(
 @Composable
 private fun DashboardSummaryContent(
     summary: DashboardSummary,
+    layoutMode: DashboardLayoutMode,
     onSetBudgetClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
 
-    BoxWithConstraints(modifier = modifier) {
-        val wide = maxWidth >= DashboardWideBreakpoint
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("DashboardContentList"),
-            verticalArrangement = Arrangement.spacedBy(spacing.medium),
-        ) {
-            item {
-                SectionHeader(
-                    title = "Financial overview",
-                    subtitle = summary.period.label,
-                    modifier = Modifier
-                        .padding(top = spacing.medium)
-                        .semantics { heading() },
-                )
-            }
-            item {
-                CashFlowSummaryCard(
-                    cashFlow = summary.cashFlow,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            if (wide) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(spacing.medium),
-                    ) {
-                        CategorySpendChart(
-                            categories = summary.topCategories,
-                            modifier = Modifier.weight(1f),
-                        )
-                        BudgetProgressCard(
-                            budgets = summary.budgetProgress,
-                            onSetBudgetClick = onSetBudgetClick,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(spacing.medium),
-                    ) {
-                        DashboardInsightCard(
-                            insights = summary.insights,
-                            modifier = Modifier.weight(1f),
-                        )
-                        RecentTransactionsCard(
-                            transactions = summary.recentTransactions,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-            } else {
-                item {
-                    CategorySpendChart(
-                        categories = summary.topCategories,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                item {
-                    BudgetProgressCard(
-                        budgets = summary.budgetProgress,
-                        onSetBudgetClick = onSetBudgetClick,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                item {
-                    DashboardInsightCard(
-                        insights = summary.insights,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                item {
-                    RecentTransactionsCard(
-                        transactions = summary.recentTransactions,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-            item {
-                Box(modifier = Modifier.padding(bottom = spacing.medium))
-            }
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag("DashboardContentList"),
+        verticalArrangement = Arrangement.spacedBy(spacing.medium),
+    ) {
+        item {
+            SectionHeader(
+                title = "Financial overview",
+                subtitle = summary.period.label,
+                modifier = Modifier
+                    .padding(top = spacing.medium)
+                    .semantics { heading() },
+            )
+        }
+        item {
+            CashFlowSummaryCard(
+                cashFlow = summary.cashFlow,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        when (layoutMode) {
+            DashboardLayoutMode.SingleColumn -> singleColumnDashboardItems(
+                summary = summary,
+                onSetBudgetClick = onSetBudgetClick,
+            )
+            DashboardLayoutMode.TwoColumn -> twoColumnDashboardItems(
+                summary = summary,
+                onSetBudgetClick = onSetBudgetClick,
+            )
+            DashboardLayoutMode.DashboardGrid -> dashboardGridItems(
+                summary = summary,
+                onSetBudgetClick = onSetBudgetClick,
+            )
+        }
+        item {
+            Box(modifier = Modifier.padding(bottom = spacing.medium))
         }
     }
+}
+
+private fun androidx.compose.foundation.lazy.LazyListScope.singleColumnDashboardItems(
+    summary: DashboardSummary,
+    onSetBudgetClick: () -> Unit,
+) {
+    item {
+        CategorySpendChart(
+            categories = summary.topCategories,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+    item {
+        BudgetProgressCard(
+            budgets = summary.budgetProgress,
+            onSetBudgetClick = onSetBudgetClick,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+    item {
+        DashboardInsightCard(
+            insights = summary.insights,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+    item {
+        RecentTransactionsCard(
+            transactions = summary.recentTransactions,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+private fun androidx.compose.foundation.lazy.LazyListScope.twoColumnDashboardItems(
+    summary: DashboardSummary,
+    onSetBudgetClick: () -> Unit,
+) {
+    item {
+        DashboardTwoColumnRow {
+            CategorySpendChart(
+                categories = summary.topCategories,
+                modifier = Modifier.weight(1f),
+            )
+            BudgetProgressCard(
+                budgets = summary.budgetProgress,
+                onSetBudgetClick = onSetBudgetClick,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+    item {
+        DashboardTwoColumnRow {
+            DashboardInsightCard(
+                insights = summary.insights,
+                modifier = Modifier.weight(1f),
+            )
+            RecentTransactionsCard(
+                transactions = summary.recentTransactions,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+private fun androidx.compose.foundation.lazy.LazyListScope.dashboardGridItems(
+    summary: DashboardSummary,
+    onSetBudgetClick: () -> Unit,
+) {
+    item {
+        DashboardThreeColumnRow {
+            CategorySpendChart(
+                categories = summary.topCategories,
+                modifier = Modifier.weight(1f),
+            )
+            BudgetProgressCard(
+                budgets = summary.budgetProgress,
+                onSetBudgetClick = onSetBudgetClick,
+                modifier = Modifier.weight(1f),
+            )
+            DashboardInsightCard(
+                insights = summary.insights,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+    item {
+        RecentTransactionsCard(
+            transactions = summary.recentTransactions,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun DashboardTwoColumnRow(
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(PocketLedgerThemeDefaults.spacing.medium),
+        content = content,
+    )
+}
+
+@Composable
+private fun DashboardThreeColumnRow(
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(PocketLedgerThemeDefaults.spacing.medium),
+        content = content,
+    )
 }
 
 @Composable
