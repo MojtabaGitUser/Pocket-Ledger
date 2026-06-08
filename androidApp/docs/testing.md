@@ -21,6 +21,8 @@ Current contents:
   `com.mojtaba.pocketledger.core.testing.fixture`.
 - In-memory fake repositories in
   `com.mojtaba.pocketledger.core.testing.repository`.
+- `FakeFeatureFlagProvider` in
+  `com.mojtaba.pocketledger.core.testing.featureflags`.
 - `MainDispatcherRule` in
   `com.mojtaba.pocketledger.core.testing.coroutine`.
 
@@ -31,3 +33,7 @@ creating ad hoc duplicate builders.
 Fake repositories implement the real `:core:data` repository contracts, expose
 local-only sync state, and use `MutableStateFlow` so tests can assert reactive
 updates without Room or Android framework dependencies.
+
+`FakeFeatureFlagProvider` implements the real `:core:featureflags` contract so
+tests can enable, disable, and set typed flag values deterministically without
+depending on `BuildConfig`, Android framework APIs, or remote configuration.
