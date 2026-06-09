@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
 import com.mojtaba.pocketledger.core.designsystem.adaptive.PocketLedgerWindowWidthSizeClass
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.ErrorState
@@ -45,7 +46,12 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dashboard") },
+                title = {
+                    Text(
+                        text = "Dashboard",
+                        modifier = Modifier.pocketLedgerHeading(),
+                    )
+                },
             )
         },
         modifier = modifier.fillMaxSize(),

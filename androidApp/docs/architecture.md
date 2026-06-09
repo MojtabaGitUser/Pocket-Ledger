@@ -2,6 +2,11 @@
 
 Pocket Ledger is organized as a thin Android app shell over modular core and feature modules.
 
+Accessibility semantics are part of the UI architecture. Shared conventions for
+headings, navigation state, transaction rows, filter chips, progress
+descriptions, and empty/loading/error states are documented in
+`docs/accessibility.md`.
+
 ## Adaptive UI Architecture
 
 T-E06-01 provides adaptive infrastructure only. It does not redesign

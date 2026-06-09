@@ -1,6 +1,9 @@
 package com.mojtaba.pocketledger.feature.dashboard.presentation.component
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -64,7 +67,9 @@ class DashboardComponentTest {
         composeRule.onNodeWithText("Food").assertIsDisplayed()
         composeRule.onNodeWithText("\$80.00 (67%)").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Food, \$80.00, 67% of expenses").assertExists()
-        composeRule.onNodeWithContentDescription("67% of expenses").assertExists()
+        composeRule.onNodeWithContentDescription("67% of expenses")
+            .assertExists()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "67% of expenses"))
     }
 
     @Test
@@ -104,7 +109,14 @@ class DashboardComponentTest {
         composeRule.onNodeWithText("Near limit").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Food budget, \$90.00 spent of \$100.00, 90%, Near limit")
             .assertExists()
-        composeRule.onNodeWithContentDescription("90% budget progress").assertExists()
+        composeRule.onNodeWithContentDescription("90% budget progress")
+            .assertExists()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "90% budget progress, Near limit",
+                ),
+            )
         composeRule.onNodeWithText("Add budget").performClick()
         assertEquals(1, clicks)
     }

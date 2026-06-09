@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
 import com.mojtaba.pocketledger.core.designsystem.adaptive.AdaptiveNavigationType
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 
@@ -111,6 +113,7 @@ private fun AdaptiveTopAppBar(title: String) {
                 text = title,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.pocketLedgerHeading(),
             )
         },
     )
@@ -141,7 +144,7 @@ private fun AdaptiveBottomNavigationBar(
                 alwaysShowLabel = false,
                 modifier = Modifier.semantics {
                     contentDescription = item.contentDescription
-                },
+                }.pocketLedgerSelectedState(item.selected),
             )
         }
     }
@@ -174,7 +177,7 @@ private fun AdaptiveNavigationRail(
                 alwaysShowLabel = false,
                 modifier = Modifier.semantics {
                     contentDescription = item.contentDescription
-                },
+                }.pocketLedgerSelectedState(item.selected),
             )
         }
     }
@@ -207,7 +210,8 @@ private fun AdaptivePermanentDrawer(
                 },
                 modifier = Modifier
                     .padding(NavigationDrawerItemDefaults.ItemPadding)
-                    .semantics { contentDescription = item.contentDescription },
+                    .semantics { contentDescription = item.contentDescription }
+                    .pocketLedgerSelectedState(item.selected),
             )
         }
     }

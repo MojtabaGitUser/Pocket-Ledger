@@ -11,8 +11,10 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
 import com.mojtaba.pocketledger.core.designsystem.component.TransactionRow
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import com.mojtaba.pocketledger.feature.transaction.model.TransactionListItemUiModel
@@ -29,19 +31,22 @@ fun TransactionListItem(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .semantics {
-                this.selected = selected
-            },
+            .fillMaxWidth(),
     ) {
         TransactionRow(
             title = transaction.title,
             amount = transaction.amount,
+            modifier = Modifier
+                .semantics {
+                    this.selected = selected
+                }
+                .pocketLedgerSelectedState(selected),
             subtitle = listOfNotNull(transaction.typeLabel, transaction.dateLabel, transaction.notePreview)
                 .joinToString(separator = " - "),
             category = transaction.categoryLabel,
             onClick = onClick,
             showDivider = showDivider && transaction.tagLabels.isEmpty(),
+            onClickLabel = "Open transaction details",
             contentDescription = listOfNotNull(
                 if (selected) "Selected transaction" else null,
                 transaction.title,
@@ -50,6 +55,7 @@ fun TransactionListItem(
                 transaction.dateLabel,
                 transaction.notePreview,
                 transaction.amount.contentDescription,
+                transaction.tagLabels.takeIf { it.isNotEmpty() }?.joinToString(prefix = "Tags "),
             ).joinToString(separator = ", "),
         )
         if (transaction.tagLabels.isNotEmpty()) {
@@ -62,6 +68,9 @@ fun TransactionListItem(
                     AssistChip(
                         onClick = {},
                         label = { Text(tag) },
+                        modifier = Modifier.semantics {
+                            contentDescription = "Tag $tag"
+                        },
                     )
                 }
             }

@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.AmountText
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
@@ -54,7 +55,12 @@ fun TransactionDetailScreen(
         topBar = {
             if (showTopBar) {
                 TopAppBar(
-                    title = { Text("Transaction Detail") },
+                    title = {
+                        Text(
+                            text = "Transaction Detail",
+                            modifier = Modifier.pocketLedgerHeading(),
+                        )
+                    },
                     navigationIcon = {
                         if (showBackAction) {
                             TextButton(onClick = onNavigateBack) {
@@ -66,6 +72,7 @@ fun TransactionDetailScreen(
                         TextButton(
                             onClick = { onAction(TransactionDetailAction.EditClicked) },
                             enabled = uiState is TransactionDetailUiState.Content,
+                            modifier = Modifier.semantics { contentDescription = "Edit transaction" },
                         ) {
                             Text("Edit")
                         }
@@ -104,7 +111,12 @@ fun TransactionDetailScreen(
                     onAction(TransactionDetailAction.DeleteDismissed)
                 }
             },
-            title = { Text("Delete transaction?") },
+            title = {
+                Text(
+                    text = "Delete transaction?",
+                    modifier = Modifier.pocketLedgerHeading(),
+                )
+            },
             text = { Text("This transaction will be removed from your ledger.") },
             confirmButton = {
                 TextButton(
@@ -165,7 +177,20 @@ private fun TransactionDetailCard(
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = listOfNotNull(
+                    "Transaction detail",
+                    transaction.amount.contentDescription,
+                    transaction.typeLabel,
+                    transaction.categoryLabel,
+                    transaction.dateLabel,
+                    transaction.merchantLabel?.let { "Merchant $it" },
+                    transaction.noteLabel?.let { "Note $it" },
+                    transaction.tagLabels.takeIf { it.isNotEmpty() }?.joinToString(prefix = "Tags "),
+                ).joinToString(separator = ", ")
+            },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
@@ -201,6 +226,9 @@ private fun TransactionDetailCard(
                             AssistChip(
                                 onClick = {},
                                 label = { Text(tag) },
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Tag $tag"
+                                },
                             )
                         }
                     }
@@ -220,7 +248,9 @@ private fun DetailRow(
     singleLine: Boolean = true,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = "$label, $value" },
         horizontalArrangement = Arrangement.spacedBy(PocketLedgerThemeDefaults.spacing.medium),
     ) {
         Text(

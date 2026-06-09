@@ -31,10 +31,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerCheckedState
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import java.time.Instant
@@ -59,7 +63,12 @@ fun BudgetSetupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = {
+                    Text(
+                        text = title,
+                        modifier = Modifier.pocketLedgerHeading(),
+                    )
+                },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
                         Text("Close")
@@ -179,7 +188,10 @@ private fun BudgetSetupContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .sizeIn(minHeight = 48.dp)
-                .semantics { contentDescription = "Save budget" },
+                .semantics {
+                    contentDescription = "Save budget"
+                    stateDescription = if (uiState.canSave) "Enabled" else "Disabled until required fields are valid"
+                },
         ) {
             Text(if (uiState.isSaving) "Saving" else "Save")
         }
@@ -211,7 +223,7 @@ private fun CategorySelector(
                 modifier = Modifier.semantics {
                     contentDescription = "Category Overall"
                     this.selected = selectedCategoryId == null
-                },
+                }.pocketLedgerSelectedState(selectedCategoryId == null),
             )
             categories.forEach { category ->
                 val selected = category.id == selectedCategoryId
@@ -228,7 +240,7 @@ private fun CategorySelector(
                     modifier = Modifier.semantics {
                         contentDescription = "Category ${category.name}"
                         this.selected = selected
-                    },
+                    }.pocketLedgerSelectedState(selected),
                 )
             }
         }
@@ -254,6 +266,7 @@ private fun PeriodSummary(
             .fillMaxWidth()
             .semantics {
                 contentDescription = "Budget period"
+                stateDescription = formatPeriod(periodStart, periodEnd)
                 errorText?.let { error(it) }
             },
         verticalArrangement = Arrangement.spacedBy(PocketLedgerThemeDefaults.spacing.extraSmall),
@@ -291,7 +304,8 @@ private fun ActiveToggle(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .semantics { contentDescription = "Active budget" },
+            .semantics { contentDescription = "Active budget" }
+            .pocketLedgerCheckedState(isActive),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -310,7 +324,9 @@ private fun ActiveToggle(
         Switch(
             checked = isActive,
             onCheckedChange = onActiveChanged,
-            modifier = Modifier.semantics { contentDescription = "Active budget switch" },
+            modifier = Modifier
+                .semantics { contentDescription = "Active budget switch" }
+                .pocketLedgerCheckedState(isActive),
         )
     }
 }

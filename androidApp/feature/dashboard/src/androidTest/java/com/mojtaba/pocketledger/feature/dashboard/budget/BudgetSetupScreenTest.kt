@@ -7,6 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -75,6 +78,25 @@ class BudgetSetupScreenTest {
 
         assertEquals("food", harness.state.formState.categoryId)
         assertFalse(harness.state.formState.isActive)
+    }
+
+    @Test
+    fun selectedCategoryAndActiveSwitchExposeStateDescriptions() {
+        setBudgetContent(
+            initialFormState = BudgetSetupState(
+                nameInput = "Food",
+                amountInput = "25.00",
+                categoryId = "food",
+                isActive = true,
+                periodStart = PERIOD_START,
+                periodEnd = PERIOD_END,
+            ),
+        )
+
+        composeRule.onNodeWithContentDescription("Category Food")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
+        composeRule.onNodeWithContentDescription("Active budget switch")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "On"))
     }
 
     @Test

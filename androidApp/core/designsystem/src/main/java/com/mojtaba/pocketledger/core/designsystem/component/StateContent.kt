@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
 import com.mojtaba.pocketledger.core.designsystem.preview.PreviewText
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerPreviewTheme
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
@@ -119,6 +120,7 @@ private fun StateColumn(
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
+            modifier = Modifier.pocketLedgerHeading(),
         )
         Text(
             text = message,

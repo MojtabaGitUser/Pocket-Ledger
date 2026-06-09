@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import com.mojtaba.pocketledger.feature.transaction.presentation.editor.TransactionCategoryOption
 
@@ -44,7 +45,7 @@ fun CategorySelector(
                     modifier = Modifier.semantics {
                         contentDescription = "Category ${category.name}"
                         this.selected = selected
-                    },
+                    }.pocketLedgerSelectedState(selected),
                 )
             }
         }

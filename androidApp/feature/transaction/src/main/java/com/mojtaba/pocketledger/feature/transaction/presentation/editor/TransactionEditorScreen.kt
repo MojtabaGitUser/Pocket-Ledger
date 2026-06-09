@@ -29,9 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerCheckedState
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import com.mojtaba.pocketledger.feature.transaction.form.AmountError
@@ -65,7 +68,12 @@ fun TransactionEditorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = {
+                    Text(
+                        text = title,
+                        modifier = Modifier.pocketLedgerHeading(),
+                    )
+                },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
                         Text("Close")
@@ -243,7 +251,9 @@ private fun SecondaryFields(
                 onAction(TransactionEditorAction.RecurringChanged(!uiState.formState.isRecurring))
             },
             label = { Text("Recurring") },
-            modifier = Modifier.semantics { contentDescription = "Recurring transaction" },
+            modifier = Modifier
+                .semantics { contentDescription = "Recurring transaction" }
+                .pocketLedgerCheckedState(uiState.formState.isRecurring),
         )
         uiState.validationResult.errors.form?.message?.let { message ->
             Text(
@@ -259,7 +269,10 @@ private fun SecondaryFields(
             modifier = Modifier
                 .fillMaxWidth()
                 .sizeIn(minHeight = 48.dp)
-                .semantics { contentDescription = "Save transaction" },
+                .semantics {
+                    contentDescription = "Save transaction"
+                    stateDescription = if (uiState.canSave) "Enabled" else "Disabled until required fields are valid"
+                },
         ) {
             Text(if (uiState.isSaving) "Saving" else "Save")
         }

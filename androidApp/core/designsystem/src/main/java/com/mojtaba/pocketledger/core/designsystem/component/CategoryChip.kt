@@ -8,6 +8,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
 import com.mojtaba.pocketledger.core.designsystem.preview.PreviewCategories
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerPreviewTheme
 
@@ -29,7 +30,7 @@ fun CategoryChip(
         modifier = modifier.semantics {
             this.contentDescription = contentDescription
             this.selected = selected
-        },
+        }.pocketLedgerSelectedState(selected),
         enabled = enabled,
     )
 }

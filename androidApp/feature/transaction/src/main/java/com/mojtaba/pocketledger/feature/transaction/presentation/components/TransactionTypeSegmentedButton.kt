@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
 import com.mojtaba.pocketledger.feature.transaction.form.TransactionType
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,6 +28,9 @@ fun TransactionTypeSegmentedButton(
                 selected = selectedType == type,
                 onClick = { onTypeSelected(type) },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                modifier = Modifier
+                    .semantics { contentDescription = "Transaction type ${type.label}" }
+                    .pocketLedgerSelectedState(selectedType == type),
             ) {
                 Text(type.label)
             }
