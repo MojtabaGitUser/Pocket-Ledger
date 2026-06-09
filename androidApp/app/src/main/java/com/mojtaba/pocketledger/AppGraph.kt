@@ -18,6 +18,9 @@ import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryReposito
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
+import com.mojtaba.pocketledger.core.security.logging.AppLogger
+import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
+import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
 
 @Composable
 fun rememberPocketLedgerAppGraph(): PocketLedgerAppGraph {
@@ -33,6 +36,7 @@ class PocketLedgerAppGraph private constructor(
     val categoryRepository: CategoryRepository,
     val tagRepository: TagRepository,
     val backgroundTaskScheduler: BackgroundTaskScheduler,
+    val appLogger: AppLogger,
 ) {
     companion object {
         fun create(context: Context): PocketLedgerAppGraph {
@@ -41,6 +45,11 @@ class PocketLedgerAppGraph private constructor(
                 PocketLedgerDatabase::class.java,
                 PocketLedgerDatabase.DATABASE_NAME,
             ).build()
+            val loggingPolicy = if (BuildConfig.LOGGING_ENABLED) {
+                LoggingPolicy.Debug
+            } else {
+                LoggingPolicy.Release
+            }
 
             return PocketLedgerAppGraph(
                 transactionRepository = LocalTransactionRepository(database.transactionDao()),
@@ -51,6 +60,7 @@ class PocketLedgerAppGraph private constructor(
                     workManager = WorkManager.getInstance(context),
                     workerRegistry = TaskWorkerRegistry.Empty,
                 ),
+                appLogger = SafeAppLogger(policy = loggingPolicy),
             )
         }
     }

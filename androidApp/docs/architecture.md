@@ -218,6 +218,21 @@ Security rules:
 - Keep remote sync, authentication, biometric prompts, analytics, and key
   rotation out of this module until dedicated tasks define those requirements.
 
+T-E10-04 adds privacy-safe logging infrastructure to `:core:security` under
+`com.mojtaba.pocketledger.core.security.logging`. Application and feature code
+should depend on `AppLogger` instead of direct Logcat, Timber, `println`, or
+`printStackTrace` calls. `SafeAppLogger` centralizes redaction and build-type
+policy enforcement: debug builds allow sanitized debug/info/warning/error logs,
+while release builds automatically suppress debug/info and emit sanitized
+warnings/errors only.
+
+Logging is for operational events such as startup, navigation, repository
+lifecycle, sync lifecycle, cache events, migration status, and WorkManager
+scheduling. Transaction amounts, notes, merchant names, user-created
+categories/tags, search text, budget values, tokens, credentials, secrets,
+encryption keys, encrypted payloads, and exported ledger content must never be
+logged. Detailed developer guidance lives in `docs/logging-policy.md`.
+
 ## Feature Modules
 
 ### `:feature:dashboard`
