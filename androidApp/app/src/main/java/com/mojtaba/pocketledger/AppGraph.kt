@@ -39,6 +39,22 @@ class PocketLedgerAppGraph private constructor(
     val appLogger: AppLogger,
 ) {
     companion object {
+        fun createForTesting(
+            transactionRepository: TransactionRepository,
+            budgetRepository: BudgetRepository,
+            categoryRepository: CategoryRepository,
+            tagRepository: TagRepository,
+            backgroundTaskScheduler: BackgroundTaskScheduler,
+            appLogger: AppLogger,
+        ): PocketLedgerAppGraph = PocketLedgerAppGraph(
+            transactionRepository = transactionRepository,
+            budgetRepository = budgetRepository,
+            categoryRepository = categoryRepository,
+            tagRepository = tagRepository,
+            backgroundTaskScheduler = backgroundTaskScheduler,
+            appLogger = appLogger,
+        )
+
         fun create(context: Context): PocketLedgerAppGraph {
             val database = Room.databaseBuilder(
                 context,

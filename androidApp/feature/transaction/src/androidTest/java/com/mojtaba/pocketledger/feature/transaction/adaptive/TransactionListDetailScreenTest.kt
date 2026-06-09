@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -11,8 +14,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
+import com.mojtaba.pocketledger.feature.transaction.presentation.list.TransactionListAction
 import com.mojtaba.pocketledger.feature.transaction.presentation.list.TransactionListUiState
 import com.mojtaba.pocketledger.feature.transaction.presentation.list.previewTransactions
 import org.junit.Rule
@@ -58,6 +63,37 @@ class TransactionListDetailScreenTest {
 
         composeRule.onNodeWithText("No transactions yet").assertIsDisplayed()
         composeRule.onNodeWithText("Saved transactions will appear here.").assertIsDisplayed()
+    }
+
+    @Test
+    fun selectingTransactionUpdatesDetailPane() {
+        var selectedTransactionId by mutableStateOf<String?>(null)
+        composeRule.setContent {
+            PocketLedgerTheme(dynamicColor = false) {
+                TransactionListDetailContent(
+                    listUiState = TransactionListUiState.Content(previewTransactions),
+                    selectedTransactionId = selectedTransactionId,
+                    onListAction = { action ->
+                        if (action is TransactionListAction.TransactionClicked) {
+                            selectedTransactionId = action.transactionId
+                        }
+                    },
+                ) {
+                    Text(
+                        text = selectedTransactionId?.let { "Detail for $it" } ?: "Select a transaction",
+                        modifier = Modifier.semantics {
+                            contentDescription = "Transaction detail pane"
+                        },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("Coffee Shop").performClick()
+
+        composeRule.onNodeWithText("Detail for transaction-1").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Selected transaction, Coffee Shop", substring = true)
+            .assertIsDisplayed()
     }
 
     private fun setContent(

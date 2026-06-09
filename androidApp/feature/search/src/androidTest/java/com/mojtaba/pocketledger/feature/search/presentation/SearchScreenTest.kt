@@ -1,5 +1,8 @@
 package com.mojtaba.pocketledger.feature.search.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -63,18 +66,34 @@ class SearchScreenTest {
 
     @Test
     fun clearFiltersActionResetsVisibleStateThroughActionBoundary() {
-        val actions = mutableListOf<SearchAction>()
-        setContent(
+        val harness = SearchScreenHarness(
             SearchPreviewFixtures.contentState.copy(
-                query = SearchQuery(text = "coffee"),
+                query = SearchQuery(
+                    text = "coffee",
+                    filters = SearchPreviewFixtures.contentState.query.filters.copy(
+                        transactionTypes = setOf(SearchTransactionType.Expense),
+                    ),
+                ),
                 keywordInput = "coffee",
             ),
-            actions::add,
         )
+        composeRule.setContent {
+            PocketLedgerTheme(dynamicColor = false) {
+                SearchScreen(
+                    uiState = harness.uiState,
+                    onAction = harness::onAction,
+                )
+            }
+        }
 
+        composeRule.onNodeWithContentDescription("Filter by transaction type Expense")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
         composeRule.onNodeWithContentDescription("Clear search filters").performClick()
 
-        assertEquals(SearchAction.ClearFiltersClicked, actions.single())
+        composeRule.onNodeWithContentDescription("Filter by transaction type Expense")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Not selected"))
+        assertEquals(SearchQuery(), harness.uiState.query)
+        assertEquals("", harness.uiState.keywordInput)
     }
 
     @Test
@@ -126,6 +145,44 @@ class SearchScreenTest {
                     onAction = onAction,
                 )
             }
+        }
+    }
+
+    private class SearchScreenHarness(initialUiState: SearchUiState) {
+        var uiState by mutableStateOf(initialUiState)
+
+        fun onAction(action: SearchAction) {
+            when (action) {
+                is SearchAction.KeywordChanged -> updateQuery {
+                    copy(text = action.text)
+                }
+                is SearchAction.TypeFilterChanged -> updateQuery {
+                    copy(
+                        filters = filters.copy(
+                            transactionTypes = action.type?.let(::setOf).orEmpty(),
+                        ),
+                    )
+                }
+                SearchAction.ClearFiltersClicked -> uiState = uiState.copy(
+                    query = SearchQuery(),
+                    keywordInput = "",
+                )
+                is SearchAction.AmountRangeChanged,
+                is SearchAction.CategoryToggled,
+                is SearchAction.DateRangeChanged,
+                is SearchAction.ResultClicked,
+                is SearchAction.TagToggled,
+                SearchAction.RetryClicked,
+                -> Unit
+            }
+        }
+
+        private fun updateQuery(reducer: SearchQuery.() -> SearchQuery) {
+            val query = uiState.query.reducer()
+            uiState = uiState.copy(
+                query = query,
+                keywordInput = query.text,
+            )
         }
     }
 }
