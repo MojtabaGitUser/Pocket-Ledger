@@ -25,11 +25,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mojtaba.pocketledger.core.data.search.SearchAmountRange
 import com.mojtaba.pocketledger.core.data.search.SearchDateRange
 import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.component.ErrorState
@@ -50,7 +53,14 @@ fun SearchScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Search") })
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Search",
+                        modifier = Modifier.pocketLedgerHeading(),
+                    )
+                },
+            )
         },
         modifier = modifier.fillMaxSize(),
     ) { contentPadding ->
@@ -136,11 +146,14 @@ private fun SearchFilterBar(
         contentPadding = PaddingValues(vertical = spacing.extraSmall),
     ) {
         item {
+            val selected = uiState.query.filters.transactionTypes.isEmpty()
             FilterChip(
-                selected = uiState.query.filters.transactionTypes.isEmpty(),
+                selected = selected,
                 onClick = { onAction(SearchAction.TypeFilterChanged(null)) },
                 label = { Text("All") },
-                modifier = Modifier.semantics { contentDescription = "Filter by all transaction types" },
+                modifier = Modifier
+                    .semantics { contentDescription = "Filter by all transaction types" }
+                    .pocketLedgerSelectedState(selected),
             )
         }
         item {
@@ -164,9 +177,11 @@ private fun SearchFilterBar(
                 selected = category.selected,
                 onClick = { onAction(SearchAction.CategoryToggled(category.id)) },
                 label = { Text(category.name) },
-                modifier = Modifier.semantics {
-                    contentDescription = "Filter by category ${category.name}"
-                },
+                modifier = Modifier
+                    .semantics {
+                        contentDescription = "Filter by category ${category.name}"
+                    }
+                    .pocketLedgerSelectedState(category.selected),
             )
         }
         items(uiState.tags, key = { "tag-${it.id}" }) { tag ->
@@ -174,29 +189,37 @@ private fun SearchFilterBar(
                 selected = tag.selected,
                 onClick = { onAction(SearchAction.TagToggled(tag.id)) },
                 label = { Text("#${tag.name}") },
-                modifier = Modifier.semantics {
-                    contentDescription = "Filter by tag ${tag.name}"
-                },
+                modifier = Modifier
+                    .semantics {
+                        contentDescription = "Filter by tag ${tag.name}"
+                    }
+                    .pocketLedgerSelectedState(tag.selected),
             )
         }
         items(dateOptions, key = { "date-${it.label}" }) { option ->
+            val selected = uiState.query.filters.dateRange == option.range
             FilterChip(
-                selected = uiState.query.filters.dateRange == option.range,
+                selected = selected,
                 onClick = { onAction(SearchAction.DateRangeChanged(option.range)) },
                 label = { Text(option.label) },
-                modifier = Modifier.semantics {
-                    contentDescription = "Filter by date ${option.label}"
-                },
+                modifier = Modifier
+                    .semantics {
+                        contentDescription = "Filter by date ${option.label}"
+                    }
+                    .pocketLedgerSelectedState(selected),
             )
         }
         items(amountOptions, key = { "amount-${it.label}" }) { option ->
+            val selected = uiState.query.filters.amountRange == option.range
             FilterChip(
-                selected = uiState.query.filters.amountRange == option.range,
+                selected = selected,
                 onClick = { onAction(SearchAction.AmountRangeChanged(option.range)) },
                 label = { Text(option.label) },
-                modifier = Modifier.semantics {
-                    contentDescription = "Filter by amount ${option.label}"
-                },
+                modifier = Modifier
+                    .semantics {
+                        contentDescription = "Filter by amount ${option.label}"
+                    }
+                    .pocketLedgerSelectedState(selected),
             )
         }
         item {
@@ -205,6 +228,11 @@ private fun SearchFilterBar(
                 onClick = { onAction(SearchAction.ClearFiltersClicked) },
                 modifier = Modifier.semantics {
                     contentDescription = "Clear search filters"
+                    stateDescription = if (uiState.canClearFilters) {
+                        "Enabled"
+                    } else {
+                        "Disabled until filters are applied"
+                    }
                 },
             ) {
                 Text("Clear")
@@ -224,9 +252,11 @@ private fun TypeFilterChip(
         selected = selected,
         onClick = { onAction(SearchAction.TypeFilterChanged(type)) },
         label = { Text(label) },
-        modifier = Modifier.semantics {
-            contentDescription = "Filter by transaction type $label"
-        },
+        modifier = Modifier
+            .semantics {
+                contentDescription = "Filter by transaction type $label"
+            }
+            .pocketLedgerSelectedState(selected),
     )
 }
 
@@ -307,6 +337,7 @@ private fun SearchResultRow(
             category = result.categoryLabel,
             onClick = onClick,
             showDivider = showDivider && result.tagLabels.isEmpty(),
+            onClickLabel = "Open transaction details",
             contentDescription = result.contentDescription,
         )
         if (result.tagLabels.isNotEmpty()) {
@@ -319,6 +350,9 @@ private fun SearchResultRow(
                     AssistChip(
                         onClick = {},
                         label = { Text(tag) },
+                        modifier = Modifier.semantics {
+                            contentDescription = "Tag $tag"
+                        },
                     )
                 }
             }

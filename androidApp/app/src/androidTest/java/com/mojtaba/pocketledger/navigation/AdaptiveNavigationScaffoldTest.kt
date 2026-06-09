@@ -7,6 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -26,7 +29,9 @@ class AdaptiveNavigationScaffoldTest {
         setContent(AdaptiveNavigationType.BottomBar)
 
         composeRule.onNodeWithContentDescription("Bottom navigation").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Dashboard navigation destination").assertIsSelected()
+        composeRule.onNodeWithContentDescription("Dashboard navigation destination")
+            .assertIsSelected()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
     }
 
     @Test
@@ -51,7 +56,9 @@ class AdaptiveNavigationScaffoldTest {
 
         composeRule.onNodeWithContentDescription("Search navigation destination").performClick()
 
-        composeRule.onNodeWithContentDescription("Search navigation destination").assertIsSelected()
+        composeRule.onNodeWithContentDescription("Search navigation destination")
+            .assertIsSelected()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
         composeRule.onNodeWithText("Selected Search").assertIsDisplayed()
     }
 

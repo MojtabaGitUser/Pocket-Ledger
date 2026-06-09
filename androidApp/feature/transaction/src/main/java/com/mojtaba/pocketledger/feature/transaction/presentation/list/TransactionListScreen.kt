@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.component.ErrorState
@@ -30,7 +31,14 @@ fun TransactionListScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Transactions") })
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Transactions",
+                        modifier = Modifier.pocketLedgerHeading(),
+                    )
+                },
+            )
         },
         modifier = modifier.fillMaxSize(),
     ) { contentPadding ->

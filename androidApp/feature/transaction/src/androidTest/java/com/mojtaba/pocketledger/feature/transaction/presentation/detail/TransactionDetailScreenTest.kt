@@ -68,7 +68,7 @@ class TransactionDetailScreenTest {
     fun editActionIsEmittedFromContentState() {
         val harness = setContent(TransactionDetailUiState.Content(previewTransactionDetail))
 
-        composeRule.onNodeWithText("Edit").performClick()
+        composeRule.onNodeWithContentDescription("Edit transaction").performClick()
 
         assertTrue(harness.editClicked)
     }

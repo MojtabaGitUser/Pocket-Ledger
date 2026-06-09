@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import com.mojtaba.pocketledger.feature.transaction.presentation.editor.TransactionTagOption
 
@@ -42,7 +43,7 @@ fun TagSelector(
                     modifier = Modifier.semantics {
                         contentDescription = "Tag ${tag.name}"
                         this.selected = selected
-                    },
+                    }.pocketLedgerSelectedState(selected),
                 )
             }
         }

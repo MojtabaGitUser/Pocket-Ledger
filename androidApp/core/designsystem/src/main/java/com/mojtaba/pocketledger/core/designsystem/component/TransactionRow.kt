@@ -30,6 +30,7 @@ fun TransactionRow(
     subtitle: String? = null,
     category: String? = null,
     onClick: (() -> Unit)? = null,
+    onClickLabel: String = "Open transaction details",
     showDivider: Boolean = true,
     contentDescription: String = transactionRowContentDescription(
         title = title,
@@ -40,7 +41,11 @@ fun TransactionRow(
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
     val rowModifier = if (onClick != null) {
-        modifier.clickable(onClick = onClick)
+        modifier.clickable(
+            onClickLabel = onClickLabel,
+            role = Role.Button,
+            onClick = onClick,
+        )
     } else {
         modifier
     }
