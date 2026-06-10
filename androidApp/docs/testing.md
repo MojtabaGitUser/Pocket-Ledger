@@ -63,3 +63,7 @@ that cannot be addressed reliably by text/content description.
 
 When no emulator or device is attached, assemble Android test APKs for changed
 modules. Run connected Android tests when a device is available.
+
+Macrobenchmarks live in `:macrobenchmark` and are local/manual performance
+checks, not default PR validation. Run guidance and device assumptions are
+documented in `docs/performance-report.md`.

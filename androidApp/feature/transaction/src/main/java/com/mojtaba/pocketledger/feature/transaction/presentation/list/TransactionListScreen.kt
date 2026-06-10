@@ -13,6 +13,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
@@ -85,7 +88,9 @@ fun TransactionListContent(
         is TransactionListUiState.Content -> {
             val spacing = PocketLedgerThemeDefaults.spacing
             LazyColumn(
-                modifier = modifier,
+                modifier = modifier
+                    .testTag("TransactionList")
+                    .semantics { testTagsAsResourceId = true },
                 verticalArrangement = Arrangement.spacedBy(spacing.none),
             ) {
                 itemsIndexed(

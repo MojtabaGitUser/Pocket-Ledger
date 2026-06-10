@@ -23,9 +23,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mojtaba.pocketledger.core.data.search.SearchAmountRange
@@ -304,7 +306,9 @@ private fun SearchResultList(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier
+            .testTag("SearchResultsList")
+            .semantics { testTagsAsResourceId = true },
         verticalArrangement = Arrangement.spacedBy(PocketLedgerThemeDefaults.spacing.none),
     ) {
         itemsIndexed(

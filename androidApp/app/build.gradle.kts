@@ -59,6 +59,19 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        create("benchmark") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+            isProfileable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("String", "APP_ENV", "\"benchmark\"")
+            buildConfigField("Boolean", "IS_INTERNAL_BUILD", "true")
+            buildConfigField("Boolean", "LOGGING_ENABLED", "false")
+        }
     }
     buildFeatures {
         buildConfig = true
