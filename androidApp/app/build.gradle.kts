@@ -59,6 +59,19 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        create("benchmark") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+            isProfileable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("String", "APP_ENV", "\"benchmark\"")
+            buildConfigField("Boolean", "IS_INTERNAL_BUILD", "true")
+            buildConfigField("Boolean", "LOGGING_ENABLED", "false")
+        }
     }
     buildFeatures {
         buildConfig = true
@@ -66,11 +79,32 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:background"))
     implementation(project(":core:designsystem"))
+    implementation(project(":core:data"))
+    implementation(project(":core:database"))
+    implementation(project(":core:security"))
+    implementation(project(":feature:dashboard"))
+    implementation(project(":feature:search"))
+    implementation(project(":feature:transaction"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material3.adaptive)
+    implementation(libs.androidx.compose.material3.adaptive.navigation)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.window)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.work.testing)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(project(":core:testing"))
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
