@@ -2,10 +2,12 @@ package com.mojtaba.pocketledger.feature.search.presentation
 
 import com.mojtaba.pocketledger.core.data.search.SearchAmountRange
 import com.mojtaba.pocketledger.core.data.search.SearchDateRange
+import com.mojtaba.pocketledger.core.data.search.SearchMode
 import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 
 sealed interface SearchAction {
     data class KeywordChanged(val text: String) : SearchAction
+    data class SearchModeSelected(val mode: SearchMode) : SearchAction
     data class TypeFilterChanged(val type: SearchTransactionType?) : SearchAction
     data class CategoryToggled(val categoryId: String) : SearchAction
     data class TagToggled(val tagId: String) : SearchAction

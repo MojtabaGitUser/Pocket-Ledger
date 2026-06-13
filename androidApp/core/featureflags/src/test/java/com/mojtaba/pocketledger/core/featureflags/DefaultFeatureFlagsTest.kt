@@ -32,4 +32,9 @@ class DefaultFeatureFlagsTest {
                 )
             }
     }
+
+    @Test
+    fun semanticSearchDefaultsToDisabled() {
+        assertFalse(DefaultFeatureFlags.SemanticSearchEnabled.defaultValue)
+    }
 }

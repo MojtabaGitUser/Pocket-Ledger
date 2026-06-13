@@ -7,9 +7,11 @@ import com.mojtaba.pocketledger.core.data.model.LedgerTransaction
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
-import com.mojtaba.pocketledger.core.data.search.SearchFilters
+import com.mojtaba.pocketledger.core.data.search.SearchMode
 import com.mojtaba.pocketledger.core.data.search.SearchQuery
 import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
+import com.mojtaba.pocketledger.core.featureflags.DefaultFeatureFlags
+import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -33,9 +35,17 @@ class SearchViewModel(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
     private val tagRepository: TagRepository,
+    private val featureFlags: FeatureFlagEvaluator,
 ) : ViewModel() {
     private val query = MutableStateFlow(SearchQuery())
     private val refreshRequests = MutableStateFlow(0)
+    private val modeUnavailableMessage = MutableStateFlow<String?>(null)
+
+    private val capabilities: SearchCapabilities
+        get() = SearchCapabilities(
+            semanticSearchVisible = featureFlags.isEnabled(DefaultFeatureFlags.SemanticSearchEnabled),
+            semanticSearchAvailable = false,
+        )
 
     val uiState: StateFlow<SearchUiState> = refreshRequests
         .flatMapLatest { observeUiState() }
@@ -44,6 +54,7 @@ class SearchViewModel(
             emit(
                 SearchUiState(
                     query = query.value,
+                    capabilities = capabilities,
                     keywordInput = query.value.text,
                     isLoading = false,
                     errorMessage = throwable.message ?: "Unable to search transactions.",
@@ -64,6 +75,7 @@ class SearchViewModel(
             is SearchAction.KeywordChanged -> updateQuery { current ->
                 current.copy(text = action.text.take(SearchQuery.MAX_TEXT_LENGTH))
             }
+            is SearchAction.SearchModeSelected -> selectSearchMode(action.mode)
             is SearchAction.TypeFilterChanged -> updateQuery { current ->
                 current.copy(
                     filters = current.filters.copy(
@@ -91,7 +103,10 @@ class SearchViewModel(
             is SearchAction.AmountRangeChanged -> updateQuery { current ->
                 current.copy(filters = current.filters.copy(amountRange = action.amountRange))
             }
-            SearchAction.ClearFiltersClicked -> query.value = SearchQuery()
+            SearchAction.ClearFiltersClicked -> {
+                modeUnavailableMessage.value = null
+                query.value = SearchQuery()
+            }
             is SearchAction.ResultClicked -> {
                 viewModelScope.launch {
                     _effects.emit(SearchEffect.OpenTransaction(action.transactionId))
@@ -102,7 +117,25 @@ class SearchViewModel(
     }
 
     private fun updateQuery(reducer: (SearchQuery) -> SearchQuery) {
+        modeUnavailableMessage.value = null
         query.update { reducer(it).normalized() }
+    }
+
+    private fun selectSearchMode(mode: SearchMode) {
+        when (mode) {
+            SearchMode.Keyword -> {
+                modeUnavailableMessage.value = null
+                query.update { current -> current.copy(mode = SearchMode.Keyword).normalized() }
+            }
+            SearchMode.Semantic -> {
+                if (capabilities.semanticSearchAvailable) {
+                    query.update { current -> current.copy(mode = SearchMode.Semantic).normalized() }
+                } else {
+                    modeUnavailableMessage.value = "Semantic search is not available yet."
+                    query.update { current -> current.copy(mode = SearchMode.Keyword).normalized() }
+                }
+            }
+        }
     }
 
     private fun observeUiState(): Flow<SearchUiState> {
@@ -110,21 +143,30 @@ class SearchViewModel(
         val tags = tagRepository.observeTags()
         val hasAnyTransactions = transactionRepository.observeRecentTransactions(limit = 1)
             .map { it.isNotEmpty() }
+        val searchState = combine(query, modeUnavailableMessage) { searchQuery, unavailableMessage ->
+            SearchQueryState(
+                query = searchQuery,
+                modeUnavailableMessage = unavailableMessage,
+            )
+        }
 
         val searchResults = query.flatMapLatest { searchQuery ->
-            transactionRepository.searchTransactions(searchQuery).withTags()
+            val executableQuery = searchQuery.copy(mode = SearchMode.Keyword).normalized()
+            transactionRepository.searchTransactions(executableQuery).withTags()
         }
 
         return combine(
-            query,
+            searchState,
             searchResults,
             categories,
             tags,
             hasAnyTransactions,
-        ) { searchQuery, transactionTagPairs, categoryOptions, tagOptions, hasTransactions ->
+        ) { currentSearchState, transactionTagPairs, categoryOptions, tagOptions, hasTransactions ->
+            val searchQuery = currentSearchState.query
             val categoriesById = categoryOptions.associateBy { it.id }
             SearchUiState(
                 query = searchQuery,
+                capabilities = capabilities,
                 keywordInput = searchQuery.text,
                 results = transactionTagPairs.map { (transaction, transactionTags) ->
                     SearchResultMapper.map(
@@ -149,6 +191,7 @@ class SearchViewModel(
                 },
                 isLoading = false,
                 isEmptyLedger = !hasTransactions,
+                modeUnavailableMessage = currentSearchState.modeUnavailableMessage,
                 errorMessage = null,
             )
         }
@@ -169,6 +212,11 @@ class SearchViewModel(
             }
         }
 }
+
+private data class SearchQueryState(
+    val query: SearchQuery,
+    val modeUnavailableMessage: String?,
+)
 
 private fun Set<String>.toggle(value: String): Set<String> =
     if (value in this) this - value else this + value

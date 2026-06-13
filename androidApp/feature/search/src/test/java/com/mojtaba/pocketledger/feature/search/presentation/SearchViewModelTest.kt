@@ -2,8 +2,12 @@ package com.mojtaba.pocketledger.feature.search.presentation
 
 import com.mojtaba.pocketledger.core.data.search.SearchAmountRange
 import com.mojtaba.pocketledger.core.data.search.SearchDateRange
+import com.mojtaba.pocketledger.core.data.search.SearchMode
 import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
+import com.mojtaba.pocketledger.core.featureflags.DefaultFeatureFlags
+import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 import com.mojtaba.pocketledger.core.testing.coroutine.MainDispatcherRule
+import com.mojtaba.pocketledger.core.testing.featureflags.FakeFeatureFlagProvider
 import com.mojtaba.pocketledger.core.testing.fixture.TestClock
 import com.mojtaba.pocketledger.core.testing.fixture.testIncomeCategory
 import com.mojtaba.pocketledger.core.testing.fixture.testIncomeTransaction
@@ -38,6 +42,8 @@ class SearchViewModelTest {
 
         assertTrue(viewModel.uiState.value.isEmptyLedger)
         assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(SearchMode.Keyword, viewModel.uiState.value.query.mode)
+        assertFalse(viewModel.uiState.value.capabilities.semanticSearchVisible)
         job.cancel()
     }
 
@@ -57,7 +63,45 @@ class SearchViewModelTest {
         advanceUntilIdle()
 
         assertEquals("coffee", viewModel.uiState.value.query.text)
+        assertEquals(SearchMode.Keyword, viewModel.uiState.value.query.mode)
         assertEquals(listOf("coffee"), viewModel.uiState.value.results.map { it.transactionId })
+        job.cancel()
+    }
+
+    @Test
+    fun semanticCapabilityIsVisibleOnlyWhenFeatureFlagEnabled() = runTest {
+        val featureFlags = FakeFeatureFlagProvider().apply {
+            enable(DefaultFeatureFlags.SemanticSearchEnabled)
+        }
+        val viewModel = newViewModel(featureFlags = featureFlags)
+        val job = launch { viewModel.uiState.collect {} }
+
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.capabilities.semanticSearchVisible)
+        assertFalse(viewModel.uiState.value.capabilities.semanticSearchAvailable)
+        job.cancel()
+    }
+
+    @Test
+    fun selectingSemanticModeFallsBackToKeywordAndDoesNotRunSemanticSearch() = runTest {
+        val transactionRepository = FakeTransactionRepository(listOf(testTransaction()))
+        val featureFlags = FakeFeatureFlagProvider().apply {
+            enable(DefaultFeatureFlags.SemanticSearchEnabled)
+        }
+        val viewModel = newViewModel(
+            transactionRepository = transactionRepository,
+            featureFlags = featureFlags,
+        )
+        val job = launch { viewModel.uiState.collect {} }
+
+        viewModel.onAction(SearchAction.SearchModeSelected(SearchMode.Semantic))
+        advanceUntilIdle()
+
+        assertEquals(SearchMode.Keyword, viewModel.uiState.value.query.mode)
+        assertEquals("Semantic search is not available yet.", viewModel.uiState.value.modeUnavailableMessage)
+        assertEquals(SearchMode.Keyword, transactionRepository.lastSearchQuery?.mode)
+        assertTrue(transactionRepository.searchCalls > 0)
         job.cancel()
     }
 
@@ -100,6 +144,7 @@ class SearchViewModelTest {
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.query.isEmpty)
+        assertEquals(SearchMode.Keyword, viewModel.uiState.value.query.mode)
         assertEquals("", viewModel.uiState.value.keywordInput)
         job.cancel()
     }
@@ -183,10 +228,12 @@ class SearchViewModelTest {
         tagRepository: FakeTagRepository = FakeTagRepository(
             initialTags = listOf(testLedgerTag(id = "work", name = "Work")),
         ),
+        featureFlags: FakeFeatureFlagProvider = FakeFeatureFlagProvider(),
     ): SearchViewModel = SearchViewModel(
         transactionRepository = transactionRepository,
         categoryRepository = categoryRepository,
         tagRepository = tagRepository,
+        featureFlags = FeatureFlagEvaluator(featureFlags),
     )
 
     private fun testTransaction(

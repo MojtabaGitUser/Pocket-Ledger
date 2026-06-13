@@ -17,7 +17,9 @@ import com.mojtaba.pocketledger.adaptive.LocalAdaptiveNavigationState
 import com.mojtaba.pocketledger.core.designsystem.adaptive.AdaptiveNavigationState
 import com.mojtaba.pocketledger.core.designsystem.adaptive.PocketLedgerWindowWidthSizeClass
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
+import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
+import com.mojtaba.pocketledger.core.testing.featureflags.FakeFeatureFlagProvider
 import com.mojtaba.pocketledger.core.testing.fixture.testIncomeCategory
 import com.mojtaba.pocketledger.core.testing.fixture.testLedgerBudget
 import com.mojtaba.pocketledger.core.testing.fixture.testLedgerCategory
@@ -111,6 +113,7 @@ class PocketLedgerAppShellTest {
                 initialTags = listOf(tag),
                 initialLinks = listOf(tagLink),
             ),
+            featureFlags = FeatureFlagEvaluator(FakeFeatureFlagProvider()),
             backgroundTaskScheduler = FakeScheduler(),
             appLogger = NoOpAppLogger,
         )

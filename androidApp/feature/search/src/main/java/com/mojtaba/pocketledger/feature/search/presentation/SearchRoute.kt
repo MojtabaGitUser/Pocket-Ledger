@@ -10,18 +10,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
+import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 
 @Composable
 fun SearchRoute(
     transactionRepository: TransactionRepository,
     categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
+    featureFlags: FeatureFlagEvaluator,
     onOpenTransaction: (String) -> Unit,
     viewModel: SearchViewModel = viewModel(
         factory = SearchViewModelFactory(
             transactionRepository = transactionRepository,
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
+            featureFlags = featureFlags,
         ),
     ),
 ) {
@@ -45,6 +48,7 @@ private class SearchViewModelFactory(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
     private val tagRepository: TagRepository,
+    private val featureFlags: FeatureFlagEvaluator,
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -55,6 +59,7 @@ private class SearchViewModelFactory(
             transactionRepository = transactionRepository,
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
+            featureFlags = featureFlags,
         ) as T
     }
 }

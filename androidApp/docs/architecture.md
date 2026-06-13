@@ -285,6 +285,7 @@ Current scope:
 - Keyword transaction search.
 - Transaction type, category, tag, date range, and amount range filters.
 - Local repository-backed loading, empty-ledger, no-results, and error states.
+- Feature-flagged semantic search placeholder state.
 - Accessible result rows and filter controls.
 
 Out of scope:
@@ -297,9 +298,19 @@ Out of scope:
 Indexed local search execution is provided by `:core:data` over
 `:core:database`. `:feature:search` depends on `:core:data` and
 `:core:designsystem`; it must not depend on `:app` or access Room directly.
-Future AI/semantic search support is deferred to E-12/T-E05-04 and must remain
-feature-flagged with a normal offline fallback before any UI suggests that it is
-active.
+T-E05-04 adds a semantic search placeholder only. `SearchQuery` carries a typed
+`SearchMode`, but `SearchMode.Keyword` remains the default and only executable
+MVP path. `DefaultFeatureFlags.SemanticSearchEnabled` controls whether the
+Search UI exposes a disabled "Semantic" coming-soon affordance. Even when the
+flag is enabled, semantic search is unavailable, does not run embeddings,
+models, ranking, cloud calls, or network requests, and falls back to the local
+keyword repository path.
+
+Future semantic search work should plug into the existing `SearchMode` and
+search capability state rather than adding a parallel query contract. Raw search
+queries, filters, merchant names, notes, categories, and tags must not be logged
+or sent remotely without a dedicated future privacy design and explicit product
+approval.
 
 ### `:feature:transaction`
 
@@ -335,11 +346,11 @@ adaptive list/detail experience with the selected transaction open.
 type-safe, offline-first query contract for future local transaction search and
 repository/Room query mapping.
 
-`SearchQuery` supports free text, transaction type filters, category and tag
-filters, optional date and amount ranges, optional currency filtering, recurring
-transaction filtering, and deterministic sort options. Search models do not
-depend on Android UI, Compose, Room annotations, feature modules, network
-services, or AI/LLM behavior.
+`SearchQuery` supports a typed search mode, free text, transaction type filters,
+category and tag filters, optional date and amount ranges, optional currency
+filtering, recurring transaction filtering, and deterministic sort options.
+Search models do not depend on Android UI, Compose, Room annotations, feature
+modules, network services, or AI/LLM behavior.
 
 Callers should normalize and validate a `SearchQuery` before repository
 execution. Normalization handles whitespace, ID cleanup, and currency casing;

@@ -30,6 +30,10 @@ class FakeTransactionRepository(
         private set
     var upsertCalls: Int = 0
         private set
+    var searchCalls: Int = 0
+        private set
+    var lastSearchQuery: SearchQuery? = null
+        private set
     var throwOnDeleteById: Boolean = false
     var throwOnUpsert: Boolean = false
     var throwOnSearch: Boolean = false
@@ -104,6 +108,8 @@ class FakeTransactionRepository(
         }
 
     override fun searchTransactions(query: SearchQuery): Flow<List<LedgerTransaction>> {
+        searchCalls += 1
+        lastSearchQuery = query
         if (throwOnSearch) {
             return flow { error("Search failed") }
         }

@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mojtaba.pocketledger.core.data.search.SearchAmountRange
 import com.mojtaba.pocketledger.core.data.search.SearchDateRange
+import com.mojtaba.pocketledger.core.data.search.SearchMode
 import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
@@ -147,6 +148,39 @@ private fun SearchFilterBar(
         horizontalArrangement = Arrangement.spacedBy(spacing.small),
         contentPadding = PaddingValues(vertical = spacing.extraSmall),
     ) {
+        item {
+            val selected = uiState.query.mode == SearchMode.Keyword
+            FilterChip(
+                selected = selected,
+                onClick = { onAction(SearchAction.SearchModeSelected(SearchMode.Keyword)) },
+                label = { Text("Keyword") },
+                enabled = uiState.capabilities.keywordSearchAvailable,
+                modifier = Modifier
+                    .semantics { contentDescription = "Keyword search" }
+                    .pocketLedgerSelectedState(selected),
+            )
+        }
+        if (uiState.capabilities.semanticSearchVisible) {
+            item {
+                val semanticAvailable = uiState.capabilities.semanticSearchAvailable
+                val selected = uiState.query.mode == SearchMode.Semantic
+                FilterChip(
+                    selected = selected,
+                    onClick = { onAction(SearchAction.SearchModeSelected(SearchMode.Semantic)) },
+                    label = { Text("Semantic") },
+                    enabled = semanticAvailable,
+                    modifier = Modifier
+                        .semantics {
+                            contentDescription = "Semantic search, coming soon"
+                            stateDescription = if (semanticAvailable) {
+                                if (selected) "Selected" else "Not selected"
+                            } else {
+                                "Disabled, coming soon"
+                            }
+                        },
+                )
+            }
+        }
         item {
             val selected = uiState.query.filters.transactionTypes.isEmpty()
             FilterChip(
@@ -277,6 +311,12 @@ private fun SearchStateContent(
                 title = "Could not search transactions",
                 message = uiState.errorMessage,
                 onRetry = { onAction(SearchAction.RetryClicked) },
+            )
+        }
+        uiState.modeUnavailableMessage != null -> Centered(modifier) {
+            EmptyState(
+                title = "Search mode unavailable",
+                message = uiState.modeUnavailableMessage,
             )
         }
         uiState.isEmptyLedger -> Centered(modifier) {
