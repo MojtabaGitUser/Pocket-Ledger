@@ -1,6 +1,18 @@
 plugins {
     id("pocketledger.android.application")
     id("pocketledger.android.compose")
+    alias(libs.plugins.paparazzi)
+}
+
+tasks.withType<Test>().configureEach {
+    maxParallelForks = 1
+    val isPaparazziTaskRequested = gradle.startParameter.taskNames.any { taskName ->
+        taskName.contains("Paparazzi", ignoreCase = true) ||
+            taskName.contains("AdaptiveScreenshots", ignoreCase = true)
+    }
+    if (!isPaparazziTaskRequested) {
+        exclude("**/screenshot/**")
+    }
 }
 
 android {
