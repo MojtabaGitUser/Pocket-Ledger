@@ -67,3 +67,48 @@ modules. Run connected Android tests when a device is available.
 Macrobenchmarks live in `:macrobenchmark` and are local/manual performance
 checks, not default PR validation. Run guidance and device assumptions are
 documented in `docs/performance-report.md`.
+
+## Adaptive Screenshot Tests
+
+Adaptive screenshot coverage uses Paparazzi in `:app` so one JVM-based test
+suite can render the app shell and the dashboard, transaction, and search
+feature screens without an emulator. The matrix lives under
+`app/src/test/java/com/mojtaba/pocketledger/screenshot` and uses centralized
+fixtures and device definitions:
+
+- compact phone: Pixel 5 portrait
+- compact phone landscape: Pixel 5 landscape
+- medium tablet: Nexus 7 portrait
+- expanded tablet: Pixel Tablet landscape
+- foldable open: Pixel Fold open
+- foldable closed: folded phone-sized Pixel Fold configuration
+- desktop/freeform: 1440 x 1000 dp-style desktop window
+
+The screenshot suite covers dashboard content, empty and error states;
+transaction list, detail, missing, error, and adaptive list/detail states;
+search initial, populated, empty-ledger, no-results, error, and filter-visible
+states; adaptive navigation chrome; and key large-font variants at 1.3 and 1.5
+font scale.
+
+Normal `test` tasks exclude screenshot tests to keep PR unit-test feedback
+focused. Run screenshot verification explicitly:
+
+```bash
+./gradlew verifyAdaptiveScreenshots
+```
+
+Update goldens after an intentional UI change:
+
+```bash
+./gradlew recordAdaptiveScreenshots
+```
+
+Paparazzi stores committed PNG baselines under
+`app/src/test/snapshots/images`. Failed verification diffs are written under
+`app/build/paparazzi/failures`, and an HTML report is generated under
+`app/build/reports/paparazzi/debug`.
+
+CI keeps screenshot verification off the default pull-request path to avoid
+adding screenshot runtime to every PR. The PR Validation workflow can be run
+manually with `verify_screenshots=true` to execute `verifyAdaptiveScreenshots`
+on GitHub Actions.
