@@ -48,6 +48,7 @@ fun PocketLedgerNavGraph(
             transactionRepository = appGraph.transactionRepository,
             categoryRepository = appGraph.categoryRepository,
             tagRepository = appGraph.tagRepository,
+            featureFlags = appGraph.featureFlags,
             deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
             onOpenTransaction = { transactionId ->
                 navController.navigate(TransactionRoutes.detailRoute(transactionId))

@@ -18,6 +18,8 @@ import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryReposito
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
+import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
+import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
 import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
 import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
@@ -35,6 +37,7 @@ class PocketLedgerAppGraph private constructor(
     val budgetRepository: BudgetRepository,
     val categoryRepository: CategoryRepository,
     val tagRepository: TagRepository,
+    val featureFlags: FeatureFlagEvaluator,
     val backgroundTaskScheduler: BackgroundTaskScheduler,
     val appLogger: AppLogger,
 ) {
@@ -44,6 +47,7 @@ class PocketLedgerAppGraph private constructor(
             budgetRepository: BudgetRepository,
             categoryRepository: CategoryRepository,
             tagRepository: TagRepository,
+            featureFlags: FeatureFlagEvaluator,
             backgroundTaskScheduler: BackgroundTaskScheduler,
             appLogger: AppLogger,
         ): PocketLedgerAppGraph = PocketLedgerAppGraph(
@@ -51,6 +55,7 @@ class PocketLedgerAppGraph private constructor(
             budgetRepository = budgetRepository,
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
+            featureFlags = featureFlags,
             backgroundTaskScheduler = backgroundTaskScheduler,
             appLogger = appLogger,
         )
@@ -72,6 +77,7 @@ class PocketLedgerAppGraph private constructor(
                 budgetRepository = LocalBudgetRepository(database.budgetDao()),
                 categoryRepository = LocalCategoryRepository(database.categoryDao()),
                 tagRepository = LocalTagRepository(database.tagDao()),
+                featureFlags = FeatureFlagEvaluator(LocalFeatureFlagProvider()),
                 backgroundTaskScheduler = WorkManagerScheduler(
                     workManager = WorkManager.getInstance(context),
                     workerRegistry = TaskWorkerRegistry.Empty,

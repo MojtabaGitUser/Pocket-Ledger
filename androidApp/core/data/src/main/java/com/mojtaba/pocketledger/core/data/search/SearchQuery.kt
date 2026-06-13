@@ -4,6 +4,7 @@ import java.util.Locale
 
 data class SearchQuery(
     val text: String = "",
+    val mode: SearchMode = SearchMode.Keyword,
     val filters: SearchFilters = SearchFilters(),
     val sort: SearchSort = SearchSort.DateDescending,
 ) {

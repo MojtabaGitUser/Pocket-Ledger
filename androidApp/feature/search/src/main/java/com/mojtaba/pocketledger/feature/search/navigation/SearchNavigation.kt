@@ -6,12 +6,14 @@ import androidx.navigation.navDeepLink
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
+import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 import com.mojtaba.pocketledger.feature.search.presentation.SearchRoute
 
 fun NavGraphBuilder.searchGraph(
     transactionRepository: TransactionRepository,
     categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
+    featureFlags: FeatureFlagEvaluator,
     deepLinkBaseUri: String,
     onOpenTransaction: (String) -> Unit,
 ) {
@@ -25,6 +27,7 @@ fun NavGraphBuilder.searchGraph(
             transactionRepository = transactionRepository,
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
+            featureFlags = featureFlags,
             onOpenTransaction = onOpenTransaction,
         )
     }
