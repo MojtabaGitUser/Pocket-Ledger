@@ -80,6 +80,7 @@ object DashboardFormatters {
     fun insightTitle(insight: DashboardInsight): String =
         when (insight) {
             DashboardInsight.NoData -> "No data yet"
+            is DashboardInsight.AiMonthlySummary -> "Monthly summary"
             is DashboardInsight.PositiveCashFlow -> "Positive cash flow"
             is DashboardInsight.NegativeCashFlow -> "Negative cash flow"
             is DashboardInsight.OverspendingCategory -> "Concentrated spending"
@@ -90,6 +91,7 @@ object DashboardFormatters {
     fun insightMessage(insight: DashboardInsight): String =
         when (insight) {
             DashboardInsight.NoData -> "Add transactions to start seeing dashboard insights."
+            is DashboardInsight.AiMonthlySummary -> insight.text
             is DashboardInsight.PositiveCashFlow ->
                 "Net cash flow is ${formatAmountMinor(insight.netMinor, insight.currencyCode, includeSign = true)}."
             is DashboardInsight.NegativeCashFlow ->

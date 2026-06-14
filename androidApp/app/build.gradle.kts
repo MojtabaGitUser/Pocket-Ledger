@@ -91,6 +91,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:ai"))
     implementation(project(":core:background"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:data"))

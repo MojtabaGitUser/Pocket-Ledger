@@ -2,6 +2,12 @@ package com.mojtaba.pocketledger.feature.search.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mojtaba.pocketledger.core.ai.AiCapability
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
+import com.mojtaba.pocketledger.core.ai.AiInferenceResult
+import com.mojtaba.pocketledger.core.ai.AiProviderSelector
+import com.mojtaba.pocketledger.core.ai.SemanticSearchDocument
+import com.mojtaba.pocketledger.core.ai.SemanticSearchRequest
 import com.mojtaba.pocketledger.core.data.model.LedgerTag
 import com.mojtaba.pocketledger.core.data.model.LedgerTransaction
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
@@ -27,6 +33,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -36,6 +43,8 @@ class SearchViewModel(
     private val categoryRepository: CategoryRepository,
     private val tagRepository: TagRepository,
     private val featureFlags: FeatureFlagEvaluator,
+    private val aiProviderSelector: AiProviderSelector,
+    private val aiFallbackStrategy: AiFallbackStrategy,
 ) : ViewModel() {
     private val query = MutableStateFlow(SearchQuery())
     private val refreshRequests = MutableStateFlow(0)
@@ -44,7 +53,7 @@ class SearchViewModel(
     private val capabilities: SearchCapabilities
         get() = SearchCapabilities(
             semanticSearchVisible = featureFlags.isEnabled(DefaultFeatureFlags.SemanticSearchEnabled),
-            semanticSearchAvailable = false,
+            semanticSearchAvailable = aiProviderSelector.isAvailable(AiCapability.SemanticSearch),
         )
 
     val uiState: StateFlow<SearchUiState> = refreshRequests
@@ -131,7 +140,7 @@ class SearchViewModel(
                 if (capabilities.semanticSearchAvailable) {
                     query.update { current -> current.copy(mode = SearchMode.Semantic).normalized() }
                 } else {
-                    modeUnavailableMessage.value = "Semantic search is not available yet."
+                    modeUnavailableMessage.value = "Semantic search is not available on this device."
                     query.update { current -> current.copy(mode = SearchMode.Keyword).normalized() }
                 }
             }
@@ -150,10 +159,7 @@ class SearchViewModel(
             )
         }
 
-        val searchResults = query.flatMapLatest { searchQuery ->
-            val executableQuery = searchQuery.copy(mode = SearchMode.Keyword).normalized()
-            transactionRepository.searchTransactions(executableQuery).withTags()
-        }
+        val searchResults = query.flatMapLatest(::observeSearchResults)
 
         return combine(
             searchState,
@@ -211,6 +217,56 @@ class SearchViewModel(
                 ) { pairs -> pairs.toList() }
             }
         }
+
+    private fun observeSearchResults(searchQuery: SearchQuery): Flow<List<Pair<LedgerTransaction, List<LedgerTag>>>> {
+        val executableQuery = when (searchQuery.mode) {
+            SearchMode.Keyword -> searchQuery.copy(mode = SearchMode.Keyword).normalized()
+            SearchMode.Semantic -> searchQuery.copy(text = "", mode = SearchMode.Keyword).normalized()
+        }
+        val localCandidates = transactionRepository.searchTransactions(executableQuery).withTags()
+        return if (searchQuery.mode == SearchMode.Semantic) {
+            localCandidates.transformLatest { candidates ->
+                emit(rankSemanticResults(searchQuery.text, candidates))
+            }
+        } else {
+            localCandidates
+        }
+    }
+
+    private suspend fun rankSemanticResults(
+        text: String,
+        candidates: List<Pair<LedgerTransaction, List<LedgerTag>>>,
+    ): List<Pair<LedgerTransaction, List<LedgerTag>>> {
+        if (text.isBlank() || candidates.isEmpty()) {
+            return candidates
+        }
+
+        val candidatesById = candidates.associateBy { (transaction, _) -> transaction.id }
+        val request = SemanticSearchRequest(
+            query = text,
+            documents = candidates.map { (transaction, tags) -> transaction.toSemanticDocument(tags) },
+        )
+        val rankedIds = when (val result = aiFallbackStrategy.semanticSearch(request)) {
+            is AiInferenceResult.Success -> result.value.rankedIds
+            is AiInferenceResult.Unavailable,
+            is AiInferenceResult.Failure,
+            -> emptyList()
+        }
+        return rankedIds.mapNotNull(candidatesById::get)
+    }
+
+    private fun LedgerTransaction.toSemanticDocument(tags: List<LedgerTag>): SemanticSearchDocument =
+        SemanticSearchDocument(
+            id = id,
+            title = merchant.orEmpty(),
+            body = listOfNotNull(note, source, type, currencyCode, tags.joinToString(" ") { it.name })
+                .filter { it.isNotBlank() }
+                .joinToString(" "),
+            metadata = mapOf(
+                "type" to type,
+                "currency" to currencyCode,
+            ),
+        )
 }
 
 private data class SearchQueryState(

@@ -31,8 +31,10 @@ fun PocketLedgerNavGraph(
     ) {
         dashboardGraph(
             navController = navController,
+            transactionRepository = appGraph.transactionRepository,
             budgetRepository = appGraph.budgetRepository,
             categoryRepository = appGraph.categoryRepository,
+            aiFallbackStrategy = appGraph.aiFallbackStrategy,
             deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
             widthSizeClass = adaptiveNavigationState.widthSizeClass,
         )
@@ -49,6 +51,8 @@ fun PocketLedgerNavGraph(
             categoryRepository = appGraph.categoryRepository,
             tagRepository = appGraph.tagRepository,
             featureFlags = appGraph.featureFlags,
+            aiProviderSelector = appGraph.aiProviderSelector,
+            aiFallbackStrategy = appGraph.aiFallbackStrategy,
             deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
             onOpenTransaction = { transactionId ->
                 navController.navigate(TransactionRoutes.detailRoute(transactionId))

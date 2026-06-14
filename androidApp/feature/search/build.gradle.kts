@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:ai"))
     implementation(project(":core:data"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:featureflags"))
