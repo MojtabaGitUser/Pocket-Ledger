@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.biometric.BiometricManager
+import androidx.fragment.app.FragmentActivity
 import androidx.room.Room
 import androidx.work.WorkManager
 import com.mojtaba.pocketledger.background.TaskWorkerRegistry
@@ -29,6 +31,10 @@ import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
 import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
 import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
+import com.mojtaba.pocketledger.core.security.applock.AppLockManager
+import com.mojtaba.pocketledger.core.security.preferences.EncryptedSensitivePreferences
+import com.mojtaba.pocketledger.core.security.preferences.SensitivePreferences
+import com.mojtaba.pocketledger.security.AndroidBiometricAppLockAuthenticator
 
 @Composable
 fun rememberPocketLedgerAppGraph(): PocketLedgerAppGraph {
@@ -46,7 +52,11 @@ class PocketLedgerAppGraph private constructor(
     val featureFlags: FeatureFlagEvaluator,
     val aiProviderSelector: AiProviderSelector,
     val aiFallbackStrategy: AiFallbackStrategy,
+    val sensitivePreferences: SensitivePreferences,
+    val appLockManager: AppLockManager,
+    @Suppress("unused")
     val backgroundTaskScheduler: BackgroundTaskScheduler,
+    @Suppress("unused")
     val appLogger: AppLogger,
 ) {
     companion object {
@@ -58,6 +68,8 @@ class PocketLedgerAppGraph private constructor(
             featureFlags: FeatureFlagEvaluator,
             aiProviderSelector: AiProviderSelector,
             aiFallbackStrategy: AiFallbackStrategy,
+            sensitivePreferences: SensitivePreferences,
+            appLockManager: AppLockManager,
             backgroundTaskScheduler: BackgroundTaskScheduler,
             appLogger: AppLogger,
         ): PocketLedgerAppGraph = PocketLedgerAppGraph(
@@ -68,11 +80,16 @@ class PocketLedgerAppGraph private constructor(
             featureFlags = featureFlags,
             aiProviderSelector = aiProviderSelector,
             aiFallbackStrategy = aiFallbackStrategy,
+            sensitivePreferences = sensitivePreferences,
+            appLockManager = appLockManager,
             backgroundTaskScheduler = backgroundTaskScheduler,
             appLogger = appLogger,
         )
 
-        fun create(context: Context): PocketLedgerAppGraph {
+        fun create(
+            context: Context,
+            activityProvider: () -> FragmentActivity? = { null },
+        ): PocketLedgerAppGraph {
             val database = Room.databaseBuilder(
                 context,
                 PocketLedgerDatabase::class.java,
@@ -93,6 +110,7 @@ class PocketLedgerAppGraph private constructor(
                 ),
                 featureFlags = featureFlags,
             )
+            val sensitivePreferences = EncryptedSensitivePreferences(context)
 
             return PocketLedgerAppGraph(
                 transactionRepository = LocalTransactionRepository(database.transactionDao()),
@@ -102,6 +120,14 @@ class PocketLedgerAppGraph private constructor(
                 featureFlags = featureFlags,
                 aiProviderSelector = aiProviderSelector,
                 aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
+                sensitivePreferences = sensitivePreferences,
+                appLockManager = AppLockManager(
+                    preferences = sensitivePreferences,
+                    authenticator = AndroidBiometricAppLockAuthenticator(
+                        biometricManager = BiometricManager.from(context),
+                        activityProvider = activityProvider,
+                    ),
+                ),
                 backgroundTaskScheduler = WorkManagerScheduler(
                     workManager = WorkManager.getInstance(context),
                     workerRegistry = TaskWorkerRegistry.Empty,

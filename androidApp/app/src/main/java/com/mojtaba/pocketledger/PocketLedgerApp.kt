@@ -6,9 +6,9 @@ import com.mojtaba.pocketledger.navigation.rememberPocketLedgerAppState
 
 @Composable
 fun PocketLedgerApp(
+    appGraph: PocketLedgerAppGraph = rememberPocketLedgerAppGraph(),
     modifier: Modifier = Modifier,
 ) {
-    val appGraph = rememberPocketLedgerAppGraph()
     val appState = rememberPocketLedgerAppState(
         includeDebugDestinations = BuildConfig.DEBUG,
     )

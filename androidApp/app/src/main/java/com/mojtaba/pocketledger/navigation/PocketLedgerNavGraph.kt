@@ -62,7 +62,7 @@ fun PocketLedgerNavGraph(
             InsightsPlaceholderScreen()
         }
         placeholderDestination(AppDestination.Settings) {
-            SettingsPlaceholderScreen()
+            SettingsScreen(appLockManager = appGraph.appLockManager)
         }
         if (includeDebugDestinations) {
             placeholderDestination(AppDestination.DebugHealth) {
