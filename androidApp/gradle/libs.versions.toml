@@ -3,8 +3,10 @@ agp = "9.2.1"
 activityCompose = "1.10.1"
 composeBom = "2025.01.00"
 coreKtx = "1.10.1"
+errorProneAnnotations = "2.23.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
+jsr305 = "3.0.2"
 espressoCore = "3.5.1"
 appcompat = "1.6.1"
 biometric = "1.1.0"
@@ -40,7 +42,9 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+google-errorprone-annotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProneAnnotations" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
