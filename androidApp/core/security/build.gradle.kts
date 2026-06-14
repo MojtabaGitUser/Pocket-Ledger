@@ -8,6 +8,8 @@ android {
 
 dependencies {
     implementation(libs.androidx.security.crypto)
+    implementation(libs.google.errorprone.annotations)
+    implementation(libs.jsr305)
     implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.junit)

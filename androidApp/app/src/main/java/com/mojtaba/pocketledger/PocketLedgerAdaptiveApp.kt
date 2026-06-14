@@ -12,6 +12,7 @@ import com.mojtaba.pocketledger.adaptive.adaptiveNavigationStateForWidth
 import com.mojtaba.pocketledger.adaptive.rememberFoldableUiState
 import com.mojtaba.pocketledger.navigation.PocketLedgerAppShell
 import com.mojtaba.pocketledger.navigation.PocketLedgerAppState
+import com.mojtaba.pocketledger.security.AppLockGate
 
 @Composable
 fun PocketLedgerAdaptiveApp(
@@ -27,12 +28,17 @@ fun PocketLedgerAdaptiveApp(
             LocalAdaptiveNavigationState provides adaptiveNavigationState,
             LocalFoldableUiState provides foldableUiState,
         ) {
-            PocketLedgerAppShell(
-                appState = appState,
-                appGraph = appGraph,
-                adaptiveNavigationState = adaptiveNavigationState,
+            AppLockGate(
+                appLockManager = appGraph.appLockManager,
                 modifier = Modifier.fillMaxSize(),
-            )
+            ) {
+                PocketLedgerAppShell(
+                    appState = appState,
+                    appGraph = appGraph,
+                    adaptiveNavigationState = adaptiveNavigationState,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     }
 }
