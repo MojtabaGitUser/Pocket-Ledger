@@ -6,18 +6,21 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
 import com.mojtaba.pocketledger.core.data.repository.BudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
+import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
 import com.mojtaba.pocketledger.core.designsystem.adaptive.PocketLedgerWindowWidthSizeClass
 import com.mojtaba.pocketledger.feature.dashboard.budget.BudgetSetupMode
 import com.mojtaba.pocketledger.feature.dashboard.budget.BudgetSetupRoute
-import com.mojtaba.pocketledger.feature.dashboard.presentation.DashboardAction
-import com.mojtaba.pocketledger.feature.dashboard.presentation.DashboardRoute
+import com.mojtaba.pocketledger.feature.dashboard.presentation.DashboardStateRoute
 
 fun NavGraphBuilder.dashboardGraph(
     navController: NavHostController,
+    transactionRepository: TransactionRepository,
     budgetRepository: BudgetRepository,
     categoryRepository: CategoryRepository,
+    aiFallbackStrategy: AiFallbackStrategy,
     deepLinkBaseUri: String,
     widthSizeClass: PocketLedgerWindowWidthSizeClass = PocketLedgerWindowWidthSizeClass.Compact,
 ) {
@@ -27,14 +30,13 @@ fun NavGraphBuilder.dashboardGraph(
             navDeepLink { uriPattern = "$deepLinkBaseUri/${DashboardRoutes.DashboardRoute}" },
         ),
     ) {
-        DashboardRoute(
+        DashboardStateRoute(
+            transactionRepository = transactionRepository,
+            budgetRepository = budgetRepository,
+            categoryRepository = categoryRepository,
+            aiFallbackStrategy = aiFallbackStrategy,
             widthSizeClass = widthSizeClass,
-            onAction = { action ->
-                when (action) {
-                    DashboardAction.RetryClicked -> Unit
-                    DashboardAction.SetBudgetClicked -> navController.navigate(DashboardRoutes.BudgetSetupRoute)
-                }
-            },
+            onSetBudget = { navController.navigate(DashboardRoutes.BudgetSetupRoute) },
         )
     }
 

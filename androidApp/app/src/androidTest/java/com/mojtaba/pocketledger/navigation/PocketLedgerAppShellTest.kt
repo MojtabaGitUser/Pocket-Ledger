@@ -14,6 +14,10 @@ import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.rememberNavController
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
 import com.mojtaba.pocketledger.adaptive.LocalAdaptiveNavigationState
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
+import com.mojtaba.pocketledger.core.ai.AiProviderSelector
+import com.mojtaba.pocketledger.core.ai.NoOpAiProvider
+import com.mojtaba.pocketledger.core.ai.RuleBasedAiProvider
 import com.mojtaba.pocketledger.core.designsystem.adaptive.AdaptiveNavigationState
 import com.mojtaba.pocketledger.core.designsystem.adaptive.PocketLedgerWindowWidthSizeClass
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
@@ -100,6 +104,12 @@ class PocketLedgerAppShellTest {
         val transaction = testLedgerTransaction()
         val tagLink = testTransactionTagLink(transactionId = transaction.id, tagId = tag.id)
 
+        val featureFlags = FeatureFlagEvaluator(FakeFeatureFlagProvider())
+        val aiProviderSelector = AiProviderSelector(
+            providers = listOf(RuleBasedAiProvider, NoOpAiProvider),
+            featureFlags = featureFlags,
+        )
+
         return PocketLedgerAppGraph.createForTesting(
             transactionRepository = FakeTransactionRepository(
                 initialTransactions = listOf(transaction),
@@ -113,7 +123,9 @@ class PocketLedgerAppShellTest {
                 initialTags = listOf(tag),
                 initialLinks = listOf(tagLink),
             ),
-            featureFlags = FeatureFlagEvaluator(FakeFeatureFlagProvider()),
+            featureFlags = featureFlags,
+            aiProviderSelector = aiProviderSelector,
+            aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
             backgroundTaskScheduler = FakeScheduler(),
             appLogger = NoOpAppLogger,
         )

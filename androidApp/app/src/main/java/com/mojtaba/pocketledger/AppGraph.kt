@@ -8,6 +8,12 @@ import androidx.room.Room
 import androidx.work.WorkManager
 import com.mojtaba.pocketledger.background.TaskWorkerRegistry
 import com.mojtaba.pocketledger.background.WorkManagerScheduler
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
+import com.mojtaba.pocketledger.core.ai.AiProviderSelector
+import com.mojtaba.pocketledger.core.ai.GeminiNanoAiProvider
+import com.mojtaba.pocketledger.core.ai.MlKitAiProvider
+import com.mojtaba.pocketledger.core.ai.NoOpAiProvider
+import com.mojtaba.pocketledger.core.ai.RuleBasedAiProvider
 import com.mojtaba.pocketledger.core.background.BackgroundTaskScheduler
 import com.mojtaba.pocketledger.core.data.repository.BudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
@@ -38,6 +44,8 @@ class PocketLedgerAppGraph private constructor(
     val categoryRepository: CategoryRepository,
     val tagRepository: TagRepository,
     val featureFlags: FeatureFlagEvaluator,
+    val aiProviderSelector: AiProviderSelector,
+    val aiFallbackStrategy: AiFallbackStrategy,
     val backgroundTaskScheduler: BackgroundTaskScheduler,
     val appLogger: AppLogger,
 ) {
@@ -48,6 +56,8 @@ class PocketLedgerAppGraph private constructor(
             categoryRepository: CategoryRepository,
             tagRepository: TagRepository,
             featureFlags: FeatureFlagEvaluator,
+            aiProviderSelector: AiProviderSelector,
+            aiFallbackStrategy: AiFallbackStrategy,
             backgroundTaskScheduler: BackgroundTaskScheduler,
             appLogger: AppLogger,
         ): PocketLedgerAppGraph = PocketLedgerAppGraph(
@@ -56,6 +66,8 @@ class PocketLedgerAppGraph private constructor(
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
             featureFlags = featureFlags,
+            aiProviderSelector = aiProviderSelector,
+            aiFallbackStrategy = aiFallbackStrategy,
             backgroundTaskScheduler = backgroundTaskScheduler,
             appLogger = appLogger,
         )
@@ -71,13 +83,25 @@ class PocketLedgerAppGraph private constructor(
             } else {
                 LoggingPolicy.Release
             }
+            val featureFlags = FeatureFlagEvaluator(LocalFeatureFlagProvider())
+            val aiProviderSelector = AiProviderSelector(
+                providers = listOf(
+                    GeminiNanoAiProvider(),
+                    MlKitAiProvider(),
+                    RuleBasedAiProvider,
+                    NoOpAiProvider,
+                ),
+                featureFlags = featureFlags,
+            )
 
             return PocketLedgerAppGraph(
                 transactionRepository = LocalTransactionRepository(database.transactionDao()),
                 budgetRepository = LocalBudgetRepository(database.budgetDao()),
                 categoryRepository = LocalCategoryRepository(database.categoryDao()),
                 tagRepository = LocalTagRepository(database.tagDao()),
-                featureFlags = FeatureFlagEvaluator(LocalFeatureFlagProvider()),
+                featureFlags = featureFlags,
+                aiProviderSelector = aiProviderSelector,
+                aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
                 backgroundTaskScheduler = WorkManagerScheduler(
                     workManager = WorkManager.getInstance(context),
                     workerRegistry = TaskWorkerRegistry.Empty,
