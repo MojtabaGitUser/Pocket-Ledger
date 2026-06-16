@@ -34,6 +34,12 @@ Fake repositories implement the real `:core:data` repository contracts, expose
 local-only sync state, and use `MutableStateFlow` so tests can assert reactive
 updates without Room or Android framework dependencies.
 
+Repository fake tests in `:core:testing` protect shared filter, sort, fixture,
+and Flow behavior that feature modules reuse for dashboard, transaction, and
+search tests. Add coverage there when changing fake repository semantics,
+cross-module query behavior, or deterministic fixture data so feature tests do
+not silently drift from the repository contracts they are exercising.
+
 `FakeFeatureFlagProvider` implements the real `:core:featureflags` contract so
 tests can enable, disable, and set typed flag values deterministically without
 depending on `BuildConfig`, Android framework APIs, or remote configuration.

@@ -10,6 +10,7 @@ import com.mojtaba.pocketledger.core.data.search.SearchSort
 import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -100,8 +101,8 @@ class FakeTransactionRepository(
         observeRecentTransactions(Int.MAX_VALUE).map { transactions -> transactions.filter { it.type == type } }
 
     override fun observeTransactionsByTag(tagId: String): Flow<List<LedgerTransaction>> =
-        transactions.map { transactionMap ->
-            val matchingIds = transactionTagIds.value
+        combine(transactions, transactionTagIds) { transactionMap, tagIdsByTransaction ->
+            val matchingIds = tagIdsByTransaction
                 .filterValues { tagId in it }
                 .keys
             transactionMap.values.filter { it.id in matchingIds }.sortedForDisplay()
