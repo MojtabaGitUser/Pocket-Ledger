@@ -1,5 +1,12 @@
 package com.mojtaba.pocketledger.core.testing.repository
 
+import com.mojtaba.pocketledger.core.data.search.SearchAmountRange
+import com.mojtaba.pocketledger.core.data.search.SearchDateRange
+import com.mojtaba.pocketledger.core.data.search.SearchFilters
+import com.mojtaba.pocketledger.core.data.search.SearchQuery
+import com.mojtaba.pocketledger.core.data.search.SearchRecurringFilter
+import com.mojtaba.pocketledger.core.data.search.SearchSort
+import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 import com.mojtaba.pocketledger.core.testing.fixture.TestClock
 import com.mojtaba.pocketledger.core.testing.fixture.TestIds
 import com.mojtaba.pocketledger.core.testing.fixture.testIncomeTransaction
@@ -8,9 +15,14 @@ import com.mojtaba.pocketledger.core.testing.fixture.testLedgerCategory
 import com.mojtaba.pocketledger.core.testing.fixture.testLedgerTag
 import com.mojtaba.pocketledger.core.testing.fixture.testLedgerTransaction
 import com.mojtaba.pocketledger.core.testing.fixture.testTransactionTagLink
-import com.mojtaba.pocketledger.core.data.search.SearchQuery
-import com.mojtaba.pocketledger.core.data.search.SearchSort
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -109,6 +121,94 @@ class FakeRepositoryTest {
             .map { it.id }
 
         assertEquals(emptyList<String>(), observedIds)
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun transactionRepositoryTagObserverEmitsWhenTagLinksChange() = runTest {
+        val repository = FakeTransactionRepository(
+            initialTransactions = listOf(
+                testLedgerTransaction(id = "untagged"),
+                testLedgerTransaction(id = "tagged", occurredAt = TestClock.November16),
+            ),
+        )
+        val observedIds = mutableListOf<List<String>>()
+        val collectJob = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository
+                .observeTransactionsByTag(TestIds.TagEssential)
+                .map { transactions -> transactions.map { it.id } }
+                .take(2)
+                .toList(observedIds)
+        }
+
+        repository.setTagLinks(
+            listOf(testTransactionTagLink(transactionId = "tagged", tagId = TestIds.TagEssential)),
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf(emptyList<String>(), listOf("tagged")), observedIds)
+        collectJob.cancel()
+    }
+
+    @Test
+    fun transactionRepositorySearchAppliesCombinedFilters() = runTest {
+        val repository = FakeTransactionRepository(
+            initialTransactions = listOf(
+                testLedgerTransaction(
+                    id = "matching",
+                    amountMinor = -2_500,
+                    currencyCode = "usd",
+                    type = "expense",
+                    occurredAt = TestClock.November15,
+                    categoryId = TestIds.CategoryGroceries,
+                    merchant = "Coffee Shop",
+                    isRecurring = true,
+                ),
+                testLedgerTransaction(
+                    id = "wrong-tag",
+                    amountMinor = -2_500,
+                    merchant = "Coffee Shop",
+                    isRecurring = true,
+                ),
+                testLedgerTransaction(
+                    id = "wrong-amount",
+                    amountMinor = -9_500,
+                    merchant = "Coffee Shop",
+                    isRecurring = true,
+                ),
+                testIncomeTransaction(
+                    id = "wrong-type",
+                    amountMinor = 2_500,
+                ),
+            ),
+            initialTagLinks = listOf(
+                testTransactionTagLink(transactionId = "matching", tagId = TestIds.TagEssential),
+                testTransactionTagLink(transactionId = "wrong-amount", tagId = TestIds.TagEssential),
+            ),
+        )
+
+        val observedIds = repository
+            .searchTransactions(
+                SearchQuery(
+                    text = " coffee  ",
+                    filters = SearchFilters(
+                        transactionTypes = setOf(SearchTransactionType.Expense),
+                        categoryIds = setOf(TestIds.CategoryGroceries),
+                        tagIds = setOf(TestIds.TagEssential),
+                        dateRange = SearchDateRange(
+                            startMillis = TestClock.November14,
+                            endMillis = TestClock.November16,
+                        ),
+                        amountRange = SearchAmountRange(minMinor = 2_000, maxMinor = 3_000),
+                        currencyCode = " USD ",
+                        recurring = SearchRecurringFilter.RecurringOnly,
+                    ),
+                ),
+            )
+            .first()
+            .map { it.id }
+
+        assertEquals(listOf("matching"), observedIds)
     }
 
     @Test
