@@ -7,8 +7,17 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
+enum class ScreenshotTheme(
+    val id: String,
+    val isDark: Boolean,
+) {
+    Light(id = "light", isDark = false),
+    Dark(id = "dark", isDark = true),
+}
+
 class AdaptiveScreenshotRule(
     private val device: AdaptiveScreenshotDevice,
+    private val theme: ScreenshotTheme = ScreenshotTheme.Light,
 ) : TestRule {
     private val paparazzi = Paparazzi(
         deviceConfig = device.config,
@@ -21,10 +30,12 @@ class AdaptiveScreenshotRule(
     fun snapshotScreen(
         group: String,
         name: String,
+        includeThemeInName: Boolean = false,
         content: @Composable () -> Unit,
     ) {
-        paparazzi.snapshot(name = "${group}_${device.id}_$name".asSnapshotName()) {
-            PocketLedgerPreviewTheme {
+        val themeSegment = if (includeThemeInName) "${theme.id}_" else ""
+        paparazzi.snapshot(name = "${group}_${themeSegment}${device.id}_$name".asSnapshotName()) {
+            PocketLedgerPreviewTheme(darkTheme = theme.isDark) {
                 content()
             }
         }
