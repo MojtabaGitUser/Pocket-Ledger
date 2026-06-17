@@ -59,7 +59,7 @@ fun AppLockGate(
 }
 
 @Composable
-private fun AppLockScreen(
+internal fun AppLockScreen(
     state: AppLockState,
     onUnlock: () -> Unit,
     modifier: Modifier = Modifier,

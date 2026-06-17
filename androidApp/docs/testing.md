@@ -125,7 +125,10 @@ The screenshot suite covers dashboard content, empty and error states;
 transaction list, detail, missing, error, and adaptive list/detail states;
 search initial, populated, empty-ledger, no-results, error, and filter-visible
 states; adaptive navigation chrome; and key large-font variants at 1.3 and 1.5
-font scale.
+font scale. `ThemeScreenshotMatrixTest` adds an explicit light/dark matrix over
+compact phone and expanded tablet layouts for dashboard content, transaction
+adaptive content, populated search, settings app-lock availability states, and
+the locked app-lock screen.
 
 Normal `test` tasks exclude screenshot tests to keep PR unit-test feedback
 focused. Run screenshot verification explicitly:
@@ -144,6 +147,13 @@ Paparazzi stores committed PNG baselines under
 `app/src/test/snapshots/images`. Failed verification diffs are written under
 `app/build/paparazzi/failures`, and an HTML report is generated under
 `app/build/reports/paparazzi/debug`.
+
+When adding a screenshot case, prefer existing screen-level composables with
+explicit UI state and deterministic fixtures from the screenshot package or
+`:core:testing`. Avoid repository, Room, biometric hardware, network, current
+time, random IDs, and animations. Add broad matrix dimensions only when they
+protect a meaningful visual contract; otherwise add the smallest focused case
+with a descriptive group and state name.
 
 CI keeps screenshot verification off the default pull-request path to avoid
 adding screenshot runtime to every PR. The PR Validation workflow can be run
