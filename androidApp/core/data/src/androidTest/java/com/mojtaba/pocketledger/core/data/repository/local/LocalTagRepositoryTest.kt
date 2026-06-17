@@ -5,7 +5,13 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.mojtaba.pocketledger.core.data.model.TransactionTagLink
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -13,6 +19,7 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class LocalTagRepositoryTest {
     private lateinit var database: PocketLedgerDatabase
     private lateinit var categoryRepository: LocalCategoryRepository
@@ -67,6 +74,31 @@ class LocalTagRepositoryTest {
     }
 
     @Test
+    fun observeTagsForTransaction_emitsRelationshipUpdates() = runTest {
+        categoryRepository.insert(testCategory())
+        transactionRepository.insert(testTransaction())
+        tagRepository.insert(testTag(id = "tag-weekend", name = "Weekend"))
+
+        val emissions = mutableListOf<List<com.mojtaba.pocketledger.core.data.model.LedgerTag>>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            tagRepository.observeTagsForTransaction("transaction-1")
+                .take(3)
+                .toList(emissions)
+        }
+        advanceUntilIdle()
+
+        tagRepository.addTagToTransaction(TransactionTagLink("transaction-1", "tag-weekend"))
+        advanceUntilIdle()
+        tagRepository.removeTagFromTransaction("transaction-1", "tag-weekend")
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(emptyList(), listOf("tag-weekend"), emptyList()),
+            emissions.map { tags -> tags.map { it.id } },
+        )
+    }
+
+    @Test
     fun removeTagFromTransaction_removesOnlyRequestedLink() = runTest {
         categoryRepository.insert(testCategory())
         transactionRepository.insert(testTransaction())
@@ -80,5 +112,17 @@ class LocalTagRepositoryTest {
 
         assertEquals(true, removed)
         assertEquals(listOf("tag-food"), observedIds)
+    }
+
+    @Test
+    fun deletingTransaction_cascadesTagLinksThroughRoom() = runTest {
+        categoryRepository.insert(testCategory())
+        transactionRepository.insert(testTransaction())
+        tagRepository.insert(testTag(id = "tag-weekend", name = "Weekend"))
+        tagRepository.addTagToTransaction(TransactionTagLink("transaction-1", "tag-weekend"))
+
+        transactionRepository.deleteById("transaction-1")
+
+        assertEquals(emptyList<String>(), tagRepository.observeTagsForTransaction("transaction-1").first().map { it.id })
     }
 }

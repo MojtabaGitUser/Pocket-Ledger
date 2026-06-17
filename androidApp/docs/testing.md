@@ -70,6 +70,37 @@ that cannot be addressed reliably by text/content description.
 When no emulator or device is attached, assemble Android test APKs for changed
 modules. Run connected Android tests when a device is available.
 
+## Room And Repository Integration Tests
+
+Room integration tests live in `:core:database` under
+`core/database/src/androidTest`. They use isolated in-memory databases for DAO
+behavior and `MigrationTestHelper` with the committed schema JSON files under
+`core/database/schemas` for file-backed migration validation. Coverage includes
+transaction CRUD, date/category/tag/search queries, category and budget active
+filters, transaction-tag relationships, budget period/category queries, Flow
+emissions, foreign-key delete behavior, and the schema version 1 to current
+migration path.
+
+Local repository integration tests live in `:core:data` under
+`core/data/src/androidTest`. They construct the real local repositories over a
+real in-memory `PocketLedgerDatabase`, not fake repositories, and verify
+local-source-first reads/writes, update/delete behavior, Flow emissions, search
+filters, and category/tag/budget relationship behavior.
+
+Run the focused suites with an attached emulator or device:
+
+```bash
+./gradlew :core:database:connectedDebugAndroidTest
+./gradlew :core:data:connectedDebugAndroidTest
+```
+
+When no emulator or device is available, compile the Android test APKs instead:
+
+```bash
+./gradlew :core:database:assembleDebugAndroidTest
+./gradlew :core:data:assembleDebugAndroidTest
+```
+
 Macrobenchmarks live in `:macrobenchmark` and are local/manual performance
 checks, not default PR validation. Run guidance and device assumptions are
 documented in `docs/performance-report.md`.
