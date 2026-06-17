@@ -2,7 +2,9 @@ package com.mojtaba.pocketledger.core.database
 
 import com.mojtaba.pocketledger.core.database.model.BudgetEntity
 import com.mojtaba.pocketledger.core.database.model.CategoryEntity
+import com.mojtaba.pocketledger.core.database.model.TagEntity
 import com.mojtaba.pocketledger.core.database.model.TransactionEntity
+import com.mojtaba.pocketledger.core.database.model.TransactionTagCrossRef
 
 internal fun testCategory(
     id: String = "category-food",
@@ -61,4 +63,23 @@ internal fun testBudget(
     isActive = isActive,
     createdAt = 1_700_000_000_000,
     updatedAt = 1_700_000_000_000,
+)
+
+internal fun testTag(
+    id: String = "tag-weekend",
+    name: String = "Weekend",
+): TagEntity = TagEntity(
+    id = id,
+    name = name,
+    colorHex = "#1565C0",
+    createdAt = 1_700_000_000_000,
+    updatedAt = 1_700_000_000_000,
+)
+
+internal fun testTransactionTagCrossRef(
+    transactionId: String = "transaction-1",
+    tagId: String = "tag-weekend",
+): TransactionTagCrossRef = TransactionTagCrossRef(
+    transactionId = transactionId,
+    tagId = tagId,
 )

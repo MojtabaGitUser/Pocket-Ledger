@@ -6,13 +6,21 @@ import androidx.test.core.app.ApplicationProvider
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
 import com.mojtaba.pocketledger.core.database.testBudget
 import com.mojtaba.pocketledger.core.database.testCategory
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class BudgetDaoTest {
     private lateinit var database: PocketLedgerDatabase
     private lateinit var categoryDao: CategoryDao
@@ -45,6 +53,42 @@ class BudgetDaoTest {
     }
 
     @Test
+    fun insertGetUpdateDelete_roundTripsBudget() = runTest {
+        categoryDao.insert(testCategory())
+        budgetDao.insert(testBudget(id = "budget", isActive = true))
+
+        assertEquals(50_000L, budgetDao.getById("budget")?.amountMinor)
+
+        budgetDao.update(testBudget(id = "budget", isActive = false).copy(amountMinor = 75_000))
+        assertEquals(75_000L, budgetDao.getById("budget")?.amountMinor)
+
+        budgetDao.deleteById("budget")
+        assertNull(budgetDao.getById("budget"))
+    }
+
+    @Test
+    fun observeById_emitsCreateUpdateDeleteChanges() = runTest {
+        categoryDao.insert(testCategory())
+
+        val emissions = mutableListOf<com.mojtaba.pocketledger.core.database.model.BudgetEntity?>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            budgetDao.observeById("budget")
+                .take(4)
+                .toList(emissions)
+        }
+        advanceUntilIdle()
+
+        budgetDao.insert(testBudget(id = "budget"))
+        advanceUntilIdle()
+        budgetDao.update(testBudget(id = "budget").copy(amountMinor = 75_000))
+        advanceUntilIdle()
+        budgetDao.deleteById("budget")
+        advanceUntilIdle()
+
+        assertEquals(listOf(null, 50_000L, 75_000L, null), emissions.map { it?.amountMinor })
+    }
+
+    @Test
     fun observeBudgetsByPeriodRange_returnsOverlappingBudgets() = runTest {
         categoryDao.insert(testCategory())
         budgetDao.insert(testBudget(id = "matching"))
@@ -64,5 +108,27 @@ class BudgetDaoTest {
         ).first()
 
         assertEquals(listOf("matching"), budgets.map { it.id })
+    }
+
+    @Test
+    fun observeBudgetsByCategory_filtersCategoryBudgets() = runTest {
+        categoryDao.insert(testCategory(id = "food", name = "Food"))
+        categoryDao.insert(testCategory(id = "travel", name = "Travel"))
+        budgetDao.insert(testBudget(id = "food-budget", categoryId = "food"))
+        budgetDao.insert(testBudget(id = "travel-budget", categoryId = "travel"))
+
+        val budgets = budgetDao.observeBudgetsByCategory("food").first()
+
+        assertEquals(listOf("food-budget"), budgets.map { it.id })
+    }
+
+    @Test
+    fun deletingCategory_nullsBudgetCategory() = runTest {
+        categoryDao.insert(testCategory())
+        budgetDao.insert(testBudget())
+
+        categoryDao.deleteById("category-food")
+
+        assertNull(budgetDao.getById("budget-food")?.categoryId)
     }
 }
