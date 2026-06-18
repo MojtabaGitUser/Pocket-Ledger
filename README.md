@@ -8,4 +8,5 @@ The Android project lives in `androidApp/`.
 
 - [Architecture](docs/architecture.md): module responsibilities, dependency rules, ownership boundaries, and architectural rationale.
 - [ADR 0001: Modular Architecture and KMP-Ready Structure](docs/adr/0001-modular-architecture.md): decision record for the modular architecture direction.
+- [Android testing report](androidApp/docs/testing-report.md): current test suite inventory, validation results, performance checks, release/R8 coverage, and known gaps.
 - [Android security model](androidApp/docs/security-model.md): current local data storage, app lock, AI privacy, logging, threat model, and known limitations.
