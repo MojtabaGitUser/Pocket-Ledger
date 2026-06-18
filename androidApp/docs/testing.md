@@ -1,5 +1,8 @@
 # Pocket Ledger Testing
 
+The current full testing and performance validation inventory is maintained in
+[`testing-report.md`](testing-report.md).
+
 ## `:core:testing`
 
 `:core:testing` centralizes shared test-only utilities for Pocket Ledger modules.
