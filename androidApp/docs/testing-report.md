@@ -86,7 +86,7 @@ Windows Gradle wrapper lives and where CI runs Gradle.
 | `:app` | App unit tests | `src/test` | Verify app-local adaptive, foldable, WorkManager mapping, and non-screenshot JVM behavior. | `.\gradlew.bat :app:testDebugUnitTest` | JVM/local | No | Passed in this validation run. Screenshot tests are excluded from normal `test` tasks by Gradle configuration. |
 | `:app` | App-shell instrumentation | `src/androidTest` | Verify adaptive navigation shell and top-level route wiring. | `.\gradlew.bat :app:connectedDebugAndroidTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:app:assembleDebugAndroidTest`. |
 | `:app` | Paparazzi screenshot matrix | `src/test/java/.../screenshot` plus `src/test/snapshots/images` | Verify adaptive UI visual baselines for app shell, dashboard, search, transaction, theme, and large-font states. | `.\gradlew.bat verifyAdaptiveScreenshots` | JVM screenshot | No | Passed in this validation run. |
-| `:macrobenchmark` | Macrobenchmarks | `src/main` | Measure cold startup, dashboard render, transaction scrolling, and search frame timing. | `.\gradlew.bat :macrobenchmark:connectedDebugAndroidTest` | Benchmark instrumentation | Yes | Not run because no device was attached. Artifacts compiled with `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble`. |
+| `:macrobenchmark` | Macrobenchmarks | `src/main` | Measure cold startup, dashboard render, transaction scrolling, and search frame timing. | `.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest` | Benchmark instrumentation | Yes | Not run because no device was attached. Artifacts compiled with `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble`. |
 | `:app` | Debug build validation | main source sets | Verify debug app assembly. | `.\gradlew.bat :app:assembleDebug` | Build | No | Passed in this validation run. |
 | `:app` | Release/R8 validation | main source sets | Verify release build, resource shrinking, and R8 minification. | `.\gradlew.bat :app:assembleRelease` | Build | No | Passed in this validation run. |
 
@@ -236,7 +236,11 @@ Implemented performance validation:
 
 - `:macrobenchmark` module exists.
 - `:app` defines a `benchmark` build type initialized from `release`, signed
-  with debug signing, non-debuggable, profileable, and with logging disabled.
+  with debug signing, non-debuggable, profileable, minified, resource-shrunk,
+  and with logging disabled.
+- `:macrobenchmark` defines a matching `benchmark` build type so
+  `connectedBenchmarkAndroidTest` installs and measures the app benchmark
+  variant.
 - Benchmark-only setup activity exists under `app/src/benchmark` for
   deterministic demo-data seeding.
 - Macrobenchmark tests cover:
@@ -245,12 +249,14 @@ Implemented performance validation:
   - Transaction list navigation and scroll with `FrameTimingMetric`.
   - Search path with `FrameTimingMetric`.
 - Transaction and search benchmark scenarios seed deterministic demo data.
+- Benchmark builds use non-persistent app-lock sensitive preferences so a local
+  biometric/app-lock setting cannot block benchmark startup or navigation.
 
 Current validation status:
 
 - `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble` passed.
 - `adb devices` returned no attached devices, so
-  `.\gradlew.bat :macrobenchmark:connectedDebugAndroidTest` was not run.
+  `.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest` was not run.
 - No startup timing, frame timing, scroll jank, or lower-end-device metrics
   were produced in this validation run.
 
@@ -268,7 +274,7 @@ Startup metrics:
   emulator and run:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedDebugAndroidTest
+.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
 ```
 
 Scroll jank and recomposition:
@@ -493,7 +499,7 @@ Macrobenchmark artifact assembly:
 Macrobenchmark execution with an attached representative device or emulator:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedDebugAndroidTest
+.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
 .\gradlew.bat :macrobenchmark:connectedCheck
 ```
 
@@ -565,7 +571,7 @@ Commands not run because no device or emulator was attached:
 .\gradlew.bat :feature:search:connectedDebugAndroidTest
 .\gradlew.bat :feature:transaction:connectedDebugAndroidTest
 .\gradlew.bat :app:connectedDebugAndroidTest
-.\gradlew.bat :macrobenchmark:connectedDebugAndroidTest
+.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
 .\gradlew.bat :macrobenchmark:connectedCheck
 ```
 

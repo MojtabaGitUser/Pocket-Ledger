@@ -33,6 +33,7 @@ import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
 import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
 import com.mojtaba.pocketledger.core.security.applock.AppLockManager
 import com.mojtaba.pocketledger.core.security.preferences.EncryptedSensitivePreferences
+import com.mojtaba.pocketledger.core.security.preferences.InMemorySensitivePreferences
 import com.mojtaba.pocketledger.core.security.preferences.SensitivePreferences
 import com.mojtaba.pocketledger.security.AndroidBiometricAppLockAuthenticator
 
@@ -110,7 +111,11 @@ class PocketLedgerAppGraph private constructor(
                 ),
                 featureFlags = featureFlags,
             )
-            val sensitivePreferences = EncryptedSensitivePreferences(context)
+            val sensitivePreferences = if (BuildConfig.APP_ENV == "benchmark") {
+                InMemorySensitivePreferences()
+            } else {
+                EncryptedSensitivePreferences(context)
+            }
 
             return PocketLedgerAppGraph(
                 transactionRepository = LocalTransactionRepository(database.transactionDao()),

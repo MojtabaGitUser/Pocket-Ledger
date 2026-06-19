@@ -108,6 +108,13 @@ Macrobenchmarks live in `:macrobenchmark` and are local/manual performance
 checks, not default PR validation. Run guidance and device assumptions are
 documented in `docs/performance-report.md`.
 
+The macrobenchmark module has its own `benchmark` build type and should be run
+against the app `benchmark` variant, not the debug app:
+
+```bash
+./gradlew :macrobenchmark:connectedBenchmarkAndroidTest
+```
+
 ## Adaptive Screenshot Tests
 
 Adaptive screenshot coverage uses Paparazzi in `:app` so one JVM-based test
