@@ -4,8 +4,6 @@ import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
 
@@ -18,7 +16,7 @@ class DashboardBenchmark {
         benchmarkRule.measureRepeated(
             packageName = BenchmarkConfig.PackageName,
             metrics = listOf(FrameTimingMetric()),
-            compilationMode = CompilationMode.Partial(),
+            compilationMode = CompilationMode.None(),
             startupMode = StartupMode.COLD,
             iterations = 5,
             setupBlock = {
@@ -26,10 +24,7 @@ class DashboardBenchmark {
             },
         ) {
             startActivityAndWait()
-            device.wait(
-                Until.hasObject(By.text("No dashboard data yet")),
-                BenchmarkConfig.TimeoutMillis,
-            )
+            waitForText("No dashboard data yet")
         }
     }
 }
