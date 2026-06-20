@@ -282,17 +282,21 @@ androidx.security:security-crypto:1.1.0
 ```
 
 Tink bytecode references annotation-only classes from Error Prone and JSR-305.
-The project resolves those release R8 missing-class references by adding the
-real annotation artifacts through the version catalog and `:core:security`:
+The project resolves those release R8 missing-class references with the real
+annotation artifacts from the version catalog:
 
 - `com.google.errorprone:error_prone_annotations`
 - `com.google.code.findbugs:jsr305`
 
-The app does not use broad `-dontwarn **` rules, does not disable minification,
-and does not add broad unrelated keep rules for this issue. If R8 generates
-future missing-class rules, review whether each missing class is an annotation
-metadata dependency, an optional runtime integration, or a real missing runtime
-dependency before adding rules.
+Those artifacts are scoped as `compileOnly` in `:app` and `:core:security`.
+This keeps R8's classpath complete without packaging annotation-only jars as
+release runtime dependencies.
+
+The app does not use catch-all warning suppression rules, does not disable
+minification, and does not add broad unrelated keep rules for this issue. If R8
+generates future missing-class rules, review whether each missing class is an
+annotation metadata dependency, an optional runtime integration, or a real
+missing runtime dependency before adding rules.
 
 ## Developer Checklist
 

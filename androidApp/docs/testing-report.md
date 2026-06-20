@@ -371,16 +371,34 @@ R8 and dependency notes:
 
 - The security model documents a previous release R8 missing-class issue from
   AndroidX Security Crypto's Tink dependency.
-- The project resolves those annotation references through real dependencies
-  declared in the version catalog and `:core:security`:
+- The project resolves those annotation references through real annotation
+  artifacts declared in the version catalog:
   `error_prone_annotations` and `jsr305`.
-- The project does not use broad `-dontwarn **` rules for this issue.
+- These artifacts are scoped as `compileOnly` in `:app` and `:core:security`
+  so R8 can resolve Tink bytecode metadata without packaging annotation-only
+  jars as release runtime dependencies.
+- The project does not use catch-all warning suppression rules for this issue.
+- `app/proguard-rules.pro` contains project policy comments only. Current
+  release builds rely on Android optimized defaults plus library consumer rules
+  from Room, WorkManager, Security Crypto, ProfileInstaller, Compose/Lifecycle,
+  and Tink.
 
 Current validation status:
 
-- `.\gradlew.bat :app:assembleRelease` passed in this validation run.
+- T-E15-05 release/R8 tuning verified that `.\gradlew.bat :app:assembleRelease`
+  passed with R8 and resource shrinking enabled.
 - The output included `:app:minifyReleaseWithR8`.
 - The output included release lint vital tasks.
+- No generated `missing_rules.txt` file was present after the release build.
+- Release SDK dependency metadata included expected runtime dependencies such
+  as ProfileInstaller, Room, WorkManager, AndroidX Security Crypto, and Tink.
+- Release SDK dependency metadata did not include `error_prone_annotations`,
+  `jsr305`, Paparazzi, Macrobenchmark, UIAutomator, AndroidX test libraries,
+  Espresso, or JUnit after the scope review.
+- Release artifact and mapping outputs were present:
+  `app/build/outputs/apk/release/app-release-unsigned.apk` at approximately
+  2.49 MiB (`2,606,447` bytes), and mapping files under
+  `app/build/outputs/mapping/release/`.
 
 CI memory configuration:
 
@@ -627,6 +645,25 @@ Commands run successfully:
 .\gradlew.bat :app:assembleDebug
 .\gradlew.bat :app:assembleRelease
 ```
+
+T-E15-05 release/R8 validation commands run successfully:
+
+```powershell
+.\gradlew.bat :app:assembleRelease
+.\gradlew.bat :app:assembleBenchmark
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :macrobenchmark:assemble
+.\gradlew.bat :core:security:testDebugUnitTest
+.\gradlew.bat :core:ai:testDebugUnitTest
+.\gradlew.bat :core:data:testDebugUnitTest
+.\gradlew.bat :core:database:testDebugUnitTest
+.\gradlew.bat :app:testDebugUnitTest
+.\gradlew.bat clean build
+```
+
+The final `clean build` passed in 8m44s and reran the release R8/resource
+shrinking path. `adb devices` reported no attached device or emulator, so no
+minified release APK runtime smoke test was run.
 
 Discovery commands run:
 
