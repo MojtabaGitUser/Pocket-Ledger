@@ -372,12 +372,15 @@ private fun SearchResultRow(
     modifier: Modifier = Modifier,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
+    val subtitle = remember(result) {
+        listOfNotNull(result.typeLabel, result.dateLabel, result.notePreview)
+            .joinToString(separator = " - ")
+    }
     Column(modifier = modifier.fillMaxWidth()) {
         TransactionRow(
             title = result.title,
             amount = result.amount,
-            subtitle = listOfNotNull(result.typeLabel, result.dateLabel, result.notePreview)
-                .joinToString(separator = " - "),
+            subtitle = subtitle,
             category = result.categoryLabel,
             onClick = onClick,
             showDivider = showDivider && result.tagLabels.isEmpty(),
@@ -390,7 +393,7 @@ private fun SearchResultRow(
                 contentPadding = PaddingValues(bottom = spacing.small),
                 modifier = Modifier.padding(horizontal = spacing.medium),
             ) {
-                items(result.tagLabels) { tag ->
+                items(result.tagLabels, key = { tag -> tag }) { tag ->
                     AssistChip(
                         onClick = {},
                         label = { Text(tag) },

@@ -273,6 +273,40 @@ Current validation status:
 - No startup timing, frame timing, scroll jank, or lower-end-device metrics
   were produced in this validation run.
 
+T-E15-04 recomposition and jank review:
+
+- Reviewed app shell/navigation, app lock, settings, dashboard, transaction
+  list/adaptive list-detail, search, design-system transaction rows, and the
+  existing macrobenchmark/baseline-profile setup.
+- Added lifecycle-aware `StateFlow` collection for app lock/settings,
+  dashboard, search, and transaction list routes.
+- Added stable keys to nested transaction/search tag chip rows.
+- Memoized transaction/search row subtitle and content-description derivation
+  where row models are already stable inputs.
+- Moved dashboard recent-transaction display-row formatting behind
+  `remember(transactions)` so amount/date/subtitle formatting is not repeated
+  on unrelated card recompositions.
+- `adb devices` reported no attached emulator or device, so connected
+  macrobenchmarks were not run and no runtime benchmark numbers were recorded.
+
+Validation commands for this review:
+
+```powershell
+.\gradlew.bat :macrobenchmark:assemble
+.\gradlew.bat :app:assembleBenchmark
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :app:assembleRelease
+.\gradlew.bat :feature:dashboard:testDebugUnitTest
+.\gradlew.bat :feature:search:testDebugUnitTest
+.\gradlew.bat :feature:transaction:testDebugUnitTest
+.\gradlew.bat :app:testDebugUnitTest
+.\gradlew.bat verifyAdaptiveScreenshots
+```
+
+All commands above passed in the local validation run. The first
+`:macrobenchmark:assemble` attempt timed out and left a Gradle/Kotlin cache
+lock; after `.\gradlew.bat --stop`, the command was rerun and passed.
+
 Baseline Profiles:
 
 - Baseline Profile generation is implemented in the existing `:macrobenchmark`

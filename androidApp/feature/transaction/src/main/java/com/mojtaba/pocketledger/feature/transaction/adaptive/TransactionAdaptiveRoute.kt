@@ -3,12 +3,12 @@ package com.mojtaba.pocketledger.feature.transaction.adaptive
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -39,8 +39,8 @@ fun TransactionAdaptiveRoute(
         ),
     ),
 ) {
-    val listUiState by listViewModel.uiState.collectAsState()
-    val selectedTransactionId by selectionViewModel.selectedTransactionId.collectAsState()
+    val listUiState by listViewModel.uiState.collectAsStateWithLifecycle()
+    val selectedTransactionId by selectionViewModel.selectedTransactionId.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(listUiState, selectedTransactionId) {

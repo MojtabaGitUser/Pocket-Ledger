@@ -1,11 +1,11 @@
 package com.mojtaba.pocketledger.feature.dashboard.presentation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
 import com.mojtaba.pocketledger.core.data.repository.BudgetRepository
@@ -32,7 +32,7 @@ fun DashboardStateRoute(
         ),
     ),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     DashboardRoute(
         modifier = modifier,

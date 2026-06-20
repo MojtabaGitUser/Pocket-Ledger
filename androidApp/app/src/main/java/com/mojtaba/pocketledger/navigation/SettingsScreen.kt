@@ -10,10 +10,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.SectionHeader
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
@@ -28,7 +28,7 @@ fun SettingsScreen(
     appLockManager: AppLockManager,
     modifier: Modifier = Modifier,
 ) {
-    val state by appLockManager.state.collectAsState()
+    val state by appLockManager.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val spacing = PocketLedgerThemeDefaults.spacing
     val canToggle = state.canEnable && state.status != AppLockStatus.Authenticating && state.status != AppLockStatus.Loading

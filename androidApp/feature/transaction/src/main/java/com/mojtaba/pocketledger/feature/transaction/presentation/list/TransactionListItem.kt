@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -28,6 +29,22 @@ fun TransactionListItem(
     showDivider: Boolean = true,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
+    val subtitle = remember(transaction) {
+        listOfNotNull(transaction.typeLabel, transaction.dateLabel, transaction.notePreview)
+            .joinToString(separator = " - ")
+    }
+    val transactionContentDescription = remember(transaction, selected) {
+        listOfNotNull(
+            if (selected) "Selected transaction" else null,
+            transaction.title,
+            transaction.typeLabel,
+            transaction.categoryLabel,
+            transaction.dateLabel,
+            transaction.notePreview,
+            transaction.amount.contentDescription,
+            transaction.tagLabels.takeIf { it.isNotEmpty() }?.joinToString(prefix = "Tags "),
+        ).joinToString(separator = ", ")
+    }
 
     Column(
         modifier = modifier
@@ -41,22 +58,12 @@ fun TransactionListItem(
                     this.selected = selected
                 }
                 .pocketLedgerSelectedState(selected),
-            subtitle = listOfNotNull(transaction.typeLabel, transaction.dateLabel, transaction.notePreview)
-                .joinToString(separator = " - "),
+            subtitle = subtitle,
             category = transaction.categoryLabel,
             onClick = onClick,
             showDivider = showDivider && transaction.tagLabels.isEmpty(),
             onClickLabel = "Open transaction details",
-            contentDescription = listOfNotNull(
-                if (selected) "Selected transaction" else null,
-                transaction.title,
-                transaction.typeLabel,
-                transaction.categoryLabel,
-                transaction.dateLabel,
-                transaction.notePreview,
-                transaction.amount.contentDescription,
-                transaction.tagLabels.takeIf { it.isNotEmpty() }?.joinToString(prefix = "Tags "),
-            ).joinToString(separator = ", "),
+            contentDescription = transactionContentDescription,
         )
         if (transaction.tagLabels.isNotEmpty()) {
             LazyRow(
@@ -64,7 +71,7 @@ fun TransactionListItem(
                 contentPadding = PaddingValues(bottom = spacing.small),
                 modifier = Modifier.padding(horizontal = spacing.medium),
             ) {
-                items(transaction.tagLabels) { tag ->
+                items(transaction.tagLabels, key = { tag -> tag }) { tag ->
                     AssistChip(
                         onClick = {},
                         label = { Text(tag) },
