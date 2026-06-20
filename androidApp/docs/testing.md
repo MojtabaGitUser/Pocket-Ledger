@@ -108,12 +108,21 @@ Macrobenchmarks live in `:macrobenchmark` and are local/manual performance
 checks, not default PR validation. Run guidance and device assumptions are
 documented in `docs/performance-report.md`.
 
-The macrobenchmark module has its own `benchmark` build type and should be run
-against the app `benchmark` variant, not the debug app:
+The macrobenchmark module also owns Baseline Profile generation. It has its own
+`benchmark` build type and should be run against release-style app variants, not
+the debug app:
 
 ```bash
 ./gradlew :macrobenchmark:connectedBenchmarkAndroidTest
+./gradlew :app:generateReleaseBaselineProfile
 ```
+
+Baseline Profile generation requires an attached device or emulator. The
+generator covers deterministic startup, dashboard content, transaction list
+navigation and scrolling, search results, and settings. App-lock biometric
+behavior is intentionally out of scope; benchmark builds use non-persistent
+app-lock preferences so profile generation cannot be blocked by a local device
+setting.
 
 ## Adaptive Screenshot Tests
 
