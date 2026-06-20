@@ -24,6 +24,8 @@ Implemented layers:
 - Macrobenchmark module for startup, dashboard render, transaction scrolling,
   and search frame timing.
 - Baseline Profile generation in the existing `:macrobenchmark` module.
+- Large deterministic dataset generation and a large dataset Macrobenchmark
+  scenario for local performance testing.
 - Release/R8 validation through `:app:assembleRelease`.
 - CI coverage through the PR Validation GitHub Actions workflow.
 
@@ -34,6 +36,8 @@ Important limitations:
   attached.
 - Baseline Profile generation requires an attached device or emulator; profile
   files are only committed after a successful generation run.
+- Large dataset benchmark execution also requires an attached device or
+  emulator; no large dataset benchmark numbers are recorded in this report.
 - Connected Android tests and macrobenchmarks were not executed in this
   environment.
 
@@ -71,7 +75,7 @@ Windows Gradle wrapper lives and where CI runs Gradle.
 
 | Module | Test type | Source set | Purpose | Command | Runtime | Device required | Current status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `:core:testing` | Shared fake/fixture unit tests | `src/test` | Protect deterministic fixtures, fake repositories, fake feature flags, and scheduler test helpers. | `.\gradlew.bat :core:testing:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
+| `:core:testing` | Shared fake/fixture unit tests | `src/test` | Protect deterministic fixtures, large benchmark dataset generation, fake repositories, fake feature flags, and scheduler test helpers. | `.\gradlew.bat :core:testing:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
 | `:core:database` | Migration registry unit test | `src/test` | Verify migration metadata and current-version registration. | `.\gradlew.bat :core:database:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
 | `:core:database` | Room DAO and migration integration tests | `src/androidTest` | Verify DAO CRUD/query/Flow behavior and Room migration path using in-memory databases and schema assets. | `.\gradlew.bat :core:database:connectedDebugAndroidTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:core:database:assembleDebugAndroidTest`. |
 | `:core:data` | Search model unit tests | `src/test` | Verify `SearchQuery`, filter normalization, validation, and deterministic query behavior. | `.\gradlew.bat :core:data:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
@@ -88,7 +92,7 @@ Windows Gradle wrapper lives and where CI runs Gradle.
 | `:app` | App unit tests | `src/test` | Verify app-local adaptive, foldable, WorkManager mapping, and non-screenshot JVM behavior. | `.\gradlew.bat :app:testDebugUnitTest` | JVM/local | No | Passed in this validation run. Screenshot tests are excluded from normal `test` tasks by Gradle configuration. |
 | `:app` | App-shell instrumentation | `src/androidTest` | Verify adaptive navigation shell and top-level route wiring. | `.\gradlew.bat :app:connectedDebugAndroidTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:app:assembleDebugAndroidTest`. |
 | `:app` | Paparazzi screenshot matrix | `src/test/java/.../screenshot` plus `src/test/snapshots/images` | Verify adaptive UI visual baselines for app shell, dashboard, search, transaction, theme, and large-font states. | `.\gradlew.bat verifyAdaptiveScreenshots` | JVM screenshot | No | Passed in this validation run. |
-| `:macrobenchmark` | Macrobenchmarks and Baseline Profile generation | `src/main` | Measure cold startup, dashboard render, transaction scrolling, and search frame timing; generate release Baseline Profiles from deterministic startup/navigation flows. | `.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest` / `.\gradlew.bat :app:generateReleaseBaselineProfile` | Benchmark instrumentation | Yes | Not run because no device was attached. Artifacts compiled with `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble`. |
+| `:macrobenchmark` | Macrobenchmarks and Baseline Profile generation | `src/main` | Measure cold startup, dashboard render, transaction scrolling, search frame timing, large dataset list/search behavior, and release Baseline Profile generation. | `.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest` / `.\gradlew.bat :app:generateReleaseBaselineProfile` | Benchmark instrumentation | Yes | Not run because no device was attached. Artifacts compiled with `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble`. |
 | `:app` | Debug build validation | main source sets | Verify debug app assembly. | `.\gradlew.bat :app:assembleDebug` | Build | No | Passed in this validation run. |
 | `:app` | Release/R8 validation | main source sets | Verify release build, resource shrinking, and R8 minification. | `.\gradlew.bat :app:assembleRelease` | Build | No | Passed in this validation run. |
 
@@ -98,6 +102,9 @@ Windows Gradle wrapper lives and where CI runs Gradle.
 
 - `TestLedgerFixtures`, `TestIds`, and `TestClock` provide stable ledger
   records, IDs, timestamps, currency codes, and minor-unit money values.
+- `LargeBenchmarkDataset` provides 6,000 stable synthetic local transactions,
+  10 categories, 8 tags, 48 monthly budgets, and about 2,400 transaction-tag
+  links for benchmark-only large dataset seeding.
 - `FakeTransactionRepository`, `FakeCategoryRepository`, `FakeTagRepository`,
   and `FakeBudgetRepository` implement the real `:core:data` repository
   contracts over `MutableStateFlow`.
@@ -250,7 +257,11 @@ Implemented performance validation:
   - Dashboard render/open path with `FrameTimingMetric`.
   - Transaction list navigation and scroll with `FrameTimingMetric`.
   - Search path with `FrameTimingMetric`.
+  - Large dataset transaction list scrolling and keyword search with
+    `FrameTimingMetric`.
 - Transaction and search benchmark scenarios seed deterministic demo data.
+- Large dataset benchmark scenarios seed deterministic `large-benchmark-`
+  prefixed data through a benchmark-only setup mode.
 - Benchmark builds use non-persistent app-lock sensitive preferences so a local
   biometric/app-lock setting cannot block benchmark startup or navigation.
 
@@ -295,7 +306,8 @@ Startup metrics:
 Scroll jank and recomposition:
 
 - Scroll/frame timing coverage exists through the transaction list
-  macrobenchmark, but it was not executed in this environment.
+  macrobenchmark and large dataset macrobenchmark, but they were not executed
+  in this environment.
 - No separate recomposition benchmark or Compose recomposition report artifact
   was found.
 - Current safeguards are mostly architectural and test-driven: deterministic
@@ -417,7 +429,7 @@ Known CI limitations:
 | Repository Flow emission regression | `:core:data` instrumentation tests over real in-memory Room plus shared fake Flow tests. | Connected repository integration tests require emulator/device. | High |
 | UI visual regression | Paparazzi adaptive matrix with 155 committed snapshots. | Screenshots are opt-in in CI and do not validate runtime interaction. | Medium |
 | Startup regression | `StartupBenchmark` with `StartupTimingMetric` and `BaselineProfileGenerator` for startup/navigation profile coverage. | No device run, stored startup metrics, or generated profile artifact in this validation. | High |
-| Scroll jank regression | Transaction list macrobenchmark with `FrameTimingMetric`. | No connected benchmark run in this validation and no threshold/trend storage. | High |
+| Scroll jank regression | Transaction list macrobenchmark and large dataset macrobenchmark with `FrameTimingMetric`. | No connected benchmark run in this validation and no threshold/trend storage. | High |
 | Recomposition regression | ViewModel unit tests, deterministic state, adaptive screenshots, and architectural separation. | No explicit recomposition benchmark/report found. | Medium |
 | Release/R8 regression | `:app:assembleRelease` with minification and resource shrinking; CI also runs release assemble. | Minified APK runtime smoke test was not run on device. | High |
 | CI memory pressure | `-Xmx4g`, 1 GB metaspace, and CI worker cap of 2. | Full `clean build` can still be memory-intensive as modules and screenshots grow. | Medium |
@@ -518,6 +530,13 @@ Macrobenchmark execution with an attached representative device or emulator:
 .\gradlew.bat :macrobenchmark:connectedCheck
 ```
 
+Focused large dataset benchmark execution with an attached representative
+device or emulator:
+
+```powershell
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+```
+
 Baseline Profile generation with an attached representative device or emulator:
 
 ```powershell
@@ -566,9 +585,10 @@ Optional full local validation including screenshots:
 Commands run successfully:
 
 ```powershell
+.\gradlew.bat :core:testing:testDebugUnitTest
+.\gradlew.bat :core:data:testDebugUnitTest
+.\gradlew.bat :core:database:testDebugUnitTest
 .\gradlew.bat :macrobenchmark:assemble
-.\gradlew.bat :macrobenchmark:tasks --all --console=plain
-.\gradlew.bat :app:tasks --all --console=plain
 .\gradlew.bat :app:assembleBenchmark
 .\gradlew.bat :app:assembleDebug
 .\gradlew.bat :app:assembleRelease
@@ -598,6 +618,7 @@ Commands not run because no device or emulator was attached:
 .\gradlew.bat :app:connectedDebugAndroidTest
 .\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
 .\gradlew.bat :macrobenchmark:connectedCheck
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
 .\gradlew.bat :app:generateReleaseBaselineProfile
 .\gradlew.bat :macrobenchmark:collectNonMinifiedReleaseBaselineProfile
 .\gradlew.bat :macrobenchmark:collectNonMinifiedBenchmarkBaselineProfile

@@ -92,6 +92,7 @@ apply(plugin = "androidx.baselineprofile")
 
 dependencies {
     add("baselineProfile", project(":macrobenchmark"))
+    add("benchmarkImplementation", project(":core:testing"))
     implementation(project(":core:ai"))
     implementation(project(":core:background"))
     implementation(project(":core:designsystem"))

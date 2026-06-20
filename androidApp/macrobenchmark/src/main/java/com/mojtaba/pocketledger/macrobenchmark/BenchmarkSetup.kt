@@ -8,19 +8,43 @@ import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 
 internal fun MacrobenchmarkScope.seedDemoData() {
+    seedBenchmarkData(
+        seedMode = BenchmarkConfig.SeedModeDemo,
+        readyText = "Benchmark data ready",
+        timeoutMillis = BenchmarkConfig.TimeoutMillis,
+    )
+}
+
+internal fun MacrobenchmarkScope.seedLargeBenchmarkData() {
+    seedBenchmarkData(
+        seedMode = BenchmarkConfig.SeedModeLarge,
+        readyText = "Large benchmark data ready",
+        timeoutMillis = BenchmarkConfig.LargeSeedTimeoutMillis,
+    )
+}
+
+private fun MacrobenchmarkScope.seedBenchmarkData(
+    seedMode: String,
+    readyText: String,
+    timeoutMillis: Long,
+) {
     val context = InstrumentationRegistry.getInstrumentation().context
     val intent = Intent()
         .setClassName(BenchmarkConfig.PackageName, BenchmarkConfig.SetupActivity)
+        .putExtra(BenchmarkConfig.SeedModeExtra, seedMode)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     context.startActivity(intent)
-    waitForText("Benchmark data ready")
+    waitForText(readyText, timeoutMillis)
     device.pressBack()
     device.waitForIdle()
 }
 
-internal fun MacrobenchmarkScope.waitForText(text: String) {
-    check(device.wait(Until.hasObject(By.text(text)), BenchmarkConfig.TimeoutMillis)) {
+internal fun MacrobenchmarkScope.waitForText(
+    text: String,
+    timeoutMillis: Long = BenchmarkConfig.TimeoutMillis,
+) {
+    check(device.wait(Until.hasObject(By.text(text)), timeoutMillis)) {
         "Timed out waiting for text: $text"
     }
 }
