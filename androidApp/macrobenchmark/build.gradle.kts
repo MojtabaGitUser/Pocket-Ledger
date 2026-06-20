@@ -36,6 +36,8 @@ android {
     }
 }
 
+apply(plugin = "androidx.baselineprofile")
+
 dependencies {
     implementation(libs.androidx.benchmark.macro.junit4)
     implementation(libs.androidx.junit)

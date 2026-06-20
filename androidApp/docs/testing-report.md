@@ -23,15 +23,17 @@ Implemented layers:
 - Paparazzi adaptive screenshot matrix in `:app`.
 - Macrobenchmark module for startup, dashboard render, transaction scrolling,
   and search frame timing.
+- Baseline Profile generation in the existing `:macrobenchmark` module.
 - Release/R8 validation through `:app:assembleRelease`.
 - CI coverage through the PR Validation GitHub Actions workflow.
 
 Important limitations:
 
-- No Baseline Profile generation module or task was found.
 - No startup, frame timing, jank, or benchmark numbers are recorded in this
   repository from the current validation run because no device or emulator was
   attached.
+- Baseline Profile generation requires an attached device or emulator; profile
+  files are only committed after a successful generation run.
 - Connected Android tests and macrobenchmarks were not executed in this
   environment.
 
@@ -86,7 +88,7 @@ Windows Gradle wrapper lives and where CI runs Gradle.
 | `:app` | App unit tests | `src/test` | Verify app-local adaptive, foldable, WorkManager mapping, and non-screenshot JVM behavior. | `.\gradlew.bat :app:testDebugUnitTest` | JVM/local | No | Passed in this validation run. Screenshot tests are excluded from normal `test` tasks by Gradle configuration. |
 | `:app` | App-shell instrumentation | `src/androidTest` | Verify adaptive navigation shell and top-level route wiring. | `.\gradlew.bat :app:connectedDebugAndroidTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:app:assembleDebugAndroidTest`. |
 | `:app` | Paparazzi screenshot matrix | `src/test/java/.../screenshot` plus `src/test/snapshots/images` | Verify adaptive UI visual baselines for app shell, dashboard, search, transaction, theme, and large-font states. | `.\gradlew.bat verifyAdaptiveScreenshots` | JVM screenshot | No | Passed in this validation run. |
-| `:macrobenchmark` | Macrobenchmarks | `src/main` | Measure cold startup, dashboard render, transaction scrolling, and search frame timing. | `.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest` | Benchmark instrumentation | Yes | Not run because no device was attached. Artifacts compiled with `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble`. |
+| `:macrobenchmark` | Macrobenchmarks and Baseline Profile generation | `src/main` | Measure cold startup, dashboard render, transaction scrolling, and search frame timing; generate release Baseline Profiles from deterministic startup/navigation flows. | `.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest` / `.\gradlew.bat :app:generateReleaseBaselineProfile` | Benchmark instrumentation | Yes | Not run because no device was attached. Artifacts compiled with `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble`. |
 | `:app` | Debug build validation | main source sets | Verify debug app assembly. | `.\gradlew.bat :app:assembleDebug` | Build | No | Passed in this validation run. |
 | `:app` | Release/R8 validation | main source sets | Verify release build, resource shrinking, and R8 minification. | `.\gradlew.bat :app:assembleRelease` | Build | No | Passed in this validation run. |
 
@@ -262,10 +264,23 @@ Current validation status:
 
 Baseline Profiles:
 
-- No dedicated Baseline Profile generation module or Gradle task was found.
-- Release and benchmark builds do execute AGP ART profile merge tasks such as
-  `mergeReleaseArtProfile`, but that is not the same as a project-owned
-  generated Baseline Profile suite.
+- Baseline Profile generation is implemented in the existing `:macrobenchmark`
+  module with `BaselineProfileGenerator`.
+- The app applies the AndroidX Baseline Profile plugin, consumes
+  `:macrobenchmark` through the `baselineProfile` configuration, and includes
+  `androidx.profileinstaller` for local APK profile installation support.
+- The generator covers seeded startup/dashboard content, transaction list
+  navigation and scrolling, search results, and settings.
+- App-lock biometric/system authentication is out of scope for profile
+  generation. Benchmark builds use non-persistent sensitive preferences so
+  app-lock cannot block profile collection, while release builds keep encrypted
+  preferences and normal authentication behavior.
+- Release and benchmark builds execute profile merge tasks such as
+  `mergeReleaseBaselineProfile`, `mergeReleaseArtProfile`, and
+  `mergeBenchmarkArtProfile` when profiles are available.
+- Profile files are only committed after
+  `.\gradlew.bat :app:generateReleaseBaselineProfile` succeeds on a suitable
+  device or emulator.
 
 Startup metrics:
 
@@ -401,7 +416,7 @@ Known CI limitations:
 | Room migration regression | Room schema assets, migration registration unit test, migration instrumentation test. | Connected migration test was not run in this environment. Future schema versions need new migration tests. | High |
 | Repository Flow emission regression | `:core:data` instrumentation tests over real in-memory Room plus shared fake Flow tests. | Connected repository integration tests require emulator/device. | High |
 | UI visual regression | Paparazzi adaptive matrix with 155 committed snapshots. | Screenshots are opt-in in CI and do not validate runtime interaction. | Medium |
-| Startup regression | `StartupBenchmark` with `StartupTimingMetric`. | No device run or stored startup metrics in this validation. No Baseline Profile generation task found. | High |
+| Startup regression | `StartupBenchmark` with `StartupTimingMetric` and `BaselineProfileGenerator` for startup/navigation profile coverage. | No device run, stored startup metrics, or generated profile artifact in this validation. | High |
 | Scroll jank regression | Transaction list macrobenchmark with `FrameTimingMetric`. | No connected benchmark run in this validation and no threshold/trend storage. | High |
 | Recomposition regression | ViewModel unit tests, deterministic state, adaptive screenshots, and architectural separation. | No explicit recomposition benchmark/report found. | Medium |
 | Release/R8 regression | `:app:assembleRelease` with minification and resource shrinking; CI also runs release assemble. | Minified APK runtime smoke test was not run on device. | High |
@@ -503,6 +518,23 @@ Macrobenchmark execution with an attached representative device or emulator:
 .\gradlew.bat :macrobenchmark:connectedCheck
 ```
 
+Baseline Profile generation with an attached representative device or emulator:
+
+```powershell
+.\gradlew.bat :app:generateReleaseBaselineProfile
+.\gradlew.bat :macrobenchmark:collectNonMinifiedReleaseBaselineProfile
+.\gradlew.bat :macrobenchmark:collectNonMinifiedBenchmarkBaselineProfile
+```
+
+Baseline Profile task discovery and release merge verification:
+
+```powershell
+.\gradlew.bat :app:tasks --all
+.\gradlew.bat :macrobenchmark:tasks --all
+.\gradlew.bat :app:assembleRelease
+.\gradlew.bat :app:assembleBenchmark
+```
+
 Debug and release build validation:
 
 ```powershell
@@ -534,20 +566,12 @@ Optional full local validation including screenshots:
 Commands run successfully:
 
 ```powershell
-.\gradlew.bat :core:testing:testDebugUnitTest
-.\gradlew.bat :core:database:testDebugUnitTest
-.\gradlew.bat :core:data:testDebugUnitTest
-.\gradlew.bat :core:ai:testDebugUnitTest
-.\gradlew.bat :core:security:testDebugUnitTest
-.\gradlew.bat :feature:dashboard:testDebugUnitTest
-.\gradlew.bat :feature:search:testDebugUnitTest
-.\gradlew.bat :feature:transaction:testDebugUnitTest
-.\gradlew.bat :app:testDebugUnitTest
+.\gradlew.bat :macrobenchmark:assemble
+.\gradlew.bat :macrobenchmark:tasks --all --console=plain
+.\gradlew.bat :app:tasks --all --console=plain
+.\gradlew.bat :app:assembleBenchmark
 .\gradlew.bat :app:assembleDebug
 .\gradlew.bat :app:assembleRelease
-.\gradlew.bat verifyAdaptiveScreenshots
-.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
-.\gradlew.bat :core:database:assembleDebugAndroidTest :core:data:assembleDebugAndroidTest :core:security:assembleDebugAndroidTest :feature:dashboard:assembleDebugAndroidTest :feature:search:assembleDebugAndroidTest :feature:transaction:assembleDebugAndroidTest :app:assembleDebugAndroidTest
 ```
 
 Discovery commands run:
@@ -558,7 +582,8 @@ git status --short
 rg -n "test|testing|unit|integration|Room|repository|screenshot|Paparazzi|macrobenchmark|baseline profile|BaselineProfile|startup|Startup|R8|minify|jank|recomposition|performance|benchmark|assembleRelease|assembleDebug|CI|workflow|gradle" .
 rg --files . | rg "test|androidTest|benchmark|macrobenchmark|baseline|profile|screenshot|paparazzi|docs|workflow|README|gradle"
 adb devices
-.\gradlew.bat :macrobenchmark:tasks --all
+.\gradlew.bat :macrobenchmark:tasks --all --console=plain
+.\gradlew.bat :app:tasks --all --console=plain
 ```
 
 Commands not run because no device or emulator was attached:
@@ -573,6 +598,9 @@ Commands not run because no device or emulator was attached:
 .\gradlew.bat :app:connectedDebugAndroidTest
 .\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
 .\gradlew.bat :macrobenchmark:connectedCheck
+.\gradlew.bat :app:generateReleaseBaselineProfile
+.\gradlew.bat :macrobenchmark:collectNonMinifiedReleaseBaselineProfile
+.\gradlew.bat :macrobenchmark:collectNonMinifiedBenchmarkBaselineProfile
 ```
 
 Backlog source note:

@@ -88,7 +88,10 @@ android {
     }
 }
 
+apply(plugin = "androidx.baselineprofile")
+
 dependencies {
+    add("baselineProfile", project(":macrobenchmark"))
     implementation(project(":core:ai"))
     implementation(project(":core:background"))
     implementation(project(":core:designsystem"))
@@ -106,6 +109,7 @@ dependencies {
     implementation(libs.androidx.compose.material3.adaptive)
     implementation(libs.androidx.compose.material3.adaptive.navigation)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.window)
     implementation(libs.androidx.work.runtime.ktx)
