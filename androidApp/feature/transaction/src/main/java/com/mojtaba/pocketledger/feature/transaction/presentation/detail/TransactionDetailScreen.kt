@@ -222,7 +222,7 @@ private fun TransactionDetailCard(
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(spacing.small),
                     ) {
-                        items(transaction.tagLabels) { tag ->
+                        items(transaction.tagLabels, key = { tag -> tag }) { tag ->
                             AssistChip(
                                 onClick = {},
                                 label = { Text(tag) },

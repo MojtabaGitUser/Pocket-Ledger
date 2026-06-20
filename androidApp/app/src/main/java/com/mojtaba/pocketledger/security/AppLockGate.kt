@@ -12,17 +12,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import com.mojtaba.pocketledger.core.security.applock.AppLockManager
 import com.mojtaba.pocketledger.core.security.applock.AppLockMessage
 import com.mojtaba.pocketledger.core.security.applock.AppLockState
 import com.mojtaba.pocketledger.core.security.applock.AppLockStatus
-import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
 import kotlinx.coroutines.launch
 
 @Composable
@@ -31,7 +31,7 @@ fun AppLockGate(
     modifier: Modifier = Modifier,
     protectedContent: @Composable () -> Unit,
 ) {
-    val state by appLockManager.state.collectAsState()
+    val state by appLockManager.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(appLockManager) {
