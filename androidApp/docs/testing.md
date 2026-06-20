@@ -22,6 +22,8 @@ Disallowed usage:
 Current contents:
 - Deterministic ledger model fixtures in
   `com.mojtaba.pocketledger.core.testing.fixture`.
+- Deterministic large benchmark dataset generation in
+  `com.mojtaba.pocketledger.core.testing.performance`.
 - In-memory fake repositories in
   `com.mojtaba.pocketledger.core.testing.repository`.
 - `FakeFeatureFlagProvider` in
@@ -123,6 +125,15 @@ navigation and scrolling, search results, and settings. App-lock biometric
 behavior is intentionally out of scope; benchmark builds use non-persistent
 app-lock preferences so profile generation cannot be blocked by a local device
 setting.
+
+Large dataset performance coverage is also local/manual. The generator produces
+6,000 deterministic synthetic transactions, categories, tags, budgets, and
+links for benchmark use only. Run the focused large dataset benchmark with an
+attached device or emulator:
+
+```bash
+./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+```
 
 ## Adaptive Screenshot Tests
 
