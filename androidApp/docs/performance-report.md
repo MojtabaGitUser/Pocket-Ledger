@@ -266,7 +266,7 @@ To inspect all module tasks:
 ## Limitations And Follow-Ups
 
 - T-E15-04 will turn benchmark results into a performance findings report.
-- T-E15-05 will handle R8/release optimization decisions.
+- T-E15-05 reviewed and tuned release/R8 optimization decisions.
 - T-E15-06 will add a focused memory/perf pass.
 - No benchmark results are recorded by this document; compare results only from
   repeat runs on the same named device, OS image, app commit, and build variant.
@@ -277,3 +277,92 @@ To inspect all module tasks:
 
 Do not add Macrobenchmark execution to default PR validation unless a future
 manual or scheduled benchmark workflow is explicitly introduced.
+
+## T-E15-05 Release Build And R8 Tuning
+
+This pass reviewed the release, benchmark, debug, R8, baseline profile,
+security, AI, Room, WorkManager, macrobenchmark, screenshot, and CI build
+configuration.
+
+Release build behavior after the review:
+
+- `release` remains non-debuggable, minified with R8, resource-shrunk, and uses
+  `proguard-android-optimize.txt` plus `app/proguard-rules.pro`.
+- `benchmark` remains initialized from `release`, non-debuggable, profileable,
+  debug-signed for local install, minified, resource-shrunk, and logging-off.
+- `debug` remains developer-friendly and debuggable with debug logging enabled.
+- The app still applies the AndroidX Baseline Profile plugin, consumes
+  `:macrobenchmark` as the profile producer, and keeps
+  `androidx.profileinstaller` as a release runtime dependency so embedded
+  profiles can be installed from locally installed APKs.
+
+R8 tuning:
+
+- No broad app keep rules or broad warning suppressions were added.
+- `app/proguard-rules.pro` now documents the project policy: rely on Android's
+  optimized defaults and library consumer rules unless a specific runtime issue
+  proves a narrower custom rule is needed.
+- Tink's Error Prone and JSR-305 annotation references are resolved through
+  `compileOnly` dependencies in `:app` and `:core:security`, which keeps the R8
+  classpath complete without packaging annotation-only jars into the release
+  runtime dependency metadata.
+- Generated R8 configuration showed consumer rules from WorkManager, Room,
+  Security Crypto, ProfileInstaller, Compose/Lifecycle, and Tink. No generated
+  `missing_rules.txt` file was present after `:app:assembleRelease`.
+
+Release dependency scope review:
+
+- Release SDK dependency metadata included expected production runtime
+  dependencies such as ProfileInstaller, Room, WorkManager, AndroidX Security
+  Crypto, and Tink.
+- Release SDK dependency metadata did not include `error_prone_annotations`,
+  `jsr305`, Paparazzi, Macrobenchmark, UIAutomator, AndroidX test libraries,
+  Espresso, or JUnit after the scope change.
+- The large dataset generator remains benchmark-only through
+  `benchmarkImplementation(project(":core:testing"))`.
+
+Release artifact check from the validation build:
+
+```text
+app/build/outputs/apk/release/app-release-unsigned.apk
+```
+
+The APK size was approximately 2.49 MiB (`2,606,447` bytes). Release mapping
+outputs were generated under:
+
+```text
+app/build/outputs/mapping/release/
+```
+
+including `mapping.txt`, `configuration.txt`, `resources.txt`, `seeds.txt`,
+and `usage.txt`.
+
+CI validation:
+
+- `.github/workflows/pr-validation.yml` already runs `:app:assembleRelease`
+  and `clean build`, so PR validation should catch most release/R8 regressions.
+- Connected macrobenchmark and baseline profile generation remain intentionally
+  out of default CI because no device/emulator workflow is configured.
+
+Commands for this review:
+
+```powershell
+.\gradlew.bat :app:assembleRelease
+.\gradlew.bat :app:assembleBenchmark
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :macrobenchmark:assemble
+.\gradlew.bat :core:security:testDebugUnitTest
+.\gradlew.bat :core:ai:testDebugUnitTest
+.\gradlew.bat :core:data:testDebugUnitTest
+.\gradlew.bat :core:database:testDebugUnitTest
+.\gradlew.bat :app:testDebugUnitTest
+.\gradlew.bat clean build
+```
+
+Remaining gaps:
+
+- Release signing was not validated because no local release signing properties
+  were present in this environment.
+- The minified release APK was not smoke-tested on a device or emulator.
+- Future optional integrations must continue to be checked for real runtime
+  reflection or service-loader requirements before adding any custom R8 rules.

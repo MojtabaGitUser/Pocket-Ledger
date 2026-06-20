@@ -116,6 +116,8 @@ dependencies {
     implementation(libs.androidx.window)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.kotlinx.coroutines.core)
+    compileOnly(libs.google.errorprone.annotations)
+    compileOnly(libs.jsr305)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.work.testing)
