@@ -307,6 +307,41 @@ All commands above passed in the local validation run. The first
 `:macrobenchmark:assemble` attempt timed out and left a Gradle/Kotlin cache
 lock; after `.\gradlew.bat --stop`, the command was rerun and passed.
 
+T-E15-06 debug LeakCanary and profiler pass:
+
+- Added LeakCanary only to the app debug runtime through
+  `debugImplementation(libs.leakcanary.android)`.
+- Documented the manual memory/profiler checklist in
+  `performance-report.md`, including startup, dashboard, transaction list,
+  search, settings/app-lock, navigation, Room-backed flows, and synthetic-data
+  requirements.
+- Static memory-risk review covered app graph/MainActivity, app shell,
+  app-lock gate, biometric prompt integration, dashboard, transaction, search,
+  settings, Room repositories/database construction, WorkManager scheduling,
+  AI providers/fallback, and benchmark-only seed data. No obvious low-risk leak
+  fix was identified.
+- `adb devices` reported no attached device or emulator, so the debug app was
+  not installed and LeakCanary runtime reports were not observed.
+
+Validation commands for this review:
+
+```powershell
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :app:assembleRelease
+.\gradlew.bat :app:assembleBenchmark
+.\gradlew.bat :macrobenchmark:assemble
+.\gradlew.bat :app:testDebugUnitTest :core:security:testDebugUnitTest :core:data:testDebugUnitTest :core:database:testDebugUnitTest :feature:dashboard:testDebugUnitTest :feature:search:testDebugUnitTest :feature:transaction:testDebugUnitTest
+.\gradlew.bat :app:dependencyInsight --configuration debugRuntimeClasspath --dependency leakcanary
+.\gradlew.bat :app:dependencyInsight --configuration releaseRuntimeClasspath --dependency leakcanary
+.\gradlew.bat :app:dependencyInsight --configuration benchmarkRuntimeClasspath --dependency leakcanary
+```
+
+All commands above passed. The first `:app:assembleDebug` attempt timed out
+before returning useful output; rerunning the same command with a longer timeout
+passed. Dependency insight showed LeakCanary 2.14 on `debugRuntimeClasspath`
+and no matching LeakCanary dependency on `releaseRuntimeClasspath` or
+`benchmarkRuntimeClasspath`.
+
 Baseline Profiles:
 
 - Baseline Profile generation is implemented in the existing `:macrobenchmark`

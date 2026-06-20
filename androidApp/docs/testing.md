@@ -110,6 +110,14 @@ Macrobenchmarks live in `:macrobenchmark` and are local/manual performance
 checks, not default PR validation. Run guidance and device assumptions are
 documented in `docs/performance-report.md`.
 
+Debug memory profiling is also local/manual. The debug app includes LeakCanary
+through `debugImplementation` in `:app`; release and benchmark builds must not
+include it. Use the T-E15-06 checklist in
+[`performance-report.md`](performance-report.md) when exercising startup,
+transaction scrolling, search, settings/app-lock, navigation, and Room-backed
+flows. Profile with synthetic or demo data only, never with personal financial
+records or real bank details.
+
 The macrobenchmark module also owns Baseline Profile generation. It has its own
 `benchmark` build type and should be run against release-style app variants, not
 the debug app:

@@ -366,3 +366,125 @@ Remaining gaps:
 - The minified release APK was not smoke-tested on a device or emulator.
 - Future optional integrations must continue to be checked for real runtime
   reflection or service-loader requirements before adding any custom R8 rules.
+
+## T-E15-06 Debug LeakCanary And Profiler Pass
+
+This pass adds LeakCanary as a debug-only memory diagnostic tool and documents
+the local profiler workflow. LeakCanary is declared in the version catalog as
+`com.squareup.leakcanary:leakcanary-android` and is consumed only by `:app`
+through `debugImplementation(libs.leakcanary.android)`.
+
+Dependency scope:
+
+- Debug builds include LeakCanary so local development APKs can report retained
+  objects and heap-analysis findings.
+- Release builds do not include LeakCanary because there is no
+  `implementation`, `releaseImplementation`, or shared-module dependency on
+  it.
+- Benchmark builds remain release-like and are not given a
+  `benchmarkImplementation` LeakCanary dependency. This avoids polluting startup,
+  frame timing, memory pressure, and Baseline Profile collection.
+- No LeakCanary R8 keep rules, `dontwarn` rules, release runtime hooks, or
+  production monitoring code were added.
+
+Manual profiler checklist:
+
+1. Attach a development device or emulator. Use synthetic or demo data only;
+   do not use personal financial records, real merchant names, real account
+   data, or real bank details during profiling.
+2. Install and launch the debug app:
+
+```powershell
+.\gradlew.bat :app:installDebug
+```
+
+3. Exercise startup to dashboard, dashboard refresh, transaction list scrolling,
+   transaction detail/editor navigation, search query/results, Settings app-lock
+   toggle states, lock/unlock flow on a device with supported authentication,
+   and top-level navigation between Dashboard, Transactions, Search, Insights,
+   Settings, and Debug.
+4. Rotate or background/foreground the app while watching for retained
+   `Activity`, `View`, `NavHost`, biometric prompt, repository, or Room objects.
+5. Open the LeakCanary notification or launcher entry if a retained-object
+   report appears. Treat "retained" as a lead, not proof: inspect the reference
+   path, reproduce the flow, and confirm whether the object should have been
+   cleared.
+6. Use Android Studio Memory Profiler for heap snapshots around the same flows.
+   Compare snapshots after forcing GC and after navigating away from the screen
+   under test.
+7. If a leak is confirmed, fix the ownership boundary rather than suppressing
+   LeakCanary. Typical fixes include using `applicationContext` for app-singleton
+   services, keeping coroutines in `viewModelScope` or composition-managed
+   scopes, cancelling callbacks/listeners from `DisposableEffect`, avoiding
+   stored `Activity` or `View` references, and closing short-lived Room
+   databases.
+
+Static memory-risk review:
+
+- App graph and `MainActivity`: production construction uses
+  `applicationContext` for Room, WorkManager, encrypted preferences, and
+  `BiometricManager`. `MainActivity` owns a small activity coroutine scope and
+  cancels it in `onDestroy`. The app graph receives an `activityProvider`
+  callback for biometric prompts instead of storing a `FragmentActivity`
+  instance directly.
+- App lock and biometric prompt: `AppLockGate` uses lifecycle-aware state
+  collection and composition-managed unlock launches. The Android biometric
+  prompt is created inside the suspend authentication call and cancelled if the
+  coroutine is cancelled.
+- Compose routes: dashboard, budget setup, transaction list/detail/editor,
+  adaptive transaction, search, and settings use `collectAsStateWithLifecycle`,
+  `LaunchedEffect`, `remember`, `rememberCoroutineScope`, or ViewModel scopes in
+  lifecycle-owned places. No undisposed listener or raw view callback was found.
+- ViewModels: repository Flow collection and save/delete work run through
+  `viewModelScope`, `stateIn(WhileSubscribed(...))`, or one-shot launches. The
+  transaction delete undo snapshot is intentionally short-lived ViewModel state.
+- Room/repositories: the app database is an app-lifetime Room singleton owned by
+  the graph. The benchmark setup activity creates a temporary database for
+  seeding and closes it in `finally`.
+- WorkManager: the scheduler stores a `WorkManager` instance obtained from
+  application context and does not store activities, views, or callbacks.
+- AI provider/fallback code: current providers are local/stub implementations
+  without Android context references or network/client resources.
+- Benchmark data: large benchmark data is benchmark-source-set only through
+  `benchmarkImplementation(project(":core:testing"))` and is chunked during
+  seeding. It is not available to normal debug or release source sets except
+  through the benchmark build type.
+
+No obvious low-risk leak fix was identified during the static review, so this
+task does not refactor runtime architecture or change production behavior.
+
+Runtime limitation:
+
+- A LeakCanary runtime pass requires an attached device or emulator and a debug
+  install. If no device is attached during validation, only build/dependency
+  isolation can be verified and no leak-free runtime claim should be made.
+
+Validation results for this pass:
+
+```powershell
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :app:assembleRelease
+.\gradlew.bat :app:assembleBenchmark
+.\gradlew.bat :macrobenchmark:assemble
+.\gradlew.bat :app:testDebugUnitTest :core:security:testDebugUnitTest :core:data:testDebugUnitTest :core:database:testDebugUnitTest :feature:dashboard:testDebugUnitTest :feature:search:testDebugUnitTest :feature:transaction:testDebugUnitTest
+.\gradlew.bat :app:dependencyInsight --configuration debugRuntimeClasspath --dependency leakcanary
+.\gradlew.bat :app:dependencyInsight --configuration releaseRuntimeClasspath --dependency leakcanary
+.\gradlew.bat :app:dependencyInsight --configuration benchmarkRuntimeClasspath --dependency leakcanary
+```
+
+All commands above passed. The first `:app:assembleDebug` attempt timed out
+before returning useful output; the same command was rerun with a longer timeout
+and passed. Dependency insight showed LeakCanary 2.14 on
+`debugRuntimeClasspath`, and no matching LeakCanary dependency on
+`releaseRuntimeClasspath` or `benchmarkRuntimeClasspath`.
+
+`adb devices` reported no attached device or emulator, so the debug app was not
+installed, LeakCanary UI/notification behavior was not observed, and no runtime
+leak result is claimed.
+
+Follow-ups:
+
+- Run the manual profiler checklist on a named physical device and a lower-end
+  emulator before recording runtime findings.
+- Keep future profiler findings tied to exact app commit, build variant,
+  device, Android version, flows exercised, and LeakCanary trace evidence.
