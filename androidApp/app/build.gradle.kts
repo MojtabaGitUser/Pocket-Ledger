@@ -129,4 +129,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(project(":core:testing"))
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    debugImplementation(libs.leakcanary.android)
 }
