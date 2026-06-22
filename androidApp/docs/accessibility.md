@@ -79,6 +79,35 @@ Use state descriptions for spoken clarity:
 Search filters should keep distinct labels for type, category, tag, date, and
 amount filters so tests and accessibility services can identify them.
 
+## Semantic Labels And State Descriptions
+
+Use semantic labels and state descriptions where they make TalkBack output more
+useful than the visible text alone.
+
+Checklist:
+
+- Icon-only and compact actions have meaningful labels, for example
+  `Edit transaction`, `Delete transaction`, `Clear search filters`, or
+  `Unlock Pocket Ledger`.
+- Decorative navigation glyphs and display-only tag/status chips do not expose
+  fake actions or noisy duplicate labels.
+- Interactive controls expose their role through the platform component or an
+  explicit role when needed, and expose selected, checked, enabled, disabled,
+  loading, error, empty, active, inactive, unavailable, or authenticating state
+  where applicable.
+- Loading, empty, unavailable, and error states provide a combined spoken
+  description and a state description such as `Loading`, `Empty`, or `Error`.
+- Financial summaries, budget progress, category totals, and transaction rows
+  use spoken descriptions that include only visible, relevant information and
+  are understandable when read aloud.
+- Debug or app-health UI uses diagnostic-safe labels and states. Do not expose
+  stack traces, internal IDs, raw enum names, secrets, or sensitive release
+  diagnostics through accessibility text.
+- TalkBack navigation order follows the visible screen structure: screen title,
+  primary controls, filters/forms, content, and retry/confirmation actions.
+- Compose tests cover critical semantics for navigation state, loading/error
+  states, transaction rows, form fields, chips/toggles, and app-lock states.
+
 ## Progress And Metrics
 
 Dashboard metric cards should expose readable descriptions that include the

@@ -4,6 +4,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -38,10 +41,14 @@ class TransactionEditorScreenTest {
     fun typeSwitchingUpdatesStateAndShowsIncomeCategories() {
         val harness = setEditorContent()
 
+        composeRule.onNodeWithContentDescription("Transaction type Expense")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
         composeRule.onNodeWithText("Income").performClick()
 
         assertEquals(TransactionType.INCOME, harness.state.formState.transactionType)
         composeRule.onNodeWithText("Salary").assertExists()
+        composeRule.onNodeWithContentDescription("Transaction type Income")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
     }
 
     @Test
@@ -90,11 +97,34 @@ class TransactionEditorScreenTest {
 
         composeRule.onNodeWithContentDescription("Merchant").performTextInput("Coffee Shop")
         composeRule.onNodeWithContentDescription("Note").performTextInput("Team breakfast")
+        composeRule.onNodeWithContentDescription("Recurring transaction")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Off"))
         composeRule.onNodeWithContentDescription("Recurring transaction").performClick()
 
         assertEquals("Coffee Shop", harness.state.formState.merchant)
         assertEquals("Team breakfast", harness.state.formState.note)
         assertTrue(harness.state.formState.isRecurring)
+        composeRule.onNodeWithContentDescription("Recurring transaction")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "On"))
+    }
+
+    @Test
+    fun categoryAndTagChipsExposeSelectedStateDescriptions() {
+        val harness = setEditorContent()
+
+        composeRule.onNodeWithContentDescription("Category Food")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Not selected"))
+            .performClick()
+        composeRule.onNodeWithContentDescription("Tag Work")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Not selected"))
+            .performClick()
+
+        assertEquals("food", harness.state.formState.categoryId)
+        assertEquals(setOf("work"), harness.state.selectedTagIds)
+        composeRule.onNodeWithContentDescription("Category Food")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
+        composeRule.onNodeWithContentDescription("Tag Work")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
     }
 
     @Test

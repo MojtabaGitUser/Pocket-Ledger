@@ -2,9 +2,13 @@ package com.mojtaba.pocketledger.feature.dashboard.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -27,6 +31,8 @@ class DashboardScreenTest {
         setContent(DashboardUiState.Loading)
 
         composeRule.onNodeWithText("Loading dashboard").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Loading dashboard")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Loading"))
     }
 
     @Test
@@ -190,6 +196,9 @@ class DashboardScreenTest {
         composeRule.onNodeWithText("Could not load dashboard").assertIsDisplayed()
         composeRule.onNodeWithText("Could not read local summaries.").assertIsDisplayed()
         composeRule.onNodeWithText("Retry").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(
+            "Could not load dashboard. Could not read local summaries.",
+        ).assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Error"))
     }
 
     @Test

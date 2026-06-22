@@ -10,6 +10,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.component.SectionHeader
@@ -95,6 +98,10 @@ private fun PlaceholderDestinationScreen(
             if (debugOnly) {
                 AssistChip(
                     onClick = {},
+                    modifier = Modifier.semantics {
+                        contentDescription = "Debug health availability"
+                        stateDescription = "Debug build only"
+                    },
                     label = {
                         Text(text = "Debug build only")
                     },

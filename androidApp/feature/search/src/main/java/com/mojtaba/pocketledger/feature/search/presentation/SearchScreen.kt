@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -397,7 +398,7 @@ private fun SearchResultRow(
                     AssistChip(
                         onClick = {},
                         label = { Text(tag) },
-                        modifier = Modifier.semantics {
+                        modifier = Modifier.clearAndSetSemantics {
                             contentDescription = "Tag $tag"
                         },
                     )

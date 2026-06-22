@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -252,7 +253,10 @@ private fun SecondaryFields(
             },
             label = { Text("Recurring") },
             modifier = Modifier
-                .semantics { contentDescription = "Recurring transaction" }
+                .semantics {
+                    contentDescription = "Recurring transaction"
+                    selected = uiState.formState.isRecurring
+                }
                 .pocketLedgerCheckedState(uiState.formState.isRecurring),
         )
         uiState.validationResult.errors.form?.message?.let { message ->

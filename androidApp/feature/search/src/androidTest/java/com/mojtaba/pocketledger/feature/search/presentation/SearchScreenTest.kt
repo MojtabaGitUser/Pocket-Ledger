@@ -146,6 +146,8 @@ class SearchScreenTest {
 
         composeRule.onNodeWithText("No transactions yet").assertIsDisplayed()
         composeRule.onNodeWithText("Saved transactions will appear in search.").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("No transactions yet. Saved transactions will appear in search.")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Empty"))
     }
 
     @Test
@@ -160,10 +162,14 @@ class SearchScreenTest {
     fun loadingAndErrorStatesRender() {
         setContent(SearchUiState(isLoading = true))
         composeRule.onNodeWithText("Searching transactions").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Searching transactions")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Loading"))
 
         setContent(SearchUiState(isLoading = false, errorMessage = "Local ledger unavailable"))
         composeRule.onNodeWithText("Could not search transactions").assertIsDisplayed()
         composeRule.onNodeWithText("Local ledger unavailable").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Could not search transactions. Local ledger unavailable")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Error"))
     }
 
     private fun setContent(
