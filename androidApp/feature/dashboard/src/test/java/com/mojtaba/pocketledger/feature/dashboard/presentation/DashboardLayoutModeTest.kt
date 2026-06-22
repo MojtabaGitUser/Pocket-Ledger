@@ -28,4 +28,16 @@ class DashboardLayoutModeTest {
             dashboardLayoutMode(PocketLedgerWindowWidthSizeClass.Expanded),
         )
     }
+
+    @Test
+    fun twoHundredPercentFontScaleUsesRoomierLayouts() {
+        assertEquals(
+            DashboardLayoutMode.SingleColumn,
+            dashboardLayoutMode(PocketLedgerWindowWidthSizeClass.Medium, fontScale = 2f),
+        )
+        assertEquals(
+            DashboardLayoutMode.TwoColumn,
+            dashboardLayoutMode(PocketLedgerWindowWidthSizeClass.Expanded, fontScale = 2f),
+        )
+    }
 }

@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -40,6 +41,7 @@ fun TransactionRow(
     ),
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
+    val highFontScale = LocalDensity.current.fontScale >= 2f
     val rowModifier = if (onClick != null) {
         modifier.clickable(
             onClickLabel = onClickLabel,
@@ -60,23 +62,19 @@ fun TransactionRow(
                 }
             },
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = spacing.medium),
-            horizontalArrangement = Arrangement.spacedBy(spacing.medium),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        if (highFontScale) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = spacing.medium),
                 verticalArrangement = Arrangement.spacedBy(spacing.extraSmall),
             ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    maxLines = Int.MAX_VALUE,
+                    overflow = TextOverflow.Clip,
                 )
                 val supportingText = listOfNotNull(category, subtitle)
                     .joinToString(separator = " - ")
@@ -85,12 +83,45 @@ fun TransactionRow(
                         text = supportingText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = Int.MAX_VALUE,
+                        overflow = TextOverflow.Clip,
+                    )
+                }
+                AmountText(amount = amount)
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = spacing.medium),
+                horizontalArrangement = Arrangement.spacedBy(spacing.medium),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(spacing.extraSmall),
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    val supportingText = listOfNotNull(category, subtitle)
+                        .joinToString(separator = " - ")
+                    if (supportingText.isNotBlank()) {
+                        Text(
+                            text = supportingText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
+                AmountText(amount = amount)
             }
-            AmountText(amount = amount)
         }
         if (showDivider) {
             HorizontalDivider()

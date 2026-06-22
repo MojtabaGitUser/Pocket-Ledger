@@ -16,6 +16,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -43,6 +44,8 @@ fun DashboardScreen(
     modifier: Modifier = Modifier,
     widthSizeClass: PocketLedgerWindowWidthSizeClass = PocketLedgerWindowWidthSizeClass.Compact,
 ) {
+    val fontScale = LocalDensity.current.fontScale
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -64,7 +67,7 @@ fun DashboardScreen(
         ) {
             DashboardContent(
                 uiState = uiState,
-                layoutMode = dashboardLayoutMode(widthSizeClass),
+                layoutMode = dashboardLayoutMode(widthSizeClass, fontScale),
                 onAction = onAction,
                 modifier = Modifier.fillMaxSize(),
             )

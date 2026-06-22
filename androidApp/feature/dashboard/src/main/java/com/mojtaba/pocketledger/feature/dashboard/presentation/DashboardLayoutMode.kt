@@ -10,9 +10,18 @@ enum class DashboardLayoutMode {
 
 fun dashboardLayoutMode(
     widthSizeClass: PocketLedgerWindowWidthSizeClass,
+    fontScale: Float = 1f,
 ): DashboardLayoutMode =
-    when (widthSizeClass) {
-        PocketLedgerWindowWidthSizeClass.Compact -> DashboardLayoutMode.SingleColumn
-        PocketLedgerWindowWidthSizeClass.Medium -> DashboardLayoutMode.TwoColumn
-        PocketLedgerWindowWidthSizeClass.Expanded -> DashboardLayoutMode.DashboardGrid
+    if (fontScale >= 2f) {
+        when (widthSizeClass) {
+            PocketLedgerWindowWidthSizeClass.Compact,
+            PocketLedgerWindowWidthSizeClass.Medium -> DashboardLayoutMode.SingleColumn
+            PocketLedgerWindowWidthSizeClass.Expanded -> DashboardLayoutMode.TwoColumn
+        }
+    } else {
+        when (widthSizeClass) {
+            PocketLedgerWindowWidthSizeClass.Compact -> DashboardLayoutMode.SingleColumn
+            PocketLedgerWindowWidthSizeClass.Medium -> DashboardLayoutMode.TwoColumn
+            PocketLedgerWindowWidthSizeClass.Expanded -> DashboardLayoutMode.DashboardGrid
+        }
     }
