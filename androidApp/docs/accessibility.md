@@ -119,6 +119,33 @@ Progress indicators should expose a state description, for example:
 
 Keep the visible progress text and spoken progress text consistent.
 
+## 200% Font Scaling
+
+Pocket Ledger must remain usable when Android font size is set to 200%.
+Prefer reflowing content into fewer columns or stacked rows over clipping text,
+shrinking text, or hiding critical actions.
+
+Checklist:
+
+- Important screens are tested at `fontScale = 2.0f`, including dashboard,
+  transactions, search, budget setup, settings, and app lock.
+- Critical text is not clipped: titles, form labels, validation errors,
+  transaction amounts, financial summaries, category totals, and action labels
+  remain understandable.
+- Components do not overlap at 200% font scale.
+- Primary actions remain reachable, including save, retry, clear filters,
+  app-lock unlock, and settings toggles.
+- Dialogs, forms, and validation errors remain readable and scrollable when
+  content exceeds the viewport.
+- Financial summaries and transaction rows may stack vertically at 200% font
+  scale so values remain visible and readable.
+- Debug or app-health UI remains readable and does not expose sensitive release
+  diagnostics, stack traces, secrets, internal IDs, or personal financial data.
+- TalkBack labels, roles, selected states, checked states, and state
+  descriptions still match the visible UI after layout reflow.
+- Screenshot coverage is verified with `.\gradlew.bat verifyAdaptiveScreenshots`
+  after intentional 200% font-scale layout changes.
+
 ## Empty, Loading, And Error States
 
 Loading states should use polite live regions and describe what is loading.

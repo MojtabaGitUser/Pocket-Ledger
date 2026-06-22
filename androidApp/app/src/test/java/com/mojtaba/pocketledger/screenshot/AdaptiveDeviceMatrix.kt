@@ -105,4 +105,9 @@ object AdaptiveDeviceMatrix {
         ExpandedTablet.withFontScale(1.3f),
         ExpandedTablet.withFontScale(1.5f),
     )
+
+    val TwoHundredPercentFontScaleDevices = listOf(
+        CompactPhone.withFontScale(2.0f),
+        ExpandedTablet.withFontScale(2.0f),
+    )
 }

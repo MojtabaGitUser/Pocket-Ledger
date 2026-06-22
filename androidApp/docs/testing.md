@@ -162,8 +162,10 @@ fixtures and device definitions:
 The screenshot suite covers dashboard content, empty and error states;
 transaction list, detail, missing, error, and adaptive list/detail states;
 search initial, populated, empty-ledger, no-results, error, and filter-visible
-states; adaptive navigation chrome; and key large-font variants at 1.3 and 1.5
-font scale. `ThemeScreenshotMatrixTest` adds an explicit light/dark matrix over
+states; adaptive navigation chrome; key large-font variants at 1.3 and 1.5
+font scale; and focused 200% font-scale coverage for dashboard, transactions,
+search, budget setup, settings, and app lock. `ThemeScreenshotMatrixTest` adds
+an explicit light/dark matrix over
 compact phone and expanded tablet layouts for dashboard content, transaction
 adaptive content, populated search, settings app-lock availability states, and
 the locked app-lock screen.

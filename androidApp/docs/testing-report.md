@@ -182,7 +182,7 @@ Committed PNG baselines live under:
 app/src/test/snapshots/images
 ```
 
-The repository currently contains 155 committed snapshot images.
+The repository currently contains 167 committed snapshot images.
 
 Screens and states covered:
 
@@ -194,7 +194,11 @@ Screens and states covered:
 - Adaptive navigation shell.
 - Settings app-lock availability and app-lock locked states through the theme
   matrix.
-- Large-font variants for dashboard, search, and transaction list/detail.
+- Large-font variants at 1.3 and 1.5 font scale for dashboard, search, and
+  transaction list/detail.
+- Focused 200% font-scale coverage for dashboard, transaction list/detail,
+  search, budget setup, settings app-lock availability, and locked app-lock
+  state.
 
 Device and adaptive coverage:
 
@@ -207,7 +211,8 @@ Device and adaptive coverage:
 - Desktop/freeform window.
 - Explicit light/dark matrix for selected key states on compact and expanded
   layouts.
-- Font scale 1.3 and 1.5 for selected accessibility cases.
+- Font scale 1.3, 1.5, and focused 2.0 coverage for selected accessibility
+  cases.
 
 Determinism strategy:
 

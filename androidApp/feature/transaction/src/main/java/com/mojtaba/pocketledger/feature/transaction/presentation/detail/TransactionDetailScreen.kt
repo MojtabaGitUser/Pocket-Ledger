@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -25,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -164,10 +167,18 @@ fun TransactionDetailContent(
                 onRetry = { onAction(TransactionDetailAction.RetryClicked) },
             )
         }
-        is TransactionDetailUiState.Content -> TransactionDetailCard(
-            transaction = uiState.transaction,
-            modifier = modifier.padding(PocketLedgerThemeDefaults.spacing.medium),
-        )
+        is TransactionDetailUiState.Content -> {
+            val highFontScale = LocalDensity.current.fontScale >= 2f
+            val contentModifier = if (highFontScale) {
+                modifier.verticalScroll(rememberScrollState())
+            } else {
+                modifier
+            }
+            TransactionDetailCard(
+                transaction = uiState.transaction,
+                modifier = contentModifier.padding(PocketLedgerThemeDefaults.spacing.medium),
+            )
+        }
     }
 }
 
@@ -248,6 +259,31 @@ private fun DetailRow(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
 ) {
+    val highFontScale = LocalDensity.current.fontScale >= 2f
+
+    if (highFontScale) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = "$label, $value" },
+            verticalArrangement = Arrangement.spacedBy(PocketLedgerThemeDefaults.spacing.extraSmall),
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = Int.MAX_VALUE,
+                overflow = TextOverflow.Clip,
+            )
+        }
+        return
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
