@@ -8,6 +8,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -17,6 +18,7 @@ import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
 import com.mojtaba.pocketledger.feature.search.presentation.preview.SearchPreviewFixtures
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -29,6 +31,7 @@ class SearchScreenTest {
         val actions = mutableListOf<SearchAction>()
         setContent(SearchUiState(isLoading = false), actions::add)
 
+        composeRule.onNodeWithContentDescription("Keyword search").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Search transactions by keyword")
             .assertIsDisplayed()
             .performTextInput("coffee")
@@ -46,6 +49,35 @@ class SearchScreenTest {
             .performClick()
 
         assertEquals(SearchAction.TypeFilterChanged(SearchTransactionType.Expense), actions.single())
+    }
+
+    @Test
+    fun semanticModeIsHiddenWhenCapabilityIsNotVisible() {
+        setContent(SearchUiState(isLoading = false))
+
+        assertTrue(
+            composeRule
+                .onAllNodesWithContentDescription("Semantic search, coming soon")
+                .fetchSemanticsNodes()
+                .isEmpty(),
+        )
+    }
+
+    @Test
+    fun semanticModeRendersDisabledPlaceholderWhenCapabilityIsVisible() {
+        setContent(
+            SearchUiState(
+                capabilities = SearchCapabilities(
+                    semanticSearchVisible = true,
+                    semanticSearchAvailable = false,
+                ),
+                isLoading = false,
+            ),
+        )
+
+        composeRule.onNodeWithContentDescription("Semantic search, coming soon")
+            .assertIsDisplayed()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Disabled, coming soon"))
     }
 
     @Test
@@ -114,6 +146,8 @@ class SearchScreenTest {
 
         composeRule.onNodeWithText("No transactions yet").assertIsDisplayed()
         composeRule.onNodeWithText("Saved transactions will appear in search.").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("No transactions yet. Saved transactions will appear in search.")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Empty"))
     }
 
     @Test
@@ -128,10 +162,14 @@ class SearchScreenTest {
     fun loadingAndErrorStatesRender() {
         setContent(SearchUiState(isLoading = true))
         composeRule.onNodeWithText("Searching transactions").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Searching transactions")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Loading"))
 
         setContent(SearchUiState(isLoading = false, errorMessage = "Local ledger unavailable"))
         composeRule.onNodeWithText("Could not search transactions").assertIsDisplayed()
         composeRule.onNodeWithText("Local ledger unavailable").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Could not search transactions. Local ledger unavailable")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Error"))
     }
 
     private fun setContent(
@@ -155,6 +193,9 @@ class SearchScreenTest {
             when (action) {
                 is SearchAction.KeywordChanged -> updateQuery {
                     copy(text = action.text)
+                }
+                is SearchAction.SearchModeSelected -> updateQuery {
+                    copy(mode = action.mode)
                 }
                 is SearchAction.TypeFilterChanged -> updateQuery {
                     copy(

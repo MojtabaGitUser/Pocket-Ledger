@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -32,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mojtaba.pocketledger.core.data.search.SearchAmountRange
 import com.mojtaba.pocketledger.core.data.search.SearchDateRange
+import com.mojtaba.pocketledger.core.data.search.SearchMode
 import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerSelectedState
@@ -147,6 +149,39 @@ private fun SearchFilterBar(
         horizontalArrangement = Arrangement.spacedBy(spacing.small),
         contentPadding = PaddingValues(vertical = spacing.extraSmall),
     ) {
+        item {
+            val selected = uiState.query.mode == SearchMode.Keyword
+            FilterChip(
+                selected = selected,
+                onClick = { onAction(SearchAction.SearchModeSelected(SearchMode.Keyword)) },
+                label = { Text("Keyword") },
+                enabled = uiState.capabilities.keywordSearchAvailable,
+                modifier = Modifier
+                    .semantics { contentDescription = "Keyword search" }
+                    .pocketLedgerSelectedState(selected),
+            )
+        }
+        if (uiState.capabilities.semanticSearchVisible) {
+            item {
+                val semanticAvailable = uiState.capabilities.semanticSearchAvailable
+                val selected = uiState.query.mode == SearchMode.Semantic
+                FilterChip(
+                    selected = selected,
+                    onClick = { onAction(SearchAction.SearchModeSelected(SearchMode.Semantic)) },
+                    label = { Text("Semantic") },
+                    enabled = semanticAvailable,
+                    modifier = Modifier
+                        .semantics {
+                            contentDescription = "Semantic search, coming soon"
+                            stateDescription = if (semanticAvailable) {
+                                if (selected) "Selected" else "Not selected"
+                            } else {
+                                "Disabled, coming soon"
+                            }
+                        },
+                )
+            }
+        }
         item {
             val selected = uiState.query.filters.transactionTypes.isEmpty()
             FilterChip(
@@ -279,6 +314,12 @@ private fun SearchStateContent(
                 onRetry = { onAction(SearchAction.RetryClicked) },
             )
         }
+        uiState.modeUnavailableMessage != null -> Centered(modifier) {
+            EmptyState(
+                title = "Search mode unavailable",
+                message = uiState.modeUnavailableMessage,
+            )
+        }
         uiState.isEmptyLedger -> Centered(modifier) {
             EmptyState(
                 title = "No transactions yet",
@@ -332,12 +373,15 @@ private fun SearchResultRow(
     modifier: Modifier = Modifier,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
+    val subtitle = remember(result) {
+        listOfNotNull(result.typeLabel, result.dateLabel, result.notePreview)
+            .joinToString(separator = " - ")
+    }
     Column(modifier = modifier.fillMaxWidth()) {
         TransactionRow(
             title = result.title,
             amount = result.amount,
-            subtitle = listOfNotNull(result.typeLabel, result.dateLabel, result.notePreview)
-                .joinToString(separator = " - "),
+            subtitle = subtitle,
             category = result.categoryLabel,
             onClick = onClick,
             showDivider = showDivider && result.tagLabels.isEmpty(),
@@ -350,11 +394,11 @@ private fun SearchResultRow(
                 contentPadding = PaddingValues(bottom = spacing.small),
                 modifier = Modifier.padding(horizontal = spacing.medium),
             ) {
-                items(result.tagLabels) { tag ->
+                items(result.tagLabels, key = { tag -> tag }) { tag ->
                     AssistChip(
                         onClick = {},
                         label = { Text(tag) },
-                        modifier = Modifier.semantics {
+                        modifier = Modifier.clearAndSetSemantics {
                             contentDescription = "Tag $tag"
                         },
                     )

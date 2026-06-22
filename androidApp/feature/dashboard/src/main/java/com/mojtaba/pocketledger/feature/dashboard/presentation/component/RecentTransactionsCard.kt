@@ -8,9 +8,12 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import com.mojtaba.pocketledger.core.designsystem.component.AmountDisplay
 import com.mojtaba.pocketledger.core.designsystem.component.AmountTone
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.component.TransactionRow
@@ -25,6 +28,9 @@ fun RecentTransactionsCard(
     modifier: Modifier = Modifier,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
+    val visibleTransactions = remember(transactions) {
+        transactions.take(5).map { transaction -> transaction.toDisplayRow() }
+    }
 
     ElevatedCard(modifier = modifier) {
         Column(
@@ -45,28 +51,46 @@ fun RecentTransactionsCard(
                     message = "Recent ledger activity will appear here.",
                 )
             } else {
-                transactions.take(5).forEachIndexed { index, transaction ->
+                visibleTransactions.forEachIndexed { index, transaction ->
                     TransactionRow(
-                        title = transaction.categoryName ?: DashboardFormatters.transactionTypeLabel(transaction.type),
-                        amount = DashboardFormatters.amount(
-                            amountMinor = transaction.amountMinor,
-                            currencyCode = transaction.currencyCode,
-                            includeSign = true,
-                            tone = when (transaction.type) {
-                                DashboardTransactionType.Income -> AmountTone.Positive
-                                DashboardTransactionType.Expense -> AmountTone.Negative
-                                DashboardTransactionType.Unknown -> AmountTone.Neutral
-                            },
-                        ),
-                        category = DashboardFormatters.transactionTypeLabel(transaction.type),
-                        subtitle = listOfNotNull(
-                            DashboardFormatters.date(transaction.occurredAt),
-                            transaction.notePreview,
-                        ).joinToString(separator = " - ").takeIf { it.isNotBlank() },
-                        showDivider = index < transactions.take(5).lastIndex,
+                        title = transaction.title,
+                        amount = transaction.amount,
+                        category = transaction.category,
+                        subtitle = transaction.subtitle,
+                        showDivider = index < visibleTransactions.lastIndex,
                     )
                 }
             }
         }
     }
+}
+
+@Immutable
+private data class RecentTransactionDisplayRow(
+    val title: String,
+    val amount: AmountDisplay,
+    val category: String,
+    val subtitle: String?,
+)
+
+private fun RecentTransactionSummary.toDisplayRow(): RecentTransactionDisplayRow {
+    val typeLabel = DashboardFormatters.transactionTypeLabel(type)
+    return RecentTransactionDisplayRow(
+        title = categoryName ?: typeLabel,
+        amount = DashboardFormatters.amount(
+            amountMinor = amountMinor,
+            currencyCode = currencyCode,
+            includeSign = true,
+            tone = when (type) {
+                DashboardTransactionType.Income -> AmountTone.Positive
+                DashboardTransactionType.Expense -> AmountTone.Negative
+                DashboardTransactionType.Unknown -> AmountTone.Neutral
+            },
+        ),
+        category = typeLabel,
+        subtitle = listOfNotNull(
+            DashboardFormatters.date(occurredAt),
+            notePreview,
+        ).joinToString(separator = " - ").takeIf { it.isNotBlank() },
+    )
 }

@@ -12,8 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
@@ -32,6 +34,7 @@ fun EmptyState(
     StateColumn(
         title = title,
         message = message,
+        stateDescription = "Empty",
         modifier = modifier,
         icon = icon,
         action = action,
@@ -50,6 +53,7 @@ fun LoadingState(
             .padding(spacing.large)
             .semantics {
                 contentDescription = message ?: "Loading"
+                stateDescription = "Loading"
                 liveRegion = LiveRegionMode.Polite
             },
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,8 +82,10 @@ fun ErrorState(
     StateColumn(
         title = title,
         message = message,
+        stateDescription = "Error",
         modifier = modifier.semantics {
             liveRegion = LiveRegionMode.Polite
+            error(message)
         },
         action = if (onRetry != null) {
             {
@@ -97,6 +103,7 @@ fun ErrorState(
 private fun StateColumn(
     title: String,
     message: String,
+    stateDescription: String,
     modifier: Modifier = Modifier,
     icon: (@Composable () -> Unit)? = null,
     action: (@Composable () -> Unit)? = null,
@@ -108,6 +115,7 @@ private fun StateColumn(
             .padding(spacing.large)
             .semantics {
                 contentDescription = "$title. $message"
+                this.stateDescription = stateDescription
             },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(spacing.medium),

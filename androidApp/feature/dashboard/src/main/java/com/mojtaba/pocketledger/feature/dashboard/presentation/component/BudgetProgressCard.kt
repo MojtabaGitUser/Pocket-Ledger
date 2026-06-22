@@ -14,9 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerProgressState
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
@@ -115,6 +117,10 @@ private fun BudgetProgressRow(
             AssistChip(
                 onClick = {},
                 label = { Text(status) },
+                modifier = Modifier.clearAndSetSemantics {
+                    contentDescription = "Budget status"
+                    stateDescription = status
+                },
             )
         }
         LinearProgressIndicator(

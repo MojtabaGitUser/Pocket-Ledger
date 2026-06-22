@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -222,11 +223,11 @@ private fun TransactionDetailCard(
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(spacing.small),
                     ) {
-                        items(transaction.tagLabels) { tag ->
+                        items(transaction.tagLabels, key = { tag -> tag }) { tag ->
                             AssistChip(
                                 onClick = {},
                                 label = { Text(tag) },
-                                modifier = Modifier.semantics {
+                                modifier = Modifier.clearAndSetSemantics {
                                     contentDescription = "Tag $tag"
                                 },
                             )

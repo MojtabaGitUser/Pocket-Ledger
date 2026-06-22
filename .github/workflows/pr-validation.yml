@@ -5,6 +5,13 @@ on:
     branches:
       - dev
       - main
+  workflow_dispatch:
+    inputs:
+      verify_screenshots:
+        description: "Run adaptive Paparazzi screenshot verification"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -13,6 +20,8 @@ jobs:
   android-validation:
     name: Android validation
     runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=2
 
     defaults:
       run:
@@ -60,3 +69,7 @@ jobs:
 
       - name: Run full build
         run: ./gradlew clean build
+
+      - name: Verify adaptive screenshots
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_screenshots }}
+        run: ./gradlew verifyAdaptiveScreenshots

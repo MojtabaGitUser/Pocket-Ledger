@@ -8,11 +8,13 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:ai"))
     implementation(project(":core:data"))
     implementation(project(":core:designsystem"))
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.coroutines.core)

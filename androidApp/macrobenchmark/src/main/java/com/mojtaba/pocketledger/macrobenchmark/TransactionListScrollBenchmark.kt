@@ -4,9 +4,7 @@ import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
-import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
-import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
 
@@ -19,7 +17,7 @@ class TransactionListScrollBenchmark {
         benchmarkRule.measureRepeated(
             packageName = BenchmarkConfig.PackageName,
             metrics = listOf(FrameTimingMetric()),
-            compilationMode = CompilationMode.Partial(),
+            compilationMode = CompilationMode.None(),
             startupMode = StartupMode.COLD,
             iterations = 5,
             setupBlock = {
@@ -28,15 +26,10 @@ class TransactionListScrollBenchmark {
             },
         ) {
             startActivityAndWait()
-            device.findObject(By.desc("Transactions navigation destination")).click()
-            device.wait(
-                Until.hasObject(By.text("Neighborhood Market")),
-                BenchmarkConfig.TimeoutMillis,
-            )
+            findByDescription("Transactions navigation destination").click()
+            waitForText("Neighborhood Market")
 
-            val transactionList = device.findObject(
-                By.res(BenchmarkConfig.PackageName, "TransactionList"),
-            )
+            val transactionList = findByResource("TransactionList")
             repeat(3) {
                 transactionList.fling(Direction.DOWN)
                 device.waitForIdle()

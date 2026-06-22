@@ -22,6 +22,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -224,5 +225,6 @@ private fun DestinationIcon(label: String) {
         style = MaterialTheme.typography.labelLarge,
         maxLines = 1,
         overflow = TextOverflow.Clip,
+        modifier = Modifier.clearAndSetSemantics {},
     )
 }

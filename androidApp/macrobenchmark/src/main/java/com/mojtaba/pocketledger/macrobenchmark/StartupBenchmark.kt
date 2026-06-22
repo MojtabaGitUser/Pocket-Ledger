@@ -4,8 +4,6 @@ import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
 
@@ -14,11 +12,11 @@ class StartupBenchmark {
     val benchmarkRule = MacrobenchmarkRule()
 
     @Test
-    fun coldStartup() {
+    fun coldStartupNoCompilation() {
         benchmarkRule.measureRepeated(
             packageName = BenchmarkConfig.PackageName,
             metrics = listOf(StartupTimingMetric()),
-            compilationMode = CompilationMode.Partial(),
+            compilationMode = CompilationMode.None(),
             startupMode = StartupMode.COLD,
             iterations = 5,
             setupBlock = {
@@ -26,10 +24,7 @@ class StartupBenchmark {
             },
         ) {
             startActivityAndWait()
-            device.wait(
-                Until.hasObject(By.text("No dashboard data yet")),
-                BenchmarkConfig.TimeoutMillis,
-            )
+            waitForText("No dashboard data yet")
         }
     }
 }

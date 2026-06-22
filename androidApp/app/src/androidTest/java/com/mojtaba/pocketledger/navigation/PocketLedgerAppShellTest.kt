@@ -14,10 +14,21 @@ import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.rememberNavController
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
 import com.mojtaba.pocketledger.adaptive.LocalAdaptiveNavigationState
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
+import com.mojtaba.pocketledger.core.ai.AiProviderSelector
+import com.mojtaba.pocketledger.core.ai.NoOpAiProvider
+import com.mojtaba.pocketledger.core.ai.RuleBasedAiProvider
 import com.mojtaba.pocketledger.core.designsystem.adaptive.AdaptiveNavigationState
 import com.mojtaba.pocketledger.core.designsystem.adaptive.PocketLedgerWindowWidthSizeClass
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
+import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
+import com.mojtaba.pocketledger.core.security.applock.AppLockAuthenticationResult
+import com.mojtaba.pocketledger.core.security.applock.AppLockAuthenticator
+import com.mojtaba.pocketledger.core.security.applock.AppLockAvailability
+import com.mojtaba.pocketledger.core.security.applock.AppLockManager
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
+import com.mojtaba.pocketledger.core.security.preferences.InMemorySensitivePreferences
+import com.mojtaba.pocketledger.core.testing.featureflags.FakeFeatureFlagProvider
 import com.mojtaba.pocketledger.core.testing.fixture.testIncomeCategory
 import com.mojtaba.pocketledger.core.testing.fixture.testLedgerBudget
 import com.mojtaba.pocketledger.core.testing.fixture.testLedgerCategory
@@ -98,6 +109,13 @@ class PocketLedgerAppShellTest {
         val transaction = testLedgerTransaction()
         val tagLink = testTransactionTagLink(transactionId = transaction.id, tagId = tag.id)
 
+        val featureFlags = FeatureFlagEvaluator(FakeFeatureFlagProvider())
+        val aiProviderSelector = AiProviderSelector(
+            providers = listOf(RuleBasedAiProvider, NoOpAiProvider),
+            featureFlags = featureFlags,
+        )
+        val sensitivePreferences = InMemorySensitivePreferences()
+
         return PocketLedgerAppGraph.createForTesting(
             transactionRepository = FakeTransactionRepository(
                 initialTransactions = listOf(transaction),
@@ -111,9 +129,23 @@ class PocketLedgerAppShellTest {
                 initialTags = listOf(tag),
                 initialLinks = listOf(tagLink),
             ),
+            featureFlags = featureFlags,
+            aiProviderSelector = aiProviderSelector,
+            aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
+            sensitivePreferences = sensitivePreferences,
+            appLockManager = AppLockManager(
+                preferences = sensitivePreferences,
+                authenticator = AlwaysAvailableAuthenticator,
+            ),
             backgroundTaskScheduler = FakeScheduler(),
             appLogger = NoOpAppLogger,
         )
+    }
+
+    private object AlwaysAvailableAuthenticator : AppLockAuthenticator {
+        override fun availability(): AppLockAvailability = AppLockAvailability.Available
+
+        override suspend fun authenticate(): AppLockAuthenticationResult = AppLockAuthenticationResult.Success
     }
 
     private object NoOpAppLogger : AppLogger {

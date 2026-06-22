@@ -3,6 +3,10 @@ package com.mojtaba.pocketledger.feature.dashboard.model
 sealed interface DashboardInsight {
     data object NoData : DashboardInsight
 
+    data class AiMonthlySummary(
+        val text: String,
+    ) : DashboardInsight
+
     data class PositiveCashFlow(
         val netMinor: Long,
         val currencyCode: String,

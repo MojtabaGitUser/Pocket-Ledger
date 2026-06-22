@@ -7,11 +7,12 @@ import org.junit.Test
 
 class SearchQueryTest {
     @Test
-    fun `default query is empty and date descending`() {
+    fun `default query is empty keyword mode and date descending`() {
         val query = SearchQuery()
 
         assertTrue(query.isEmpty)
         assertTrue(query.filters.isEmpty)
+        assertEquals(SearchMode.Keyword, query.mode)
         assertEquals(SearchSort.DateDescending, query.sort)
     }
 
@@ -72,6 +73,31 @@ class SearchQueryTest {
         assertEquals(
             setOf(SearchTransactionType.Income, SearchTransactionType.Expense),
             query.normalized().filters.transactionTypes,
+        )
+    }
+
+    @Test
+    fun `semantic mode normalizes query without changing mode`() {
+        val query = SearchQuery(
+            text = "  coffee  ",
+            mode = SearchMode.Semantic,
+        )
+
+        val normalized = query.normalized()
+
+        assertEquals("coffee", normalized.text)
+        assertEquals(SearchMode.Semantic, normalized.mode)
+        assertTrue(normalized.validate().isValid)
+    }
+
+    @Test
+    fun `all search mode values remain stable`() {
+        assertEquals(
+            listOf(
+                SearchMode.Keyword,
+                SearchMode.Semantic,
+            ),
+            SearchMode.entries,
         )
     }
 

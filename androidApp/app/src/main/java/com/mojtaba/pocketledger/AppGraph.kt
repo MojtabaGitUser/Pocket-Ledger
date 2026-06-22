@@ -4,10 +4,18 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.biometric.BiometricManager
+import androidx.fragment.app.FragmentActivity
 import androidx.room.Room
 import androidx.work.WorkManager
 import com.mojtaba.pocketledger.background.TaskWorkerRegistry
 import com.mojtaba.pocketledger.background.WorkManagerScheduler
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
+import com.mojtaba.pocketledger.core.ai.AiProviderSelector
+import com.mojtaba.pocketledger.core.ai.GeminiNanoAiProvider
+import com.mojtaba.pocketledger.core.ai.MlKitAiProvider
+import com.mojtaba.pocketledger.core.ai.NoOpAiProvider
+import com.mojtaba.pocketledger.core.ai.RuleBasedAiProvider
 import com.mojtaba.pocketledger.core.background.BackgroundTaskScheduler
 import com.mojtaba.pocketledger.core.data.repository.BudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
@@ -18,9 +26,16 @@ import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryReposito
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
+import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
+import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
 import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
 import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
+import com.mojtaba.pocketledger.core.security.applock.AppLockManager
+import com.mojtaba.pocketledger.core.security.preferences.EncryptedSensitivePreferences
+import com.mojtaba.pocketledger.core.security.preferences.InMemorySensitivePreferences
+import com.mojtaba.pocketledger.core.security.preferences.SensitivePreferences
+import com.mojtaba.pocketledger.security.AndroidBiometricAppLockAuthenticator
 
 @Composable
 fun rememberPocketLedgerAppGraph(): PocketLedgerAppGraph {
@@ -35,7 +50,14 @@ class PocketLedgerAppGraph private constructor(
     val budgetRepository: BudgetRepository,
     val categoryRepository: CategoryRepository,
     val tagRepository: TagRepository,
+    val featureFlags: FeatureFlagEvaluator,
+    val aiProviderSelector: AiProviderSelector,
+    val aiFallbackStrategy: AiFallbackStrategy,
+    val sensitivePreferences: SensitivePreferences,
+    val appLockManager: AppLockManager,
+    @Suppress("unused")
     val backgroundTaskScheduler: BackgroundTaskScheduler,
+    @Suppress("unused")
     val appLogger: AppLogger,
 ) {
     companion object {
@@ -44,6 +66,11 @@ class PocketLedgerAppGraph private constructor(
             budgetRepository: BudgetRepository,
             categoryRepository: CategoryRepository,
             tagRepository: TagRepository,
+            featureFlags: FeatureFlagEvaluator,
+            aiProviderSelector: AiProviderSelector,
+            aiFallbackStrategy: AiFallbackStrategy,
+            sensitivePreferences: SensitivePreferences,
+            appLockManager: AppLockManager,
             backgroundTaskScheduler: BackgroundTaskScheduler,
             appLogger: AppLogger,
         ): PocketLedgerAppGraph = PocketLedgerAppGraph(
@@ -51,11 +78,19 @@ class PocketLedgerAppGraph private constructor(
             budgetRepository = budgetRepository,
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
+            featureFlags = featureFlags,
+            aiProviderSelector = aiProviderSelector,
+            aiFallbackStrategy = aiFallbackStrategy,
+            sensitivePreferences = sensitivePreferences,
+            appLockManager = appLockManager,
             backgroundTaskScheduler = backgroundTaskScheduler,
             appLogger = appLogger,
         )
 
-        fun create(context: Context): PocketLedgerAppGraph {
+        fun create(
+            context: Context,
+            activityProvider: () -> FragmentActivity? = { null },
+        ): PocketLedgerAppGraph {
             val database = Room.databaseBuilder(
                 context,
                 PocketLedgerDatabase::class.java,
@@ -66,12 +101,38 @@ class PocketLedgerAppGraph private constructor(
             } else {
                 LoggingPolicy.Release
             }
+            val featureFlags = FeatureFlagEvaluator(LocalFeatureFlagProvider())
+            val aiProviderSelector = AiProviderSelector(
+                providers = listOf(
+                    GeminiNanoAiProvider(),
+                    MlKitAiProvider(),
+                    RuleBasedAiProvider,
+                    NoOpAiProvider,
+                ),
+                featureFlags = featureFlags,
+            )
+            val sensitivePreferences = if (BuildConfig.APP_ENV == "benchmark") {
+                InMemorySensitivePreferences()
+            } else {
+                EncryptedSensitivePreferences(context)
+            }
 
             return PocketLedgerAppGraph(
                 transactionRepository = LocalTransactionRepository(database.transactionDao()),
                 budgetRepository = LocalBudgetRepository(database.budgetDao()),
                 categoryRepository = LocalCategoryRepository(database.categoryDao()),
                 tagRepository = LocalTagRepository(database.tagDao()),
+                featureFlags = featureFlags,
+                aiProviderSelector = aiProviderSelector,
+                aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
+                sensitivePreferences = sensitivePreferences,
+                appLockManager = AppLockManager(
+                    preferences = sensitivePreferences,
+                    authenticator = AndroidBiometricAppLockAuthenticator(
+                        biometricManager = BiometricManager.from(context),
+                        activityProvider = activityProvider,
+                    ),
+                ),
                 backgroundTaskScheduler = WorkManagerScheduler(
                     workManager = WorkManager.getInstance(context),
                     workerRegistry = TaskWorkerRegistry.Empty,

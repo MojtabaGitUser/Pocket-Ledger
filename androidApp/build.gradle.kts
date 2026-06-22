@@ -3,9 +3,23 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.test) apply false
+    alias(libs.plugins.androidx.baselineprofile) apply false
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
     alias(libs.plugins.androidx.room) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.paparazzi) apply false
+}
+
+tasks.register("verifyAdaptiveScreenshots") {
+    group = "verification"
+    description = "Verifies the adaptive Paparazzi screenshot matrix."
+    dependsOn(":app:verifyPaparazziDebug")
+}
+
+tasks.register("recordAdaptiveScreenshots") {
+    group = "verification"
+    description = "Records golden images for the adaptive Paparazzi screenshot matrix."
+    dependsOn(":app:recordPaparazziDebug")
 }

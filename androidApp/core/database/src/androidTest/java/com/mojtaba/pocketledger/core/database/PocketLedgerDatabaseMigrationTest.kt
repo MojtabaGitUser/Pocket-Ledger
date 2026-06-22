@@ -154,6 +154,72 @@ class PocketLedgerDatabaseMigrationTest {
     }
 
     @Test
+    fun migrateOneToCurrent_preservesLedgerDataAndValidatesLatestSchema() {
+        val databaseName = uniqueDatabaseName()
+
+        helper.createDatabase(databaseName, 1).use { database ->
+            database.execSQL(
+                """
+                INSERT INTO categories (
+                    id, name, type, color_hex, icon_name, sort_order, is_active, created_at, updated_at
+                ) VALUES (
+                    'category-food', 'Food', 'expense', '#2E7D32', 'restaurant', 10, 1, 1700000000000, 1700000000000
+                )
+                """.trimIndent(),
+            )
+            database.execSQL(
+                """
+                INSERT INTO transactions (
+                    id, amount_minor, currency_code, type, occurred_at, category_id, merchant,
+                    note, source, is_recurring, created_at, updated_at
+                ) VALUES (
+                    'transaction-coffee', -1250, 'USD', 'expense', 1700000100000, 'category-food',
+                    'Coffee Shop', 'Latte', 'manual', 0, 1700000000000, 1700000000000
+                )
+                """.trimIndent(),
+            )
+            database.execSQL(
+                """
+                INSERT INTO tags (id, name, color_hex, created_at, updated_at)
+                VALUES ('tag-weekend', 'Weekend', '#1565C0', 1700000000000, 1700000000000)
+                """.trimIndent(),
+            )
+            database.execSQL(
+                """
+                INSERT INTO transaction_tags (transaction_id, tag_id)
+                VALUES ('transaction-coffee', 'tag-weekend')
+                """.trimIndent(),
+            )
+            database.execSQL(
+                """
+                INSERT INTO budgets (
+                    id, name, amount_minor, currency_code, period_type, period_start, period_end,
+                    category_id, is_active, created_at, updated_at
+                ) VALUES (
+                    'budget-food', 'Food budget', 50000, 'USD', 'monthly', 1700000000000,
+                    1702678399999, 'category-food', 1, 1700000000000, 1700000000000
+                )
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(
+            databaseName,
+            DatabaseMigrations.CURRENT_VERSION,
+            true,
+            *DatabaseMigrations.ALL,
+        ).use { database ->
+            assertEquals("Food", database.queryString("SELECT name FROM categories WHERE id = 'category-food'"))
+            assertEquals(-1_250L, database.queryLong("SELECT amount_minor FROM transactions WHERE id = 'transaction-coffee'"))
+            assertEquals("tag-weekend", database.queryString("SELECT tag_id FROM transaction_tags WHERE transaction_id = 'transaction-coffee'"))
+            assertEquals(50_000L, database.queryLong("SELECT amount_minor FROM budgets WHERE id = 'budget-food'"))
+            database.assertHasIndex("transactions", listOf("merchant"))
+            database.assertHasIndex("transactions", listOf("note"))
+            database.assertHasIndex("transactions", listOf("source"))
+        }
+    }
+
+    @Test
     fun allMigrations_areRegisteredForCurrentVersion() {
         if (DatabaseMigrations.CURRENT_VERSION == DatabaseMigrations.INITIAL_VERSION) {
             assertTrue(DatabaseMigrations.ALL.isEmpty())
@@ -193,6 +259,16 @@ private fun SupportSQLiteDatabase.queryStringSet(sql: String): Set<String> {
     }
     return result
 }
+
+private fun SupportSQLiteDatabase.queryString(sql: String): String? =
+    query(sql).use { cursor ->
+        if (cursor.moveToFirst()) cursor.getString(0) else null
+    }
+
+private fun SupportSQLiteDatabase.queryLong(sql: String): Long? =
+    query(sql).use { cursor ->
+        if (cursor.moveToFirst()) cursor.getLong(0) else null
+    }
 
 private fun SupportSQLiteDatabase.tableColumns(tableName: String): Set<String> {
     val result = linkedSetOf<String>()
