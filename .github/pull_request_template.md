@@ -10,6 +10,12 @@
 
 - [ ] Ran the relevant local tests or documented why they were not run.
 - [ ] Updated or added tests for changed behavior.
+- [ ] PR validation is expected to pass, including lint, JVM/shared tests,
+  debug build, release build, and benchmark artifact assembly.
+- [ ] Screenshot verification was run or considered for UI, theme, layout, or
+  font-scale changes.
+- [ ] Benchmark impact was considered for performance-sensitive, startup,
+  scrolling, release/R8, or Baseline Profile changes.
 
 ## Accessibility Checklist
 

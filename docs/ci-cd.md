@@ -1,0 +1,133 @@
+# CI/CD Strategy
+
+Pocket Ledger uses GitHub Actions to keep normal pull-request validation fast
+and to keep screenshot and benchmark work controlled. The Android Gradle wrapper
+lives in `androidApp/`, and workflow commands run from that directory.
+
+## Pull Request Validation
+
+`.github/workflows/pr-validation.yml` runs for pull requests targeting `dev` and
+`main`, the active integration and default branches in this repository. It also
+supports manual `workflow_dispatch` runs.
+
+The workflow uses read-only repository permissions, Gradle wrapper validation,
+JDK 21, Gradle dependency caching through `gradle/actions/setup-gradle`, and
+concurrency cancellation so newer pushes cancel older runs for the same PR.
+
+Required PR checks:
+
+```bash
+./gradlew projects
+./gradlew lintDebug
+./gradlew testDebugUnitTest :shared:allTests
+./gradlew :app:assembleDebug
+./gradlew :app:assembleRelease
+./gradlew :app:assembleBenchmark :macrobenchmark:assemble
+```
+
+These checks cover module discovery, Android lint, local JVM tests, shared KMP
+tests, debug assembly, release/R8 assembly, and benchmark artifact compilation.
+They do not require signing secrets, Play Store credentials, an emulator, or a
+physical device.
+
+PR validation intentionally does not publish builds, upload to Play Store,
+generate signed release artifacts, run connected Android tests, run
+Macrobenchmark measurements, or generate Baseline Profiles. Those tasks either
+need device infrastructure, release credentials, or manual review.
+
+## Screenshot Workflow
+
+`.github/workflows/screenshot-benchmark.yml` runs adaptive screenshot validation
+with Paparazzi. It is controlled by:
+
+- `workflow_dispatch` with `run_screenshots=true`.
+- A weekly Monday scheduled run.
+
+The screenshot job runs:
+
+```bash
+./gradlew verifyAdaptiveScreenshots
+```
+
+Paparazzi reports and failure diffs are uploaded as workflow artifacts from:
+
+```text
+androidApp/app/build/reports/paparazzi/
+androidApp/app/build/paparazzi/failures/
+```
+
+Screenshot verification is not part of every PR because the suite is broader
+and more expensive than normal unit-test feedback. UI PRs should run it locally
+or trigger the workflow manually when layout, theme, accessibility font-scale,
+or snapshot baselines change. Committed screenshot baselines remain under
+`androidApp/app/src/test/snapshots/images`.
+
+## Benchmark Workflow
+
+The same controlled workflow assembles benchmark artifacts with:
+
+```bash
+./gradlew :app:assembleBenchmark :macrobenchmark:assemble
+```
+
+It runs by manual dispatch with `assemble_benchmarks=true` and on the weekly
+schedule. The workflow uploads benchmark APKs and reports from:
+
+```text
+androidApp/app/build/outputs/apk/benchmark/
+androidApp/macrobenchmark/build/outputs/apk/
+androidApp/macrobenchmark/build/reports/
+androidApp/macrobenchmark/build/outputs/connected_android_test_additional_output/benchmark/
+```
+
+Connected Macrobenchmark execution remains manual because it requires a stable
+attached device or emulator and produces results that should be compared only
+across the same named device, OS image, app commit, and build variant.
+
+Local connected benchmark commands:
+
+```bash
+./gradlew :macrobenchmark:connectedBenchmarkAndroidTest
+./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+./gradlew :app:generateReleaseBaselineProfile
+```
+
+Do not add connected benchmarks to default PR validation without dedicated
+device-lab capacity and flake management.
+
+## Release Safety
+
+PR and screenshot/benchmark workflows do not require secrets. Release signing
+properties, Play Store upload credentials, crash-reporting tokens, API keys, and
+personal financial data must not be printed, uploaded, or embedded in workflow
+artifacts.
+
+Release readiness is supported by:
+
+- Release/R8 assembly in PR validation.
+- Benchmark build assembly in PR validation and the controlled workflow.
+- Paparazzi coverage for adaptive UI, theme, and 200% font-scale states.
+- Existing accessibility guidance in `androidApp/docs/accessibility.md`.
+- Existing privacy-safe logging guidance in `androidApp/docs/logging-policy.md`.
+
+## Before Opening A PR
+
+Run the focused checks that match the change:
+
+```powershell
+.\androidApp\gradlew.bat lintDebug
+.\androidApp\gradlew.bat testDebugUnitTest :shared:allTests
+.\androidApp\gradlew.bat :app:assembleDebug :app:assembleRelease
+```
+
+For UI, accessibility, theme, or font-scale changes:
+
+```powershell
+.\androidApp\gradlew.bat verifyAdaptiveScreenshots
+```
+
+For performance-sensitive or release-build changes:
+
+```powershell
+.\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
+```
