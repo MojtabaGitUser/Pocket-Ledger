@@ -11,3 +11,4 @@ The Android project lives in `androidApp/`.
 - [Android testing report](androidApp/docs/testing-report.md): current test suite inventory, validation results, performance checks, release/R8 coverage, and known gaps.
 - [Android performance benchmarks](androidApp/docs/performance-report.md): Macrobenchmark and Baseline Profile generation setup, local device requirements, and update commands.
 - [Android security model](androidApp/docs/security-model.md): current local data storage, app lock, AI privacy, logging, threat model, and known limitations.
+- [CI/CD strategy](docs/ci-cd.md): PR validation, controlled screenshot and benchmark workflows, artifacts, and release-safety boundaries.

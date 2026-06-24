@@ -1,0 +1,121 @@
+name: Screenshot And Benchmark Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_screenshots:
+        description: "Run Paparazzi adaptive screenshot verification"
+        required: true
+        default: true
+        type: boolean
+      assemble_benchmarks:
+        description: "Assemble benchmark APKs and macrobenchmark tests"
+        required: true
+        default: true
+        type: boolean
+  schedule:
+    - cron: "0 10 * * 1"
+
+concurrency:
+  group: screenshot-benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    name: Adaptive screenshots
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.run_screenshots == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=2
+
+    defaults:
+      run:
+        working-directory: androidApp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Verify adaptive screenshots
+        run: ./gradlew verifyAdaptiveScreenshots
+
+      - name: Upload Paparazzi reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: paparazzi-reports
+          path: |
+            androidApp/app/build/reports/paparazzi/
+            androidApp/app/build/paparazzi/failures/
+          if-no-files-found: ignore
+
+  benchmark-artifacts:
+    name: Benchmark artifacts
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.assemble_benchmarks == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=2
+
+    defaults:
+      run:
+        working-directory: androidApp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Assemble benchmark app and tests
+        run: ./gradlew :app:assembleBenchmark :macrobenchmark:assemble
+
+      - name: Upload benchmark APKs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-apks
+          path: |
+            androidApp/app/build/outputs/apk/benchmark/
+            androidApp/macrobenchmark/build/outputs/apk/
+          if-no-files-found: ignore
+
+      - name: Upload benchmark reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-reports
+          path: |
+            androidApp/macrobenchmark/build/reports/
+            androidApp/macrobenchmark/build/outputs/connected_android_test_additional_output/benchmark/
+          if-no-files-found: ignore
