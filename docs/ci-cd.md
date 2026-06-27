@@ -95,6 +95,23 @@ Local connected benchmark commands:
 Do not add connected benchmarks to default PR validation without dedicated
 device-lab capacity and flake management.
 
+## Release Candidate Workflow
+
+`.github/workflows/release-candidate.yml` prepares release candidate artifacts
+for Play Store internal testing. It runs manually through `workflow_dispatch`
+and on pushes to `release/**`, `rc/**`, `v*`, and `rc-*` refs.
+
+The workflow uses the same JDK, Gradle wrapper validation, Gradle setup, working
+directory, repository permissions, and worker cap as the other Android
+workflows. It runs release lint, JVM/shared tests, release APK assembly, release
+app bundle generation, and benchmark artifact assembly.
+
+Uploaded artifacts include the release APK, release AAB, release mapping files,
+and validation reports. Artifact names include app version, version code, ref
+name, and GitHub run number where practical. See
+`docs/release/release-candidate.md` for triggers, signing behavior, artifact
+paths, and the release checklist.
+
 ## Release Safety
 
 PR and screenshot/benchmark workflows do not require secrets. Release signing
@@ -105,6 +122,8 @@ artifacts.
 Release readiness is supported by:
 
 - Release/R8 assembly in PR validation.
+- Release APK/AAB generation and mapping upload in the release candidate
+  workflow.
 - Benchmark build assembly in PR validation and the controlled workflow.
 - Paparazzi coverage for adaptive UI, theme, and 200% font-scale states.
 - Existing accessibility guidance in `androidApp/docs/accessibility.md`.
