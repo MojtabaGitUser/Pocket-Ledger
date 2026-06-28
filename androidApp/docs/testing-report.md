@@ -92,7 +92,7 @@ Windows Gradle wrapper lives and where CI runs Gradle.
 | `:app` | App unit tests | `src/test` | Verify app-local adaptive, foldable, WorkManager mapping, and non-screenshot JVM behavior. | `.\gradlew.bat :app:testDebugUnitTest` | JVM/local | No | Passed in this validation run. Screenshot tests are excluded from normal `test` tasks by Gradle configuration. |
 | `:app` | App-shell instrumentation | `src/androidTest` | Verify adaptive navigation shell and top-level route wiring. | `.\gradlew.bat :app:connectedDebugAndroidTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:app:assembleDebugAndroidTest`. |
 | `:app` | Paparazzi screenshot matrix | `src/test/java/.../screenshot` plus `src/test/snapshots/images` | Verify adaptive UI visual baselines for app shell, dashboard, search, transaction, theme, and large-font states. | `.\gradlew.bat verifyAdaptiveScreenshots` | JVM screenshot | No | Passed in this validation run. |
-| `:macrobenchmark` | Macrobenchmarks and Baseline Profile generation | `src/main` | Measure cold startup, dashboard render, transaction scrolling, search frame timing, large dataset list/search behavior, and release Baseline Profile generation. | `.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest` / `.\gradlew.bat :app:generateReleaseBaselineProfile` | Benchmark instrumentation | Yes | Not run because no device was attached. Artifacts compiled with `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble`. |
+| `:macrobenchmark` | Macrobenchmarks and Baseline Profile generation | `src/main` | Measure cold startup, dashboard render, transaction scrolling, search frame timing, large dataset list/search behavior, and release Baseline Profile generation. | `.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest` / `.\gradlew.bat :app:generateReleaseBaselineProfile` | Benchmark instrumentation | Yes | Not run because no device was attached. Artifacts compiled with `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble`. |
 | `:app` | Debug build validation | main source sets | Verify debug app assembly. | `.\gradlew.bat :app:assembleDebug` | Build | No | Passed in this validation run. |
 | `:app` | Release/R8 validation | main source sets | Verify release build, resource shrinking, and R8 minification. | `.\gradlew.bat :app:assembleRelease` | Build | No | Passed in this validation run. |
 
@@ -239,8 +239,8 @@ Current validation status:
 Current limitations:
 
 - Screenshot verification is not part of default pull-request execution.
-- CI only runs screenshots when the PR Validation workflow is manually
-  dispatched with `verify_screenshots=true`.
+- CI only runs screenshots when the Screenshot And Benchmark Validation
+  workflow is manually dispatched with `run_screenshots=true` or on schedule.
 - Paparazzi validates static rendering, not touch interaction, TalkBack
   traversal, runtime animation smoothness, or real-device rendering.
 
@@ -274,7 +274,7 @@ Current validation status:
 
 - `.\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble` passed.
 - `adb devices` returned no attached devices, so
-  `.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest` was not run.
+  `.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest` was not run.
 - No startup timing, frame timing, scroll jank, or lower-end-device metrics
   were produced in this validation run.
 
@@ -374,7 +374,7 @@ Startup metrics:
   emulator and run:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 ```
 
 Scroll jank and recomposition:
@@ -458,16 +458,22 @@ Remaining risks:
 
 ## CI Validation
 
-Workflow file:
+Workflow files:
 
 ```text
 .github/workflows/pr-validation.yml
+.github/workflows/screenshot-benchmark.yml
+.github/workflows/release-candidate.yml
 ```
 
 Triggers:
 
-- Pull requests targeting `dev` or `main`.
-- Manual `workflow_dispatch` with optional `verify_screenshots` boolean input.
+- `PR Validation`: pull requests targeting `dev` or `main`, plus manual
+  `workflow_dispatch`.
+- `Screenshot And Benchmark Validation`: manual `workflow_dispatch` with
+  `run_screenshots` and `assemble_benchmarks` inputs, plus a weekly schedule.
+- `Release Candidate`: manual `workflow_dispatch`, release candidate branches,
+  and release candidate tags.
 
 CI working directory:
 
@@ -475,43 +481,47 @@ CI working directory:
 androidApp
 ```
 
-Default CI commands:
+PR validation commands:
 
 ```bash
 ./gradlew projects
+./gradlew lintDebug
+./gradlew testDebugUnitTest :shared:allTests
 ./gradlew :app:assembleDebug
 ./gradlew :app:assembleRelease
-./gradlew :app:compileDebugKotlin :app:compileReleaseKotlin
-./gradlew :core:designsystem:assembleDebug
-./gradlew :shared:compileKotlinMetadata :shared:compileAndroidMain
-./gradlew :shared:allTests
-./gradlew clean build
+./gradlew :app:assembleBenchmark :macrobenchmark:assemble
 ```
 
-Manual screenshot CI command:
+Manual/scheduled screenshot CI command:
 
 ```bash
 ./gradlew verifyAdaptiveScreenshots
 ```
 
+Manual/scheduled benchmark artifact command:
+
+```bash
+./gradlew :app:assembleBenchmark :macrobenchmark:assemble
+```
+
 CI characteristics:
 
-- CI validates debug and release app assembly.
-- CI runs shared KMP tests.
-- CI runs full `clean build`, which includes available non-connected local
-  checks.
+- PR validation covers module discovery, lint, JVM/shared tests, debug build,
+  release/R8 build, and benchmark artifact assembly.
+- Screenshot verification is controlled through the screenshot/benchmark
+  workflow, not default PR validation.
 - CI does not run connected Android instrumentation tests by default.
-- CI does not run macrobenchmarks by default.
-- Screenshot verification is opt-in through manual workflow dispatch.
+- CI does not run connected macrobenchmark measurements by default.
 - No emulator/device service is configured in the current workflow.
 
-Known CI limitations:
+CI gaps:
 
-- Room/repository instrumentation tests are not device-executed in default CI.
+- Room and repository instrumentation tests are not device-executed in default
+  CI.
 - Compose UI instrumentation tests are not device-executed in default CI.
 - Macrobenchmark startup and frame metrics are not generated in CI.
-- Screenshot regressions are only caught when the manual screenshot option is
-  used.
+- Screenshot regressions are caught only when the manual/scheduled screenshot
+  workflow runs.
 
 ## Risk Matrix
 
@@ -618,7 +628,7 @@ Macrobenchmark artifact assembly:
 Macrobenchmark execution with an attached representative device or emulator:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 .\gradlew.bat :macrobenchmark:connectedCheck
 ```
 
@@ -727,7 +737,7 @@ Commands not run because no device or emulator was attached:
 .\gradlew.bat :feature:search:connectedDebugAndroidTest
 .\gradlew.bat :feature:transaction:connectedDebugAndroidTest
 .\gradlew.bat :app:connectedDebugAndroidTest
-.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 .\gradlew.bat :macrobenchmark:connectedCheck
 .\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
 .\gradlew.bat :app:generateReleaseBaselineProfile

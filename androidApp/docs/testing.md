@@ -123,7 +123,7 @@ The macrobenchmark module also owns Baseline Profile generation. It has its own
 the debug app:
 
 ```bash
-./gradlew :macrobenchmark:connectedBenchmarkAndroidTest
+./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 ./gradlew :app:generateReleaseBaselineProfile
 ```
 
@@ -196,6 +196,6 @@ protect a meaningful visual contract; otherwise add the smallest focused case
 with a descriptive group and state name.
 
 CI keeps screenshot verification off the default pull-request path to avoid
-adding screenshot runtime to every PR. The PR Validation workflow can be run
-manually with `verify_screenshots=true` to execute `verifyAdaptiveScreenshots`
-on GitHub Actions.
+adding screenshot runtime to every PR. The Screenshot And Benchmark Validation
+workflow can be run manually with `run_screenshots=true` to execute
+`verifyAdaptiveScreenshots` on GitHub Actions.
