@@ -10,6 +10,9 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.paparazzi) apply false
+    // Add the dependency for the Google services Gradle plugin
+    alias(libs.plugins.google.services) apply false
+
 }
 
 tasks.register("verifyAdaptiveScreenshots") {

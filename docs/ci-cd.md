@@ -107,6 +107,29 @@ Local connected benchmark commands:
 Do not add connected benchmarks to default PR validation without dedicated
 device-lab capacity and flake management.
 
+## Internal Distribution Workflow
+
+`.github/workflows/internal-distribution.yml` provides a manual and beta-tagged
+Firebase App Distribution path for internal testers. It runs on
+`workflow_dispatch` and `beta-*` tags only; it does not run for pull requests and
+does not publish to Play Store.
+
+The workflow validates and builds the existing debug APK with:
+
+```bash
+./gradlew projects
+./gradlew lintDebug
+./gradlew testDebugUnitTest :shared:allTests
+./gradlew :app:assembleDebug
+```
+
+The debug APK is uploaded as a GitHub Actions artifact and distributed through
+Firebase CLI only after `FIREBASE_APP_ID`, `FIREBASE_SERVICE_ACCOUNT_JSON`, and
+`FIREBASE_TESTER_GROUPS` are configured as GitHub Actions secrets. Missing
+secrets fail the workflow before Firebase distribution. See
+`docs/internal-distribution.md` for triggering, release notes, tester groups,
+artifact paths, and current limits.
+
 ## Release Candidate Workflow
 
 `.github/workflows/release-candidate.yml` prepares release candidate artifacts
@@ -137,6 +160,7 @@ Release readiness is supported by:
 - Release APK/AAB generation and mapping upload in the release candidate
   workflow.
 - Benchmark build assembly in PR validation and the controlled workflow.
+- Firebase App Distribution for manual or beta-tagged internal debug APKs.
 - Paparazzi coverage for adaptive UI, theme, and 200% font-scale states.
 - Existing accessibility guidance in `androidApp/docs/accessibility.md`.
 - Existing privacy-safe logging guidance in `androidApp/docs/logging-policy.md`.

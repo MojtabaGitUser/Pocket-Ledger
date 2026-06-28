@@ -2,6 +2,12 @@ plugins {
     id("pocketledger.android.application")
     id("pocketledger.android.compose")
     alias(libs.plugins.paparazzi)
+
+    id("com.android.application")
+
+    // Add the Google services Gradle plugin
+    alias(libs.plugins.google.services)
+
 }
 
 tasks.withType<Test>().configureEach {
@@ -130,4 +136,15 @@ dependencies {
     androidTestImplementation(project(":core:testing"))
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.leakcanary.android)
+
+    // Import the Firebase BoM
+    implementation(platform(libs.firebase.bom))
+
+    // TODO: Add the dependencies for Firebase products you want to use
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation(libs.firebase.analytics)
+
+
+    // Add the dependencies for any other desired Firebase products
+    // https://firebase.google.com/docs/android/setup#available-libraries
 }

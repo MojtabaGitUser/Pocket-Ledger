@@ -253,7 +253,7 @@ Implemented performance validation:
   with debug signing, non-debuggable, profileable, minified, resource-shrunk,
   and with logging disabled.
 - `:macrobenchmark` defines a matching `benchmark` build type so
-  `connectedBenchmarkAndroidTest` installs and measures the app benchmark
+  `connectedBenchmarkBenchmarkAndroidTest` installs and measures the app benchmark
   variant.
 - Benchmark-only setup activity exists under `app/src/benchmark` for
   deterministic demo-data seeding.

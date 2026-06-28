@@ -1,0 +1,134 @@
+name: Internal Distribution
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: "Release notes for Firebase App Distribution. Defaults to the latest commit message."
+        required: false
+        type: string
+  push:
+    tags:
+      - beta-*
+
+concurrency:
+  group: internal-distribution-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  firebase-internal-distribution:
+    name: Firebase internal distribution
+    runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=2
+
+    defaults:
+      run:
+        working-directory: androidApp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Prepare distribution metadata
+        id: metadata
+        shell: bash
+        env:
+          RELEASE_NOTES_INPUT: ${{ github.event.inputs.release_notes || '' }}
+        run: |
+          ref_name="${GITHUB_REF_NAME//\//-}"
+          version_name="$(grep -E 'versionName = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')"
+          version_code="$(grep -E 'versionCode = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*= ([0-9]+).*/\1/')"
+          notes_file="$RUNNER_TEMP/pocket-ledger-internal-release-notes.txt"
+
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && -n "${RELEASE_NOTES_INPUT}" ]]; then
+            printf '%s\n' "${RELEASE_NOTES_INPUT}" > "$notes_file"
+          else
+            git log -1 --pretty=%B > "$notes_file"
+          fi
+
+          echo "artifact_suffix=${version_name}-${version_code}-${ref_name}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "release_notes_file=${notes_file}" >> "$GITHUB_OUTPUT"
+
+      - name: List Gradle projects
+        run: ./gradlew projects
+
+      - name: Run Android lint
+        run: ./gradlew lintDebug
+
+      - name: Run JVM and shared tests
+        run: ./gradlew testDebugUnitTest :shared:allTests
+
+      - name: Assemble internal debug APK
+        run: ./gradlew :app:assembleDebug
+
+      - name: Upload internal APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocket-ledger-internal-apk-${{ steps.metadata.outputs.artifact_suffix }}
+          path: androidApp/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Validate Firebase configuration
+        shell: bash
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TESTER_GROUPS: ${{ secrets.FIREBASE_TESTER_GROUPS }}
+        run: |
+          missing=0
+          for name in FIREBASE_APP_ID FIREBASE_SERVICE_ACCOUNT_JSON FIREBASE_TESTER_GROUPS; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::${name} secret is required for Firebase App Distribution."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Configure Firebase credentials
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          credentials_file="$RUNNER_TEMP/firebase-service-account.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$credentials_file"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$credentials_file" >> "$GITHUB_ENV"
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Distribute APK to Firebase App Distribution
+        shell: bash
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_TESTER_GROUPS: ${{ secrets.FIREBASE_TESTER_GROUPS }}
+        run: |
+          shopt -s nullglob
+          apks=(app/build/outputs/apk/debug/*.apk)
+          if [[ ${#apks[@]} -ne 1 ]]; then
+            echo "::error::Expected exactly one debug APK, found ${#apks[@]}."
+            exit 1
+          fi
+
+          firebase appdistribution:distribute "${apks[0]}" \
+            --app "$FIREBASE_APP_ID" \
+            --groups "$FIREBASE_TESTER_GROUPS" \
+            --release-notes-file "${{ steps.metadata.outputs.release_notes_file }}"
