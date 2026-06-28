@@ -2,7 +2,46 @@
 
 Pocket Ledger is an Android-first Kotlin project with a modular foundation and a selectively Kotlin Multiplatform shared module.
 
+[![PR Validation](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/pr-validation.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/pr-validation.yml)
+[![Screenshot And Benchmark Validation](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/screenshot-benchmark.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/screenshot-benchmark.yml)
+[![Release Candidate](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/release-candidate.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/release-candidate.yml)
+
 The Android project lives in `androidApp/`.
+
+## CI Commands
+
+Run local validation from the repository root before opening a PR. These
+commands mirror the GitHub Actions workflows where possible; detailed workflow
+strategy, artifacts, and release-safety notes are in
+[CI/CD strategy](docs/ci-cd.md).
+
+Quick PR validation:
+
+```powershell
+.\androidApp\gradlew.bat lintDebug
+.\androidApp\gradlew.bat testDebugUnitTest :shared:allTests
+.\androidApp\gradlew.bat :app:assembleDebug :app:assembleRelease
+.\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
+```
+
+For macOS/Linux, run the same tasks from `androidApp/` with `./gradlew`.
+
+UI, accessibility, theme, layout, or font-scale changes:
+
+```powershell
+.\androidApp\gradlew.bat verifyAdaptiveScreenshots
+```
+
+Performance-sensitive or Baseline Profile changes:
+
+```powershell
+.\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
+.\androidApp\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
+.\androidApp\gradlew.bat :app:generateReleaseBaselineProfile
+```
+
+Connected benchmark and Baseline Profile commands require an attached emulator
+or device and are intentionally not part of default PR validation.
 
 ## Documentation
 

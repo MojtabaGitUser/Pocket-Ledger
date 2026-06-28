@@ -30,6 +30,18 @@ tests, debug assembly, release/R8 assembly, and benchmark artifact compilation.
 They do not require signing secrets, Play Store credentials, an emulator, or a
 physical device.
 
+From the repository root on Windows, use the same tasks through the checked-in
+Android wrapper:
+
+```powershell
+.\androidApp\gradlew.bat projects
+.\androidApp\gradlew.bat lintDebug
+.\androidApp\gradlew.bat testDebugUnitTest :shared:allTests
+.\androidApp\gradlew.bat :app:assembleDebug
+.\androidApp\gradlew.bat :app:assembleRelease
+.\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
+```
+
 PR validation intentionally does not publish builds, upload to Play Store,
 generate signed release artifacts, run connected Android tests, run
 Macrobenchmark measurements, or generate Baseline Profiles. Those tasks either
@@ -87,7 +99,7 @@ across the same named device, OS image, app commit, and build variant.
 Local connected benchmark commands:
 
 ```bash
-./gradlew :macrobenchmark:connectedBenchmarkAndroidTest
+./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 ./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
 ./gradlew :app:generateReleaseBaselineProfile
 ```
@@ -137,6 +149,7 @@ Run the focused checks that match the change:
 .\androidApp\gradlew.bat lintDebug
 .\androidApp\gradlew.bat testDebugUnitTest :shared:allTests
 .\androidApp\gradlew.bat :app:assembleDebug :app:assembleRelease
+.\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
 ```
 
 For UI, accessibility, theme, or font-scale changes:
@@ -145,8 +158,14 @@ For UI, accessibility, theme, or font-scale changes:
 .\androidApp\gradlew.bat verifyAdaptiveScreenshots
 ```
 
-For performance-sensitive or release-build changes:
+For performance-sensitive, Baseline Profile, or release-build changes:
 
 ```powershell
 .\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
+.\androidApp\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
+.\androidApp\gradlew.bat :app:generateReleaseBaselineProfile
 ```
+
+The connected benchmark and Baseline Profile commands require an attached
+emulator or device. They should be run on stable, comparable hardware when a
+change affects startup, scrolling, release/R8 behavior, or profile coverage.

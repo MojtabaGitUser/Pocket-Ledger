@@ -9,6 +9,8 @@
 ## Testing
 
 - [ ] Ran the relevant local tests or documented why they were not run.
+- [ ] Ran the relevant local validation commands from `README.md` /
+  `docs/ci-cd.md`, or confirmed CI covers this change.
 - [ ] Updated or added tests for changed behavior.
 - [ ] PR validation is expected to pass, including lint, JVM/shared tests,
   debug build, release build, and benchmark artifact assembly.
