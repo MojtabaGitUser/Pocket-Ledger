@@ -18,6 +18,8 @@
   font-scale changes.
 - [ ] Benchmark impact was considered for performance-sensitive, startup,
   scrolling, release/R8, or Baseline Profile changes.
+- [ ] Internal distribution impact was considered for release, signing,
+  Firebase, tester, or diagnostics changes.
 
 ## Accessibility Checklist
 

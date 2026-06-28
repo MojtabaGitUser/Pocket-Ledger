@@ -100,6 +100,11 @@ continues with unsigned release candidate artifacts.
 
 ## Play Store Readiness
 
+The separate internal distribution workflow can send debug APKs to Firebase App
+Distribution for early tester feedback. This release candidate workflow remains
+the source for release APK/AAB artifacts and Play Store internal-testing
+handoff.
+
 This workflow supports `US-E18-01 - Prepare production-ready Play Store release`
 by producing repeatable release candidate artifacts, validating the release/R8
 path, preserving mapping files, and giving internal testers an AAB candidate for
