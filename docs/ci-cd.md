@@ -145,7 +145,23 @@ Uploaded artifacts include the release APK, release AAB, release mapping files,
 and validation reports. Artifact names include app version, version code, ref
 name, and GitHub run number where practical. See
 `docs/release/release-candidate.md` for triggers, signing behavior, artifact
-paths, and the release checklist.
+paths, and `docs/release/release-checklist.md` for the release checklist.
+
+## Signing And Versioning
+
+Release signing and versioning are documented in
+`docs/release/signing-versioning.md`. The app module is `androidApp/app`, the
+production application ID is `com.mojtaba.pocketledger`, and version defaults
+come from `POCKET_LEDGER_VERSION_CODE` / `POCKET_LEDGER_VERSION_NAME` in Gradle
+properties.
+
+Normal PR validation assembles release/R8 artifacts without signing secrets.
+True release-ready signed builds must provide all `POCKET_LEDGER_RELEASE_*`
+values and set `POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true`; `:app:validateReleaseSigning`
+then fails clearly if signing is incomplete. Keystores, passwords, aliases,
+service-account JSON, Play Store credentials, Firebase credentials, private
+tester lists, and private release data must never be committed or uploaded as
+workflow artifacts.
 
 ## Debug Health Screen
 

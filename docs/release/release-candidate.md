@@ -18,6 +18,18 @@ rc-*
 Use `release/**` or `rc/**` branches for candidate stabilization work. Use
 `v*` or `rc-*` tags when a specific commit is ready to archive as a candidate.
 
+Manual dispatch supports optional inputs:
+
+```text
+version_name
+version_code
+require_release_signing
+```
+
+The version inputs override the checked-in Gradle version properties for that
+workflow run only. `require_release_signing=true` fails early unless all release
+signing secrets are configured.
+
 ## Validation
 
 The workflow follows the same environment conventions as the PR and screenshot
@@ -68,10 +80,11 @@ into installer artifacts.
 
 ## Signing
 
-Release signing is optional in CI. The app's Gradle configuration signs the
-release build only when all release signing properties are present. The workflow
-therefore produces unsigned CI-safe artifacts by default and never commits or
-prints private signing material.
+Release signing is optional for validation artifacts and required for
+release-ready artifacts. The app's Gradle configuration signs the release build
+only when all release signing properties are present. Manual workflow runs can
+set `require_release_signing=true` to fail early when secrets are missing. The
+workflow never commits or prints private signing material.
 
 To enable signed release candidate artifacts, configure all of these GitHub
 Actions secrets:
@@ -95,8 +108,24 @@ POCKET_LEDGER_RELEASE_KEY_ALIAS
 POCKET_LEDGER_RELEASE_KEY_PASSWORD
 ```
 
-If any signing secret is missing, the workflow logs that signing was skipped and
-continues with unsigned release candidate artifacts.
+If any signing secret is missing and `require_release_signing` is false, the
+workflow logs that signing was skipped and continues with unsigned validation
+artifacts. If signed output is required, missing secrets fail the workflow before
+Gradle builds artifacts.
+
+## Versioning
+
+Default version values live in `androidApp/gradle.properties`:
+
+```text
+POCKET_LEDGER_VERSION_CODE=1
+POCKET_LEDGER_VERSION_NAME=1.0.0
+```
+
+`versionCode` must increase monotonically for every Play Store upload candidate.
+`versionName` should use semantic form such as `1.0.0` or `1.0.0-rc.1`. The
+repository-root `gradle.properties` mirrors these values for root Gradle
+invocation. See `docs/release/signing-versioning.md` for the full policy.
 
 ## Play Store Readiness
 
@@ -110,5 +139,5 @@ by producing repeatable release candidate artifacts, validating the release/R8
 path, preserving mapping files, and giving internal testers an AAB candidate for
 Play Console upload. It does not replace the remaining Play Store readiness
 work: privacy policy, app content declarations, store listing assets,
-screenshots, device smoke tests, and the final release checklist still need to
-be completed before production submission.
+screenshots, device smoke tests, and the final release checklist in `docs/release/release-checklist.md` still needs
+to be completed before production submission.
