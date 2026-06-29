@@ -54,5 +54,6 @@ or device and are intentionally not part of default PR validation.
 - [CI/CD strategy](docs/ci-cd.md): PR validation, controlled screenshot and benchmark workflows, artifacts, and release-safety boundaries.
 - [Release signing and versioning](docs/release/signing-versioning.md): secure signing inputs, version policy, local release-ready commands, and CI release candidate behavior.
 - [Release readiness checklist](docs/release/release-checklist.md): signing, versioning, artifact, accessibility, privacy, and rollout review items.
+- [Privacy policy](docs/privacy-policy.md): Play Store-ready privacy policy draft based on current app behavior, Firebase setup, permissions, and diagnostics.
 - [Product event taxonomy](docs/product-event-taxonomy.md): privacy-safe product events, approved parameters, and analytics provider boundaries.
 - [Internal distribution](docs/internal-distribution.md): Firebase App Distribution tester flow, required secrets, artifacts, and release notes.

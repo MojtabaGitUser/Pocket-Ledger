@@ -38,6 +38,13 @@ not replace human review for signing, privacy, and Play Store readiness.
 
 ## Privacy, Observability, And Accessibility
 
+- [ ] Privacy policy was created and reviewed against current app behavior.
+- [ ] Privacy policy reflects Firebase Analytics, App Distribution, crash
+  reporting, permissions, backup behavior, and local data storage accurately.
+- [ ] Privacy policy does not claim unsupported privacy behavior and has a Play
+  Store listing link/contact ready before submission.
+- [ ] Privacy policy received final release/legal review before public Play Store
+  publication.
 - [ ] Crash/observability configuration was reviewed.
 - [ ] Product event taxonomy changes, if any, remain privacy-safe.
 - [ ] Debug Health remains debug-only and is not routable in release builds.
