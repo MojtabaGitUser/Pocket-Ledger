@@ -1,10 +1,10 @@
 package com.mojtaba.pocketledger
 
 import android.content.Context
+import androidx.biometric.BiometricManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.biometric.BiometricManager
 import androidx.fragment.app.FragmentActivity
 import androidx.room.Room
 import androidx.work.WorkManager
@@ -16,6 +16,10 @@ import com.mojtaba.pocketledger.core.ai.GeminiNanoAiProvider
 import com.mojtaba.pocketledger.core.ai.MlKitAiProvider
 import com.mojtaba.pocketledger.core.ai.NoOpAiProvider
 import com.mojtaba.pocketledger.core.ai.RuleBasedAiProvider
+import com.mojtaba.pocketledger.core.analytics.DebugProductAnalyticsLogger
+import com.mojtaba.pocketledger.core.analytics.NoOpProductAnalyticsLogger
+import com.mojtaba.pocketledger.core.analytics.ProductAnalyticsLogger
+import com.mojtaba.pocketledger.core.analytics.ProductAnalyticsProviderState
 import com.mojtaba.pocketledger.core.background.BackgroundTaskScheduler
 import com.mojtaba.pocketledger.core.data.repository.BudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
@@ -28,10 +32,10 @@ import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepos
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
 import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
+import com.mojtaba.pocketledger.core.security.applock.AppLockManager
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
 import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
 import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
-import com.mojtaba.pocketledger.core.security.applock.AppLockManager
 import com.mojtaba.pocketledger.core.security.preferences.EncryptedSensitivePreferences
 import com.mojtaba.pocketledger.core.security.preferences.InMemorySensitivePreferences
 import com.mojtaba.pocketledger.core.security.preferences.SensitivePreferences
@@ -59,6 +63,9 @@ class PocketLedgerAppGraph private constructor(
     val backgroundTaskScheduler: BackgroundTaskScheduler,
     @Suppress("unused")
     val appLogger: AppLogger,
+    @Suppress("unused")
+    val productAnalyticsLogger: ProductAnalyticsLogger,
+    val productAnalyticsProviderState: ProductAnalyticsProviderState,
 ) {
     companion object {
         fun createForTesting(
@@ -73,6 +80,8 @@ class PocketLedgerAppGraph private constructor(
             appLockManager: AppLockManager,
             backgroundTaskScheduler: BackgroundTaskScheduler,
             appLogger: AppLogger,
+            productAnalyticsLogger: ProductAnalyticsLogger = NoOpProductAnalyticsLogger(),
+            productAnalyticsProviderState: ProductAnalyticsProviderState = ProductAnalyticsProviderState.NoOp,
         ): PocketLedgerAppGraph = PocketLedgerAppGraph(
             transactionRepository = transactionRepository,
             budgetRepository = budgetRepository,
@@ -85,6 +94,8 @@ class PocketLedgerAppGraph private constructor(
             appLockManager = appLockManager,
             backgroundTaskScheduler = backgroundTaskScheduler,
             appLogger = appLogger,
+            productAnalyticsLogger = productAnalyticsLogger,
+            productAnalyticsProviderState = productAnalyticsProviderState,
         )
 
         fun create(
@@ -100,6 +111,19 @@ class PocketLedgerAppGraph private constructor(
                 LoggingPolicy.Debug
             } else {
                 LoggingPolicy.Release
+            }
+            val appLogger = SafeAppLogger(policy = loggingPolicy)
+            val analyticsProviderState = if (BuildConfig.LOGGING_ENABLED) {
+                ProductAnalyticsProviderState.DebugSink
+            } else {
+                ProductAnalyticsProviderState.NoOp
+            }
+            val productAnalyticsLogger = if (BuildConfig.LOGGING_ENABLED) {
+                DebugProductAnalyticsLogger { event ->
+                    appLogger.debug("Product event logged name=${event.name} parameters=${event.parameters}")
+                }
+            } else {
+                NoOpProductAnalyticsLogger()
             }
             val featureFlags = FeatureFlagEvaluator(LocalFeatureFlagProvider())
             val aiProviderSelector = AiProviderSelector(
@@ -137,7 +161,9 @@ class PocketLedgerAppGraph private constructor(
                     workManager = WorkManager.getInstance(context),
                     workerRegistry = TaskWorkerRegistry.Empty,
                 ),
-                appLogger = SafeAppLogger(policy = loggingPolicy),
+                appLogger = appLogger,
+                productAnalyticsLogger = productAnalyticsLogger,
+                productAnalyticsProviderState = analyticsProviderState,
             )
         }
     }

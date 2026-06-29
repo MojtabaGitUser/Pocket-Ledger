@@ -21,7 +21,7 @@ privacy model is built around these goals:
 - Keep optional and incomplete capabilities behind safe default feature flags.
 
 The app does not currently implement accounts, passkeys, cloud sync, remote AI,
-analytics, server-backed authentication, or full database encryption.
+production analytics collection, server-backed authentication, or full database encryption.
 
 ## Data Storage Model
 
@@ -200,6 +200,22 @@ when disabled and `RuleBased` when a preferred provider is unavailable or
 fails. Current app-lock behavior keeps the app usable when system
 authentication is unavailable by clearing the app-lock preference and leaving
 content unlocked.
+
+## Product Event Taxonomy
+
+Product event definitions live in `:core:analytics`. They provide typed,
+provider-safe event names and approved parameter keys for future analytics,
+observability, app-health, and release monitoring work.
+
+The taxonomy does not enable production analytics collection by itself. Debug
+builds may map typed events through a debug sink and the existing safe logger;
+release and benchmark builds use no-op analytics behavior until a reviewed
+provider integration is added.
+
+Do not add event parameters for exact amounts, balances, merchant names, notes,
+account names, category names, search text, raw IDs, emails, tokens, exception
+messages, stack traces, service-account data, Firebase app IDs, or CI secrets.
+See `docs/product-event-taxonomy.md` for the approved event and parameter list.
 
 ## Logging And Privacy
 
