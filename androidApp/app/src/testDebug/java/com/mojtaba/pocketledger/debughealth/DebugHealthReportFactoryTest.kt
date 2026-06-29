@@ -26,6 +26,8 @@ class DebugHealthReportFactoryTest {
         assertStatus(report, "Build type", "debug")
         assertStatus(report, "PR validation", "Configured via CI")
         assertStatus(report, "App Distribution", "Configured via CI")
+        assertStatus(report, "Product event taxonomy", "Configured")
+        assertStatus(report, "Analytics provider", "Debug sink")
         assertStatus(report, "Release diagnostics privacy", "Release hidden")
     }
 
@@ -73,6 +75,7 @@ class DebugHealthReportFactoryTest {
                 loggingEnabled = true,
                 ci = false,
                 firebaseConfigured = true,
+                analyticsProviderState = "Debug sink",
             ),
             featureFlagStates = listOf(
                 DebugHealthStatus(

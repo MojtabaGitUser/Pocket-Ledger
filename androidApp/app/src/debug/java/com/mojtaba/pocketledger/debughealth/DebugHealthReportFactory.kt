@@ -3,6 +3,7 @@ package com.mojtaba.pocketledger.debughealth
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import com.mojtaba.pocketledger.BuildConfig
+import com.mojtaba.pocketledger.core.analytics.ProductAnalyticsProviderState
 import com.mojtaba.pocketledger.core.database.DatabaseMigrations
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
 import com.mojtaba.pocketledger.core.featureflags.BooleanFeatureFlag
@@ -134,7 +135,7 @@ class DebugHealthReportFactory(
                 status(
                     "Analytics dependency",
                     "Configured",
-                    "Firebase Analytics is included through the Firebase BoM.",
+                    "Firebase Analytics is included through the Firebase BoM, but product event logging is not wired.",
                     DebugHealthSeverity.Ready,
                 ),
                 status(
@@ -172,6 +173,17 @@ class DebugHealthReportFactory(
                     "Configured",
                     "Logging policy forbids credentials, tokens, secrets, amounts, notes, search text, and encrypted payloads.",
                     DebugHealthSeverity.Ready,
+                ),
+                status(
+                    "Product event taxonomy",
+                    "Configured",
+                    "Typed product events and approved parameters are defined in core analytics.",
+                    DebugHealthSeverity.Ready,
+                ),
+                status(
+                    "Analytics provider",
+                    buildInfo.analyticsProviderState,
+                    "Runtime analytics uses debug sink or no-op behavior; Firebase Analytics event logging is not wired.",
                 ),
             ),
         )
@@ -256,6 +268,7 @@ class DebugHealthReportFactory(
         fun from(
             context: Context,
             featureFlags: FeatureFlagEvaluator,
+            analyticsProviderState: ProductAnalyticsProviderState,
         ): DebugHealthReportFactory =
             DebugHealthReportFactory(
                 buildInfo = DebugHealthBuildInfo(
@@ -275,6 +288,7 @@ class DebugHealthReportFactory(
                         "string",
                         context.packageName,
                     ) != 0,
+                    analyticsProviderState = analyticsProviderState.displayValue(),
                 ),
                 featureFlagStates = DefaultFeatureFlags.All
                     .filterIsInstance<BooleanFeatureFlag>()
@@ -294,5 +308,12 @@ class DebugHealthReportFactory(
 
         private fun enabledValue(enabled: Boolean): String =
             if (enabled) "Enabled" else "Disabled"
+
+        private fun ProductAnalyticsProviderState.displayValue(): String =
+            when (this) {
+                ProductAnalyticsProviderState.NoOp -> "No-op"
+                ProductAnalyticsProviderState.DebugSink -> "Debug sink"
+                ProductAnalyticsProviderState.FirebaseNotWired -> "Firebase not wired"
+            }
     }
 }

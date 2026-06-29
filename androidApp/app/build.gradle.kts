@@ -100,6 +100,7 @@ dependencies {
     add("baselineProfile", project(":macrobenchmark"))
     add("benchmarkImplementation", project(":core:testing"))
     implementation(project(":core:ai"))
+    implementation(project(":core:analytics"))
     implementation(project(":core:background"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:data"))

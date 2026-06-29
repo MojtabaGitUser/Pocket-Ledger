@@ -31,10 +31,11 @@ fun DebugHealthScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current.applicationContext
-    val report = remember(context, appGraph.featureFlags) {
+    val report = remember(context, appGraph.featureFlags, appGraph.productAnalyticsProviderState) {
         DebugHealthReportFactory.from(
             context = context,
             featureFlags = appGraph.featureFlags,
+            analyticsProviderState = appGraph.productAnalyticsProviderState,
         ).create()
     }
 

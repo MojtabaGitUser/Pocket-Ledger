@@ -165,8 +165,9 @@ The screen summarizes safe development and release-readiness state:
   status, Crashlytics availability, and the fact that App Distribution is
   handled by CI rather than app runtime code.
 - Observability, database, feature flags, and release safety: sanitized logging
-  mode, startup-health placeholder, Room schema/migration status, safe feature
-  flag summary, and debug-only route/privacy checks.
+  mode, startup-health placeholder, product event taxonomy/provider state, Room
+  schema/migration status, safe feature flag summary, and debug-only route/privacy
+  checks.
 
 The screen intentionally does not display service-account JSON, keystore data,
 Firebase app IDs or tokens, tester emails or groups, private CI metadata,

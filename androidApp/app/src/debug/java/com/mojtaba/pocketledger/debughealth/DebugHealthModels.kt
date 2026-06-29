@@ -39,4 +39,5 @@ data class DebugHealthBuildInfo(
     val loggingEnabled: Boolean,
     val ci: Boolean,
     val firebaseConfigured: Boolean,
+    val analyticsProviderState: String,
 )
