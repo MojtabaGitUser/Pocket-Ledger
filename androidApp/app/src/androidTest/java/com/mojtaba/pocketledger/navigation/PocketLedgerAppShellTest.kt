@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -83,14 +84,33 @@ class PocketLedgerAppShellTest {
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
     }
 
-    private fun setContent() {
+    @Test
+    fun debugHealthDestinationShowsSafeDiagnosticsWhenIncluded() {
+        setContent(includeDebugDestinations = true)
+
+        composeRule.onNodeWithContentDescription("Debug navigation destination").performClick()
+
+        composeRule.waitUntilTextExists("Debug health")
+        composeRule.onNodeWithText("Build").assertIsDisplayed()
+        composeRule.onNodeWithText("CI/CD").assertIsDisplayed()
+        composeRule.onNodeWithText("Firebase/App Distribution").assertIsDisplayed()
+        composeRule.onNodeWithText("Release Safety").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Release diagnostics privacy")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Release diagnostics privacy: Release hidden"))
+        composeRule.onAllNodesWithText("FIREBASE_SERVICE_ACCOUNT_JSON")
+            .assertCountEquals(0)
+        composeRule.onAllNodesWithText("FIREBASE_TESTER_GROUPS")
+            .assertCountEquals(0)
+    }
+
+    private fun setContent(includeDebugDestinations: Boolean = false) {
         val appGraph = testAppGraph()
         val adaptiveNavigationState = AdaptiveNavigationState(PocketLedgerWindowWidthSizeClass.Compact)
 
         composeRule.setContent {
             val appState = rememberPocketLedgerAppState(
                 navController = rememberNavController(),
-                includeDebugDestinations = false,
+                includeDebugDestinations = includeDebugDestinations,
             )
             PocketLedgerTheme(dynamicColor = false) {
                 CompositionLocalProvider(LocalAdaptiveNavigationState provides adaptiveNavigationState) {
