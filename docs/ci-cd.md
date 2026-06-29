@@ -147,6 +147,38 @@ name, and GitHub run number where practical. See
 `docs/release/release-candidate.md` for triggers, signing behavior, artifact
 paths, and the release checklist.
 
+## Debug Health Screen
+
+Debug builds expose a `Debug` top-level navigation item that opens the Debug
+Health screen. Release and benchmark variants do not register this destination,
+and the detailed implementation lives in the debug source set with a release
+stub only for compilation.
+
+The screen summarizes safe development and release-readiness state:
+
+- Build: app label, version, application ID, build type, flavor, environment,
+  debuggable state, and internal diagnostics state.
+- CI/CD and testing: PR validation, lint/unit test coverage, benchmark artifact
+  assembly, screenshot workflow, release candidate workflow, and merge-safety
+  expectations.
+- Firebase/App Distribution: Firebase resource detection, Analytics dependency
+  status, Crashlytics availability, and the fact that App Distribution is
+  handled by CI rather than app runtime code.
+- Observability, database, feature flags, and release safety: sanitized logging
+  mode, startup-health placeholder, Room schema/migration status, safe feature
+  flag summary, and debug-only route/privacy checks.
+
+The screen intentionally does not display service-account JSON, keystore data,
+Firebase app IDs or tokens, tester emails or groups, private CI metadata,
+credentials, stack traces, transaction amounts, notes, search text, or encrypted
+payloads. Unavailable runtime data is shown as `Unavailable in local build`,
+`Configured via CI`, `Not configured`, `Debug only`, or `Release hidden` rather
+than fake live status.
+
+Use this screen during local debug builds and internal debug distribution to
+review CI/CD, observability, accessibility-label, and release-safety impact
+before opening or merging release-related changes.
+
 ## Release Safety
 
 PR and screenshot/benchmark workflows do not require secrets. Release signing
