@@ -2,6 +2,20 @@ name: Release Candidate
 
 on:
   workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Optional release candidate versionName override, for example 1.0.0-rc.1"
+        required: false
+        type: string
+      version_code:
+        description: "Optional positive integer versionCode override"
+        required: false
+        type: string
+      require_release_signing:
+        description: "Fail unless release signing secrets are configured"
+        required: true
+        default: false
+        type: boolean
   push:
     branches:
       - release/**
@@ -50,10 +64,27 @@ jobs:
       - name: Prepare release metadata
         id: metadata
         shell: bash
+        env:
+          VERSION_NAME_INPUT: ${{ github.event.inputs.version_name || '' }}
+          VERSION_CODE_INPUT: ${{ github.event.inputs.version_code || '' }}
         run: |
           ref_name="${GITHUB_REF_NAME//\//-}"
-          version_name="$(grep -E 'versionName = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')"
-          version_code="$(grep -E 'versionCode = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*= ([0-9]+).*/\1/')"
+          base_version_name="$(grep -E '^POCKET_LEDGER_VERSION_NAME=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          base_version_code="$(grep -E '^POCKET_LEDGER_VERSION_CODE=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          version_name="${VERSION_NAME_INPUT:-$base_version_name}"
+          version_code="${VERSION_CODE_INPUT:-$base_version_code}"
+
+          if [[ ! "$version_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][A-Za-z0-9]+)*$ ]]; then
+            echo "::error::version_name must look like 1.0.0 or 1.0.0-rc.1."
+            exit 1
+          fi
+          if [[ ! "$version_code" =~ ^[1-9][0-9]{0,8}$ ]]; then
+            echo "::error::version_code must be a positive integer with at most 9 digits."
+            exit 1
+          fi
+
+          echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
           echo "artifact_suffix=${version_name}-${version_code}-${ref_name}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           echo "version_name=${version_name}" >> "$GITHUB_OUTPUT"
           echo "version_code=${version_code}" >> "$GITHUB_OUTPUT"
@@ -66,6 +97,7 @@ jobs:
           RELEASE_STORE_PASSWORD: ${{ secrets.POCKET_LEDGER_RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.POCKET_LEDGER_RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.POCKET_LEDGER_RELEASE_KEY_PASSWORD }}
+          REQUIRE_RELEASE_SIGNING: ${{ github.event.inputs.require_release_signing || 'false' }}
         run: |
           if [[ -n "$RELEASE_STORE_BASE64" && -n "$RELEASE_STORE_PASSWORD" && -n "$RELEASE_KEY_ALIAS" && -n "$RELEASE_KEY_PASSWORD" ]]; then
             signing_dir="$RUNNER_TEMP/pocket-ledger-signing"
@@ -78,9 +110,13 @@ jobs:
               echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS"
               echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD"
             } >> "$GITHUB_ENV"
+            echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
             echo "signing_configured=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$REQUIRE_RELEASE_SIGNING" == "true" ]]; then
+            echo "::error::Signed release candidate requested, but one or more POCKET_LEDGER_RELEASE_* secrets are missing."
+            exit 1
           else
-            echo "Release signing secrets were not all provided; building unsigned release candidate artifacts."
+            echo "Release signing secrets were not all provided; building unsigned validation artifacts."
             echo "signing_configured=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -92,6 +128,10 @@ jobs:
 
       - name: Run JVM and shared tests
         run: ./gradlew testDebugUnitTest :shared:allTests
+
+      - name: Validate release signing when configured
+        if: ${{ steps.signing.outputs.signing_configured == 'true' }}
+        run: ./gradlew :app:validateReleaseSigning
 
       - name: Assemble release APK
         run: ./gradlew :app:assembleRelease

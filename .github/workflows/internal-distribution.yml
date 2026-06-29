@@ -55,8 +55,8 @@ jobs:
           RELEASE_NOTES_INPUT: ${{ github.event.inputs.release_notes || '' }}
         run: |
           ref_name="${GITHUB_REF_NAME//\//-}"
-          version_name="$(grep -E 'versionName = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')"
-          version_code="$(grep -E 'versionCode = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*= ([0-9]+).*/\1/')"
+          version_name="$(grep -E '^POCKET_LEDGER_VERSION_NAME=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          version_code="$(grep -E '^POCKET_LEDGER_VERSION_CODE=' gradle.properties | head -n 1 | cut -d= -f2-)"
           notes_file="$RUNNER_TEMP/pocket-ledger-internal-release-notes.txt"
 
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && -n "${RELEASE_NOTES_INPUT}" ]]; then

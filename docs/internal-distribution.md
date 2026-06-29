@@ -27,10 +27,12 @@ The workflow distributes the existing `debug` APK:
 ```
 
 This is intentional for the current project state. Pocket Ledger does not yet
-have a dedicated `internal` or `beta` build type, and release signing is optional
-and secret-backed. The debug APK is installable through the normal debug signing
+have a dedicated `internal` or `beta` build type. Release signing is
+secret-backed and reserved for release-candidate APK/AAB artifacts. The debug APK is installable through the normal debug signing
 configuration and uses the `.debug` application ID suffix. It is appropriate for
 internal tester feedback, not staged Play Store rollout or production testing.
+Version metadata for artifact names comes from the non-secret
+`POCKET_LEDGER_VERSION_CODE` and `POCKET_LEDGER_VERSION_NAME` Gradle properties.
 
 A future task can add a dedicated `internal` build type when the project is
 ready to define internal signing, logging, app ID, and diagnostics behavior

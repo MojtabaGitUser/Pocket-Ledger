@@ -20,6 +20,8 @@
   scrolling, release/R8, or Baseline Profile changes.
 - [ ] Internal distribution impact was considered for release, signing,
   Firebase, tester, or diagnostics changes.
+- [ ] Release signing/versioning impact was considered for release-ready build
+  changes.
 
 ## Accessibility Checklist
 

@@ -22,3 +22,10 @@ Thumbs.db
 
 .idea/
 **/.idea/
+
+# Signing and private credentials
+*.jks
+*.keystore
+*service-account*.json
+firebase-service-account*.json
+play-store-credentials*.json
