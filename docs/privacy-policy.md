@@ -1,8 +1,8 @@
 # Pocket Ledger Privacy Policy
 
-Effective date: June 29, 2026
+Effective date: June 30, 2026
 
-Contact: [add support email before Play Store submission]
+Contact: [add public support email before Play Store submission]
 
 Pocket Ledger is a personal finance app for recording transactions, budgets,
 categories, tags, and related ledger summaries. This policy describes the
@@ -10,8 +10,11 @@ behavior implemented in the current Android app package
 `com.mojtaba.pocketledger`.
 
 This policy must be reviewed and updated before public Play Store publication if
-app behavior, third-party services, support contact details, or data disclosures
-change.
+app behavior, third-party services, support contact details, hosted policy URL,
+or data disclosures change. Before submission, Pocket Ledger must publish this
+policy at a public HTTPS URL, add that URL to Play Console, and replace the
+support-contact placeholder with the same public contact used in the Play Store
+listing.
 
 ## Information Stored Locally
 
