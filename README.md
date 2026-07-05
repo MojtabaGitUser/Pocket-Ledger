@@ -9,6 +9,11 @@ Pocket Ledger is an Android-first Kotlin project with a modular foundation and a
 
 The Android project lives in `androidApp/`.
 
+The Compose Multiplatform desktop demo lives in `androidApp/desktopApp`.
+Run it with `.\androidApp\gradlew.bat :desktopApp:run --console=plain` and
+open `Insights` from the desktop navigation rail. More details are in
+[Desktop demo](docs/desktop-demo.md).
+
 ## CI Commands
 
 Run local validation from the repository root before opening a PR. These
@@ -47,6 +52,7 @@ or device and are intentionally not part of default PR validation.
 ## Documentation
 
 - [Architecture](docs/architecture.md): module responsibilities, dependency rules, ownership boundaries, and architectural rationale.
+- [Desktop demo](docs/desktop-demo.md): Compose Multiplatform desktop run command, Insights screen access, sample data behavior, and current limitations.
 - [ADR 0001: Modular Architecture and KMP-Ready Structure](docs/adr/0001-modular-architecture.md): decision record for the modular architecture direction.
 - [Android testing report](androidApp/docs/testing-report.md): current test suite inventory, validation results, performance checks, release/R8 coverage, and known gaps.
 - [Android performance benchmarks](androidApp/docs/performance-report.md): Macrobenchmark and Baseline Profile generation setup, local device requirements, and update commands.
