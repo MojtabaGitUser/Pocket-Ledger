@@ -21,6 +21,8 @@ import com.mojtaba.pocketledger.desktop.insights.DesktopInsightsScreen
 import com.mojtaba.pocketledger.desktop.insights.DesktopInsightsStateMapper
 import com.mojtaba.pocketledger.desktop.insights.RuleBasedDesktopInsightsProvider
 import com.mojtaba.pocketledger.desktop.insights.SampleDesktopInsightsDataSource
+import com.mojtaba.pocketledger.desktop.search.DesktopSearchScreen
+import com.mojtaba.pocketledger.desktop.search.SampleDesktopSearchDataSource
 import com.mojtaba.pocketledger.desktop.theme.PocketLedgerDesktopTheme
 
 @Composable
@@ -35,6 +37,7 @@ fun PocketLedgerDesktopApp() {
                 DesktopInsightsStateMapper(RuleBasedDesktopInsightsProvider())
                     .map(SampleDesktopInsightsDataSource.monthlySummary())
             }
+            val searchRecords = remember { SampleDesktopSearchDataSource.records() }
 
             Row(modifier = Modifier.fillMaxSize()) {
                 DesktopNavigationRail(
@@ -43,7 +46,10 @@ fun PocketLedgerDesktopApp() {
                 )
                 when (destination) {
                     DesktopDestination.Dashboard -> DesktopPlaceholderScreen("Dashboard")
-                    DesktopDestination.Search -> DesktopPlaceholderScreen("Search")
+                    DesktopDestination.Search -> DesktopSearchScreen(
+                        records = searchRecords,
+                        modifier = Modifier.weight(1f),
+                    )
                     DesktopDestination.Insights -> DesktopInsightsScreen(
                         state = insightsState,
                         modifier = Modifier.weight(1f),
