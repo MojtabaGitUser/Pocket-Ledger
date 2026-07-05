@@ -10,6 +10,7 @@ import androidx.navigation.navDeepLink
 import com.mojtaba.pocketledger.adaptive.LocalAdaptiveNavigationState
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
 import com.mojtaba.pocketledger.debughealth.DebugHealthScreen
+import com.mojtaba.pocketledger.feature.dashboard.insights.InsightsRoute
 import com.mojtaba.pocketledger.feature.dashboard.navigation.dashboardGraph
 import com.mojtaba.pocketledger.feature.search.navigation.searchGraph
 import com.mojtaba.pocketledger.feature.transaction.navigation.TransactionRoutes
@@ -44,6 +45,7 @@ fun PocketLedgerNavGraph(
             transactionRepository = appGraph.transactionRepository,
             categoryRepository = appGraph.categoryRepository,
             tagRepository = appGraph.tagRepository,
+            aiFallbackStrategy = appGraph.aiFallbackStrategy,
             deepLinkBaseUri = "${AppDestination.DEEP_LINK_SCHEME}://${AppDestination.DEEP_LINK_HOST}",
             paneType = adaptiveNavigationState.paneType,
         )
@@ -60,7 +62,12 @@ fun PocketLedgerNavGraph(
             },
         )
         placeholderDestination(AppDestination.Insights) {
-            InsightsPlaceholderScreen()
+            InsightsRoute(
+                transactionRepository = appGraph.transactionRepository,
+                budgetRepository = appGraph.budgetRepository,
+                categoryRepository = appGraph.categoryRepository,
+                aiFallbackStrategy = appGraph.aiFallbackStrategy,
+            )
         }
         placeholderDestination(AppDestination.Settings) {
             SettingsScreen(appLockManager = appGraph.appLockManager)

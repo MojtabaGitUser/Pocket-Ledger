@@ -11,6 +11,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
@@ -21,6 +22,7 @@ fun TransactionEditorRoute(
     transactionRepository: TransactionRepository,
     categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
+    aiFallbackStrategy: AiFallbackStrategy? = null,
     mode: TransactionFormMode,
     transactionId: String?,
     onNavigateBack: () -> Unit,
@@ -31,6 +33,7 @@ fun TransactionEditorRoute(
             transactionRepository = transactionRepository,
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
+            aiFallbackStrategy = aiFallbackStrategy,
             mode = mode,
             transactionId = transactionId,
         ),
@@ -59,6 +62,7 @@ private class TransactionEditorViewModelFactory(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
     private val tagRepository: TagRepository,
+    private val aiFallbackStrategy: AiFallbackStrategy?,
     private val mode: TransactionFormMode,
     private val transactionId: String?,
 ) : ViewModelProvider.Factory {
@@ -75,6 +79,7 @@ private class TransactionEditorViewModelFactory(
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
             savedStateHandle = extras.createSavedStateHandle(),
+            aiFallbackStrategy = aiFallbackStrategy,
             initialMode = mode,
             initialTransactionId = transactionId,
         ) as T

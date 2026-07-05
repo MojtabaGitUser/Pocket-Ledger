@@ -45,7 +45,7 @@ Backlog context that is present lives in `docs/github-issue-import-report.md`.
 | Ads | No ad UI, ad network integration, or ad-serving feature is implemented. Firebase/Google SDKs contribute advertising/ad-services identifier permissions for analytics/attribution capability, not app-served ads. | Declare no ads if Play Console asks whether the app contains ads. |
 | Content ratings | App is a personal finance ledger and budget utility. It does not include user-generated public content, gambling, social networking, shopping, or regulated investment/banking flows. | Complete the questionnaire as a finance/productivity utility based on actual screenshots and features. |
 | Target audience and children | The privacy policy states the app is not designed for children. The product is a personal finance utility for users managing their own ledger. | Target adults/general finance users; do not mark as child-directed. |
-| Financial features | The app records local transactions, budgets, categories, tags, summaries, and search. It does not provide banking, lending, investing, money transmission, payments, credit, tax filing, financial advice, or regulated financial services. | Declare as personal finance tracking only. Do not overstate regulated services. |
+| Financial features | The app records local transactions, budgets, categories, tags, summaries, search, private monthly insights, and user-confirmed smart autofill. It does not provide banking, lending, investing, money transmission, payments, credit, tax filing, financial advice, or regulated financial services. | Declare as personal finance tracking only. Do not overstate regulated services or AI advice. |
 | Permissions declaration | Release merged manifest permissions are listed below. No contacts, camera, location, photos, calendar, SMS, phone, microphone, or notification permission is in the release merged manifest. | Use release manifest only for production declarations. |
 | Data collection | Local financial data stays in app-private storage unless Android backup/device transfer or Firebase SDK behavior applies. No user account data, contact data, payment-card credentials, cloud sync data, import/export payload, or remote AI data path is implemented. | Declare local financial data handling and Firebase SDK metadata conservatively. |
 | Data sharing | Current app code does not send ledger records to a Pocket Ledger server. Firebase/Google SDKs may receive technical analytics or attribution data. Firebase App Distribution shares debug APKs with authorized testers through CI, not runtime app code. | Do not claim ledger records are shared. Do disclose Firebase/Google SDK behavior where Play Console requires it. |
@@ -114,6 +114,8 @@ The taxonomy in `docs/product-event-taxonomy.md` and
 parameters such as screen name, source, result, error type, count bucket,
 amount bucket, currency-present flag, recurring flag, build type, app version,
 and feature flag state.
+
+E-12 AI features are local-only. Current provider shells for on-device models are unavailable by default, and deterministic rule-based fallback handles monthly insights, semantic search ranking, and smart autofill without remote AI calls or AI secrets.
 
 Product analytics events must not contain:
 

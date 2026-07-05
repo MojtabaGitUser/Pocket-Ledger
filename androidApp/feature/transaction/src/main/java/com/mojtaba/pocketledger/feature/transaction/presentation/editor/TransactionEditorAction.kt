@@ -12,5 +12,8 @@ sealed interface TransactionEditorAction {
     data class DateChanged(val value: Long?) : TransactionEditorAction
     data class CurrencyChanged(val value: String) : TransactionEditorAction
     data class RecurringChanged(val value: Boolean) : TransactionEditorAction
+    data object SmartAutofillClicked : TransactionEditorAction
+    data object SmartAutofillAccepted : TransactionEditorAction
+    data object SmartAutofillDismissed : TransactionEditorAction
     data object SaveClicked : TransactionEditorAction
 }
