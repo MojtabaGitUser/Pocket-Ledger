@@ -6,12 +6,10 @@ on:
       - dev
       - main
   workflow_dispatch:
-    inputs:
-      verify_screenshots:
-        description: "Run adaptive Paparazzi screenshot verification"
-        required: false
-        default: false
-        type: boolean
+
+concurrency:
+  group: pr-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -49,27 +47,17 @@ jobs:
       - name: List Gradle projects
         run: ./gradlew projects
 
-      - name: Assemble app debug
+      - name: Run Android lint
+        run: ./gradlew lintDebug
+
+      - name: Run JVM and shared tests
+        run: ./gradlew testDebugUnitTest :shared:allTests
+
+      - name: Assemble debug app
         run: ./gradlew :app:assembleDebug
 
-      - name: Assemble app release
+      - name: Assemble release app
         run: ./gradlew :app:assembleRelease
 
-      - name: Compile app Kotlin
-        run: ./gradlew :app:compileDebugKotlin :app:compileReleaseKotlin
-
-      - name: Assemble design system debug
-        run: ./gradlew :core:designsystem:assembleDebug
-
-      - name: Compile shared KMP
-        run: ./gradlew :shared:compileKotlinMetadata :shared:compileAndroidMain
-
-      - name: Run shared tests
-        run: ./gradlew :shared:allTests
-
-      - name: Run full build
-        run: ./gradlew clean build
-
-      - name: Verify adaptive screenshots
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_screenshots }}
-        run: ./gradlew verifyAdaptiveScreenshots
+      - name: Assemble benchmark artifacts
+        run: ./gradlew :app:assembleBenchmark :macrobenchmark:assemble

@@ -27,6 +27,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.selected
@@ -34,7 +35,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerCheckedState
 import com.mojtaba.pocketledger.core.designsystem.accessibility.pocketLedgerHeading
@@ -230,13 +230,7 @@ private fun CategorySelector(
                 FilterChip(
                     selected = selected,
                     onClick = { onCategorySelected(if (selected) null else category.id) },
-                    label = {
-                        Text(
-                            text = category.name,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
+                    label = { Text(text = category.name) },
                     modifier = Modifier.semantics {
                         contentDescription = "Category ${category.name}"
                         this.selected = selected
@@ -301,6 +295,8 @@ private fun ActiveToggle(
     onActiveChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val highFontScale = LocalDensity.current.fontScale >= 2f
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -321,10 +317,21 @@ private fun ActiveToggle(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        if (!highFontScale) {
+            Switch(
+                checked = isActive,
+                onCheckedChange = onActiveChanged,
+                modifier = Modifier
+                    .semantics { contentDescription = "Active budget switch" }
+                    .pocketLedgerCheckedState(isActive),
+            )
+        }
+    }
+    if (highFontScale) {
         Switch(
             checked = isActive,
             onCheckedChange = onActiveChanged,
-            modifier = Modifier
+            modifier = modifier
                 .semantics { contentDescription = "Active budget switch" }
                 .pocketLedgerCheckedState(isActive),
         )

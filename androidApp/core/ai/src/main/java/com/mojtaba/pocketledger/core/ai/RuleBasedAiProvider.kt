@@ -1,10 +1,11 @@
 package com.mojtaba.pocketledger.core.ai
 
 import java.util.Locale
+import kotlin.math.abs
 
 object RuleBasedAiProvider : AiProvider {
     override val type: AiProviderType = AiProviderType.RuleBased
-    override val capabilities: AiProviderCapabilities = AiProviderCapabilities.SummariesAndSearch
+    override val capabilities: AiProviderCapabilities = AiProviderCapabilities.LocalFinanceFeatures
 
     override fun availability(): AiProviderAvailability = AiProviderAvailability.Available
 
@@ -21,43 +22,181 @@ object RuleBasedAiProvider : AiProvider {
         )
     }
 
-    override suspend fun semanticSearch(request: SemanticSearchRequest): AiInferenceResult<SemanticSearchResult> {
-        val queryTokens = request.query.tokens()
-        val rankedIds = if (queryTokens.isEmpty()) {
-            request.documents.map { it.id }
-        } else {
-            request.documents
-                .map { document -> document to document.score(queryTokens) }
-                .filter { (_, score) -> score > 0 }
-                .sortedWith(
-                    compareByDescending<Pair<SemanticSearchDocument, Int>> { it.second }
-                        .thenBy { it.first.title.lowercase(Locale.US) }
-                        .thenBy { it.first.id },
-                )
-                .take(request.maxResults.coerceAtLeast(0))
-                .map { (document, _) -> document.id }
+    override suspend fun generateMonthlySummary(
+        request: MonthlySummaryRequest,
+    ): AiInferenceResult<MonthlySummaryResult> {
+        val expense = abs(request.totalExpenseMinor)
+        val net = request.totalIncomeMinor - expense
+        val topCategories = request.categorySummaries
+            .filter { it.totalExpenseMinor > 0L }
+            .sortedWith(compareByDescending<AiCategorySummary> { it.totalExpenseMinor }.thenBy { it.displayName.orEmpty() })
+            .take(3)
+        val title = "${request.periodLabel} private summary"
+        val summary = when {
+            request.transactionCount == 0 -> "No local transactions were found for ${request.periodLabel}."
+            request.totalIncomeMinor == 0L && expense > 0L ->
+                "${request.periodLabel} included ${request.transactionCount} transactions and recorded expenses with no income in this period."
+            expense == 0L && request.totalIncomeMinor > 0L ->
+                "${request.periodLabel} included ${request.transactionCount} transactions and recorded income with no expenses in this period."
+            else -> "${request.periodLabel} included ${request.transactionCount} transactions with ${net.netDirection()} net cash flow."
+        }
+        val insights = buildList {
+            add("Income total: ${request.totalIncomeMinor.toMajorUnits()} ${request.currencyCode}.")
+            add("Expense total: ${expense.toMajorUnits()} ${request.currencyCode}.")
+            if (topCategories.isNotEmpty()) {
+                add("Top spending category: ${topCategories.first().safeName()}.")
+            }
+            request.recurringHints.firstOrNull()?.let { hint ->
+                add("Frequent local pattern: ${hint.label} appeared ${hint.transactionCount} times.")
+            }
+            request.budgetComparisons.firstOrNull { it.budgetMinor > 0L && it.spentMinor >= it.budgetMinor }?.let { budget ->
+                add("One budget is at or above its configured limit: ${budget.displayName}.")
+            }
+        }
+        val warnings = buildList {
+            if (expense > request.totalIncomeMinor && expense > 0L) {
+                add("Expenses were higher than income for this period.")
+            }
+            val top = topCategories.firstOrNull()
+            if (top != null && expense > 0L && top.totalExpenseMinor * 100L >= expense * 50L) {
+                add("Spending was concentrated in ${top.safeName()}.")
+            }
+        }
+        val actions = buildList {
+            if (request.transactionCount == 0) {
+                add("Add transactions to generate more useful local insights.")
+            } else {
+                add("Review top categories for unusual local activity.")
+            }
+            if (warnings.isNotEmpty()) {
+                add("Compare this month with your budget settings.")
+            }
         }
         return AiInferenceResult.Success(
-            value = SemanticSearchResult(rankedIds),
+            value = MonthlySummaryResult(
+                title = title,
+                summaryText = summary,
+                insights = insights,
+                warnings = warnings,
+                suggestedActions = actions,
+                providerType = type,
+                quality = if (request.transactionCount == 0) AiResultQuality.Low else AiResultQuality.Medium,
+                privacyMode = request.privacyMode,
+            ),
             providerType = type,
         )
     }
 
-    private fun SemanticSearchDocument.score(queryTokens: Set<String>): Int {
-        val haystack = listOf(title, body, metadata.values.joinToString(" ")).joinToString(" ").lowercase(Locale.US)
+    override suspend fun semanticSearch(request: SemanticSearchRequest): AiInferenceResult<SemanticSearchResult> {
+        val queryTokens = request.query.tokens()
+        val filteredDocuments = request.documents.filter { document ->
+            (request.filters.categoryIds.isEmpty() || document.categoryId in request.filters.categoryIds) &&
+                (request.filters.accountIds.isEmpty() || document.accountId in request.filters.accountIds)
+        }
+        val matches = if (queryTokens.isEmpty()) {
+            filteredDocuments.take(request.maxResults.coerceAtLeast(0)).mapIndexed { index, document ->
+                SemanticSearchMatch(document.id, relevanceScore = filteredDocuments.size - index, reason = "Local order match")
+            }
+        } else {
+            filteredDocuments
+                .mapNotNull { document -> document.match(queryTokens) }
+                .sortedWith(compareByDescending<SemanticSearchMatch> { it.relevanceScore }.thenBy { it.id })
+                .take(request.maxResults.coerceAtLeast(0))
+        }
+        return AiInferenceResult.Success(
+            value = SemanticSearchResult(rankedIds = matches.map { it.id }, matches = matches),
+            providerType = type,
+        )
+    }
+
+    override suspend fun smartAutofill(request: SmartAutofillRequest): AiInferenceResult<SmartAutofillResult> {
+        val tokens = request.partialInput.description.tokens() + request.partialInput.note.tokens()
+        if (tokens.isEmpty() || request.history.isEmpty()) {
+            return AiInferenceResult.Success(
+                SmartAutofillResult(null, type, AiResultQuality.Low),
+                type,
+            )
+        }
+        val ranked = request.history
+            .filter { it.transactionType.equals(request.partialInput.transactionType, ignoreCase = true) }
+            .map { item -> item to item.score(tokens) }
+            .filter { (_, score) -> score > 0 }
+            .sortedWith(compareByDescending<Pair<SmartAutofillHistoryItem, Int>> { it.second }.thenByDescending { it.first.occurredAtMillis })
+        val best = ranked.firstOrNull()?.first
+        val suggestion = if (best == null) {
+            null
+        } else {
+            val recurringCount = ranked.take(5).count { it.first.isRecurring }
+            val amount = ranked
+                .mapNotNull { it.first.amountMinor }
+                .take(3)
+                .takeIf { it.size >= 2 && it.distinct().size == 1 }
+                ?.first()
+            SmartAutofillSuggestion(
+                categoryId = best.categoryId?.takeIf { id -> request.partialInput.categoryId == null && request.candidates.categories.any { it.id == id } },
+                accountId = best.accountId?.takeIf { id -> request.partialInput.accountId == null && request.candidates.accounts.any { it.id == id } },
+                amountMinor = amount?.takeIf { request.partialInput.amountMinor == null },
+                recurring = (recurringCount >= 2).takeIf { request.partialInput.description.isNotBlank() },
+                note = null,
+                reason = "Matched similar local transaction patterns.",
+            )
+        }
+        val confidence = when {
+            ranked.firstOrNull()?.second ?: 0 >= 6 -> AiResultQuality.High
+            ranked.isNotEmpty() -> AiResultQuality.Medium
+            else -> AiResultQuality.Low
+        }
+        return AiInferenceResult.Success(
+            SmartAutofillResult(suggestion, type, confidence),
+            type,
+        )
+    }
+
+    private fun SemanticSearchDocument.match(queryTokens: Set<String>): SemanticSearchMatch? {
+        val titleTokens = title.tokens()
+        val bodyTokens = body.tokens()
+        val metadataTokens = metadata.values.joinToString(" ").tokens()
+        val score = queryTokens.sumOf { token ->
+            when {
+                title.lowercase(Locale.US) == token -> 8
+                token in titleTokens -> 6
+                titleTokens.any { it.startsWith(token) } -> 4
+                token in bodyTokens -> 3
+                bodyTokens.any { it.startsWith(token) } -> 2
+                token in metadataTokens -> 2
+                else -> 0
+            }
+        }
+        return if (score > 0) SemanticSearchMatch(id, score, "Matched local transaction text") else null
+    }
+
+    private fun SmartAutofillHistoryItem.score(queryTokens: Set<String>): Int {
+        val textTokens = listOfNotNull(description, note).joinToString(" ").tokens()
         return queryTokens.sumOf { token ->
             when {
-                haystack.contains(token) -> 2
-                token.length >= 4 && haystack.tokens().any { candidate -> candidate.contains(token) } -> 1
+                token in textTokens -> 3
+                textTokens.any { it.startsWith(token) } -> 2
+                textTokens.any { it.contains(token) && token.length >= 4 } -> 1
                 else -> 0
             }
         }
     }
 
+    private fun AiCategorySummary.safeName(): String = displayName?.takeIf { it.isNotBlank() } ?: "Uncategorized"
+
+    private fun Long.netDirection(): String = when {
+        this > 0L -> "positive"
+        this < 0L -> "negative"
+        else -> "flat"
+    }
+
+    private fun Long.toMajorUnits(): String = String.format(Locale.US, "%.2f", this / 100.0)
+
     private fun String?.cleanOrNull(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
 
-    private fun String.tokens(): Set<String> =
-        lowercase(Locale.US)
+    private fun String?.tokens(): Set<String> =
+        orEmpty()
+            .lowercase(Locale.US)
             .split(Regex("[^a-z0-9]+"))
             .mapNotNull { it.cleanOrNull() }
             .toSet()

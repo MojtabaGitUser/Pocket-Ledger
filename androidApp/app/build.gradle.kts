@@ -2,6 +2,12 @@ plugins {
     id("pocketledger.android.application")
     id("pocketledger.android.compose")
     alias(libs.plugins.paparazzi)
+
+    id("com.android.application")
+
+    // Add the Google services Gradle plugin
+    alias(libs.plugins.google.services)
+
 }
 
 tasks.withType<Test>().configureEach {
@@ -15,30 +21,70 @@ tasks.withType<Test>().configureEach {
     }
 }
 
+fun releaseProperty(name: String) = providers.gradleProperty(name).orElse(providers.environmentVariable(name))
+
+val pocketLedgerVersionCode = releaseProperty("POCKET_LEDGER_VERSION_CODE").map { rawValue ->
+    require(rawValue.matches(Regex("[1-9][0-9]{0,8}"))) {
+        "POCKET_LEDGER_VERSION_CODE must be a positive integer with at most 9 digits."
+    }
+    rawValue.toInt()
+}
+val pocketLedgerVersionName = releaseProperty("POCKET_LEDGER_VERSION_NAME").map { rawValue ->
+    require(rawValue.matches(Regex("""[0-9]+\.[0-9]+\.[0-9]+([-.][A-Za-z0-9]+)*"""))) {
+        "POCKET_LEDGER_VERSION_NAME must use semantic format such as 1.0.0 or 1.0.0-rc.1."
+    }
+    require(rawValue.length <= 32) { "POCKET_LEDGER_VERSION_NAME must be 32 characters or fewer." }
+    rawValue
+}
+
+val releaseStoreFile = releaseProperty("POCKET_LEDGER_RELEASE_STORE_FILE")
+val releaseStorePassword = releaseProperty("POCKET_LEDGER_RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = releaseProperty("POCKET_LEDGER_RELEASE_KEY_ALIAS")
+val releaseKeyPassword = releaseProperty("POCKET_LEDGER_RELEASE_KEY_PASSWORD")
+val releaseSigningValues = listOf(
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+)
+val releaseSigningValueCount = releaseSigningValues.count { it.isPresent }
+val hasReleaseSigningConfig = releaseSigningValueCount == releaseSigningValues.size
+val requireReleaseSigning = releaseProperty("POCKET_LEDGER_REQUIRE_RELEASE_SIGNING")
+    .map { it.equals("true", ignoreCase = true) }
+    .getOrElse(false)
+
+if (releaseSigningValueCount in 1 until releaseSigningValues.size) {
+    throw GradleException(
+        "Release signing is partially configured. Provide all POCKET_LEDGER_RELEASE_* values " +
+            "or remove them for unsigned validation builds."
+    )
+}
+if (requireReleaseSigning && !hasReleaseSigningConfig) {
+    throw GradleException(
+        "POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true requires POCKET_LEDGER_RELEASE_STORE_FILE, " +
+            "POCKET_LEDGER_RELEASE_STORE_PASSWORD, POCKET_LEDGER_RELEASE_KEY_ALIAS, and " +
+            "POCKET_LEDGER_RELEASE_KEY_PASSWORD."
+    )
+}
+
 android {
     namespace = "com.mojtaba.pocketledger"
-
-    val releaseStoreFile = providers.gradleProperty("POCKET_LEDGER_RELEASE_STORE_FILE")
-    val releaseStorePassword = providers.gradleProperty("POCKET_LEDGER_RELEASE_STORE_PASSWORD")
-    val releaseKeyAlias = providers.gradleProperty("POCKET_LEDGER_RELEASE_KEY_ALIAS")
-    val releaseKeyPassword = providers.gradleProperty("POCKET_LEDGER_RELEASE_KEY_PASSWORD")
-    val hasReleaseSigningConfig =
-        releaseStoreFile.isPresent &&
-            releaseStorePassword.isPresent &&
-            releaseKeyAlias.isPresent &&
-            releaseKeyPassword.isPresent
 
     defaultConfig {
         applicationId = "com.mojtaba.pocketledger"
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = pocketLedgerVersionCode.get()
+        versionName = pocketLedgerVersionName.get()
     }
 
     signingConfigs {
         create("release") {
             if (hasReleaseSigningConfig) {
-                storeFile = file(releaseStoreFile.get())
+                val signingStore = file(releaseStoreFile.get())
+                if (!signingStore.isFile) {
+                    throw GradleException("Release signing store file does not exist: ${signingStore.absolutePath}")
+                }
+                storeFile = signingStore
                 storePassword = releaseStorePassword.get()
                 keyAlias = releaseKeyAlias.get()
                 keyPassword = releaseKeyPassword.get()
@@ -88,12 +134,27 @@ android {
     }
 }
 
+tasks.register("validateReleaseSigning") {
+    group = "verification"
+    description = "Fails unless release signing is fully configured for release-ready APK/AAB builds."
+    doLast {
+        if (!hasReleaseSigningConfig) {
+            throw GradleException(
+                "Release signing is not configured. Set POCKET_LEDGER_RELEASE_STORE_FILE, " +
+                    "POCKET_LEDGER_RELEASE_STORE_PASSWORD, POCKET_LEDGER_RELEASE_KEY_ALIAS, and " +
+                    "POCKET_LEDGER_RELEASE_KEY_PASSWORD."
+            )
+        }
+    }
+}
+
 apply(plugin = "androidx.baselineprofile")
 
 dependencies {
     add("baselineProfile", project(":macrobenchmark"))
     add("benchmarkImplementation", project(":core:testing"))
     implementation(project(":core:ai"))
+    implementation(project(":core:analytics"))
     implementation(project(":core:background"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:data"))
@@ -130,4 +191,15 @@ dependencies {
     androidTestImplementation(project(":core:testing"))
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.leakcanary.android)
+
+    // Import the Firebase BoM
+    implementation(platform(libs.firebase.bom))
+
+    // TODO: Add the dependencies for Firebase products you want to use
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation(libs.firebase.analytics)
+
+
+    // Add the dependencies for any other desired Firebase products
+    // https://firebase.google.com/docs/android/setup#available-libraries
 }

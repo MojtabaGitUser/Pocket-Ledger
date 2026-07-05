@@ -3,14 +3,20 @@ package com.mojtaba.pocketledger.core.featureflags
 object DefaultFeatureFlags {
     val SemanticSearchEnabled = BooleanFeatureFlag(
         key = FeatureFlagKey("semantic_search_enabled"),
-        defaultValue = false,
-        description = "Enables future AI or semantic transaction search surfaces.",
+        defaultValue = true,
+        description = "Enables local semantic transaction search with deterministic fallback.",
     )
 
     val AiInsightsEnabled = BooleanFeatureFlag(
         key = FeatureFlagKey("ai_insights_enabled"),
-        defaultValue = false,
-        description = "Enables future AI-generated dashboard insights.",
+        defaultValue = true,
+        description = "Enables private on-device or rule-based monthly insights.",
+    )
+
+    val SmartAutofillEnabled = BooleanFeatureFlag(
+        key = FeatureFlagKey("smart_autofill_enabled"),
+        defaultValue = true,
+        description = "Enables local smart transaction autofill suggestions.",
     )
 
     val PasskeyAccountFlowEnabled = BooleanFeatureFlag(
@@ -46,6 +52,7 @@ object DefaultFeatureFlags {
     val All: List<FeatureFlag<*>> = listOf(
         SemanticSearchEnabled,
         AiInsightsEnabled,
+        SmartAutofillEnabled,
         PasskeyAccountFlowEnabled,
         CloudSyncEnabled,
         BackgroundJobsEnabled,

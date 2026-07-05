@@ -153,7 +153,7 @@ lock; after `.\gradlew.bat --stop`, the command was rerun and passed.
 Connected benchmark commands remain required when hardware is available:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 ```
 
 Remaining gaps:
@@ -242,7 +242,7 @@ Assemble the benchmark artifacts:
 Run connected benchmarks when a device or emulator is attached:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 ```
 
 Run only the large dataset benchmark class on a connected device or emulator:

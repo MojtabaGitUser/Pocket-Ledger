@@ -1,0 +1,175 @@
+name: Release Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Optional release candidate versionName override, for example 1.0.0-rc.1"
+        required: false
+        type: string
+      version_code:
+        description: "Optional positive integer versionCode override"
+        required: false
+        type: string
+      require_release_signing:
+        description: "Fail unless release signing secrets are configured"
+        required: true
+        default: false
+        type: boolean
+  push:
+    branches:
+      - release/**
+      - rc/**
+    tags:
+      - v*
+      - rc-*
+
+concurrency:
+  group: release-candidate-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  android-release-candidate:
+    name: Android release candidate
+    runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Dorg.gradle.workers.max=2
+
+    defaults:
+      run:
+        working-directory: androidApp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Prepare release metadata
+        id: metadata
+        shell: bash
+        env:
+          VERSION_NAME_INPUT: ${{ github.event.inputs.version_name || '' }}
+          VERSION_CODE_INPUT: ${{ github.event.inputs.version_code || '' }}
+        run: |
+          ref_name="${GITHUB_REF_NAME//\//-}"
+          base_version_name="$(grep -E '^POCKET_LEDGER_VERSION_NAME=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          base_version_code="$(grep -E '^POCKET_LEDGER_VERSION_CODE=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          version_name="${VERSION_NAME_INPUT:-$base_version_name}"
+          version_code="${VERSION_CODE_INPUT:-$base_version_code}"
+
+          if [[ ! "$version_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][A-Za-z0-9]+)*$ ]]; then
+            echo "::error::version_name must look like 1.0.0 or 1.0.0-rc.1."
+            exit 1
+          fi
+          if [[ ! "$version_code" =~ ^[1-9][0-9]{0,8}$ ]]; then
+            echo "::error::version_code must be a positive integer with at most 9 digits."
+            exit 1
+          fi
+
+          echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
+          echo "artifact_suffix=${version_name}-${version_code}-${ref_name}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "version_name=${version_name}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${version_code}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure optional release signing
+        id: signing
+        shell: bash
+        env:
+          RELEASE_STORE_BASE64: ${{ secrets.POCKET_LEDGER_RELEASE_STORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.POCKET_LEDGER_RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.POCKET_LEDGER_RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.POCKET_LEDGER_RELEASE_KEY_PASSWORD }}
+          REQUIRE_RELEASE_SIGNING: ${{ github.event.inputs.require_release_signing || 'false' }}
+        run: |
+          if [[ -n "$RELEASE_STORE_BASE64" && -n "$RELEASE_STORE_PASSWORD" && -n "$RELEASE_KEY_ALIAS" && -n "$RELEASE_KEY_PASSWORD" ]]; then
+            signing_dir="$RUNNER_TEMP/pocket-ledger-signing"
+            signing_store="$signing_dir/release.keystore"
+            mkdir -p "$signing_dir"
+            printf '%s' "$RELEASE_STORE_BASE64" | base64 --decode > "$signing_store"
+            {
+              echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_STORE_FILE=$signing_store"
+              echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD"
+              echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS"
+              echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+            echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
+            echo "signing_configured=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$REQUIRE_RELEASE_SIGNING" == "true" ]]; then
+            echo "::error::Signed release candidate requested, but one or more POCKET_LEDGER_RELEASE_* secrets are missing."
+            exit 1
+          else
+            echo "Release signing secrets were not all provided; building unsigned validation artifacts."
+            echo "signing_configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: List Gradle projects
+        run: ./gradlew projects
+
+      - name: Run release lint
+        run: ./gradlew lintRelease
+
+      - name: Run JVM and shared tests
+        run: ./gradlew testDebugUnitTest :shared:allTests
+
+      - name: Validate release signing when configured
+        if: ${{ steps.signing.outputs.signing_configured == 'true' }}
+        run: ./gradlew :app:validateReleaseSigning
+
+      - name: Assemble release APK
+        run: ./gradlew :app:assembleRelease
+
+      - name: Build release app bundle
+        run: ./gradlew :app:bundleRelease
+
+      - name: Assemble benchmark artifacts
+        run: ./gradlew :app:assembleBenchmark :macrobenchmark:assemble
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocket-ledger-rc-apk-${{ steps.metadata.outputs.artifact_suffix }}
+          path: androidApp/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload release app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocket-ledger-rc-aab-${{ steps.metadata.outputs.artifact_suffix }}
+          path: androidApp/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+      - name: Upload release mapping
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocket-ledger-rc-mapping-${{ steps.metadata.outputs.artifact_suffix }}
+          path: androidApp/app/build/outputs/mapping/release/
+          if-no-files-found: error
+
+      - name: Upload release validation reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocket-ledger-rc-reports-${{ steps.metadata.outputs.artifact_suffix }}
+          path: |
+            androidApp/**/build/reports/lint-results-release.*
+            androidApp/**/build/reports/tests/
+            androidApp/**/build/test-results/
+          if-no-files-found: ignore

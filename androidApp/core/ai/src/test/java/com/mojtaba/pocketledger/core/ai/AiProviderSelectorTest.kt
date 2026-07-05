@@ -15,7 +15,10 @@ class AiProviderSelectorTest {
     fun disabledFeatureFlagSelectsNoOpProvider() {
         val selector = selector(
             providers = listOf(availableProvider(AiProviderType.GeminiNano), RuleBasedAiProvider, NoOpAiProvider),
-            enabledFlags = emptyMap(),
+            enabledFlags = mapOf(
+                DefaultFeatureFlags.AiInsightsEnabled.key to FeatureFlagValue.BooleanValue(false),
+                DefaultFeatureFlags.SemanticSearchEnabled.key to FeatureFlagValue.BooleanValue(false),
+            ),
         )
 
         assertEquals(AiProviderType.NoOp, selector.selectFor(AiCapability.MonthlySummary).type)
@@ -82,7 +85,7 @@ class AiProviderSelectorTest {
         private val availability: AiProviderAvailability,
         private val fail: Boolean = false,
     ) : AiProvider {
-        override val capabilities: AiProviderCapabilities = AiProviderCapabilities.SummariesAndSearch
+        override val capabilities: AiProviderCapabilities = AiProviderCapabilities.LocalFinanceFeatures
 
         override fun availability(): AiProviderAvailability = availability
 
@@ -91,9 +94,29 @@ class AiProviderSelectorTest {
             return AiInferenceResult.Success(AiSummaryResult("AI summary"), type)
         }
 
+        override suspend fun generateMonthlySummary(
+            request: MonthlySummaryRequest,
+        ): AiInferenceResult<MonthlySummaryResult> {
+            if (fail) error("${type.name} failed.")
+            return AiInferenceResult.Success(
+                MonthlySummaryResult(
+                    title = "AI summary",
+                    summaryText = "AI summary",
+                    insights = emptyList(),
+                    providerType = type,
+                ),
+                type,
+            )
+        }
+
         override suspend fun semanticSearch(request: SemanticSearchRequest): AiInferenceResult<SemanticSearchResult> {
             if (fail) error("${type.name} failed.")
             return AiInferenceResult.Success(SemanticSearchResult(request.documents.map { it.id }), type)
+        }
+
+        override suspend fun smartAutofill(request: SmartAutofillRequest): AiInferenceResult<SmartAutofillResult> {
+            if (fail) error("${type.name} failed.")
+            return AiInferenceResult.Success(SmartAutofillResult(null, type, AiResultQuality.Low), type)
         }
     }
 }

@@ -123,7 +123,7 @@ The macrobenchmark module also owns Baseline Profile generation. It has its own
 the debug app:
 
 ```bash
-./gradlew :macrobenchmark:connectedBenchmarkAndroidTest
+./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 ./gradlew :app:generateReleaseBaselineProfile
 ```
 
@@ -162,8 +162,10 @@ fixtures and device definitions:
 The screenshot suite covers dashboard content, empty and error states;
 transaction list, detail, missing, error, and adaptive list/detail states;
 search initial, populated, empty-ledger, no-results, error, and filter-visible
-states; adaptive navigation chrome; and key large-font variants at 1.3 and 1.5
-font scale. `ThemeScreenshotMatrixTest` adds an explicit light/dark matrix over
+states; adaptive navigation chrome; key large-font variants at 1.3 and 1.5
+font scale; and focused 200% font-scale coverage for dashboard, transactions,
+search, budget setup, settings, and app lock. `ThemeScreenshotMatrixTest` adds
+an explicit light/dark matrix over
 compact phone and expanded tablet layouts for dashboard content, transaction
 adaptive content, populated search, settings app-lock availability states, and
 the locked app-lock screen.
@@ -194,6 +196,6 @@ protect a meaningful visual contract; otherwise add the smallest focused case
 with a descriptive group and state name.
 
 CI keeps screenshot verification off the default pull-request path to avoid
-adding screenshot runtime to every PR. The PR Validation workflow can be run
-manually with `verify_screenshots=true` to execute `verifyAdaptiveScreenshots`
-on GitHub Actions.
+adding screenshot runtime to every PR. The Screenshot And Benchmark Validation
+workflow can be run manually with `run_screenshots=true` to execute
+`verifyAdaptiveScreenshots` on GitHub Actions.

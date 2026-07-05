@@ -47,7 +47,7 @@ class SearchViewModelTest {
         assertTrue(viewModel.uiState.value.isEmptyLedger)
         assertFalse(viewModel.uiState.value.isLoading)
         assertEquals(SearchMode.Keyword, viewModel.uiState.value.query.mode)
-        assertFalse(viewModel.uiState.value.capabilities.semanticSearchVisible)
+        assertTrue(viewModel.uiState.value.capabilities.semanticSearchVisible)
         job.cancel()
     }
 
@@ -120,7 +120,10 @@ class SearchViewModelTest {
     @Test
     fun semanticFlagDisabledKeepsKeywordSearchAvailable() = runTest {
         val transactionRepository = FakeTransactionRepository(listOf(testTransaction()))
-        val viewModel = newViewModel(transactionRepository = transactionRepository)
+        val featureFlags = FakeFeatureFlagProvider().apply {
+            disable(DefaultFeatureFlags.SemanticSearchEnabled)
+        }
+        val viewModel = newViewModel(transactionRepository = transactionRepository, featureFlags = featureFlags)
         val job = launch { viewModel.uiState.collect {} }
 
         viewModel.onAction(SearchAction.SearchModeSelected(SearchMode.Semantic))

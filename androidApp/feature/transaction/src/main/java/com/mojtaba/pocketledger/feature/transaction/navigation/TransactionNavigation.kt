@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
 import com.mojtaba.pocketledger.core.designsystem.adaptive.AdaptivePaneType
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
@@ -21,6 +22,7 @@ fun NavGraphBuilder.transactionGraph(
     transactionRepository: TransactionRepository,
     categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
+    aiFallbackStrategy: AiFallbackStrategy? = null,
     deepLinkBaseUri: String,
     paneType: AdaptivePaneType = AdaptivePaneType.SinglePane,
 ) {
@@ -97,6 +99,7 @@ fun NavGraphBuilder.transactionGraph(
             transactionRepository = transactionRepository,
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
+            aiFallbackStrategy = aiFallbackStrategy,
             mode = TransactionFormMode.EDIT,
             transactionId = transactionId,
             onNavigateBack = navController::navigateUp,

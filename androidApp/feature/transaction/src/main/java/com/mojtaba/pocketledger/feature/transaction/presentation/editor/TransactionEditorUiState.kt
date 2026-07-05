@@ -11,6 +11,8 @@ data class TransactionEditorUiState(
     val categories: List<TransactionCategoryOption> = emptyList(),
     val tags: List<TransactionTagOption> = emptyList(),
     val selectedTagIds: Set<String> = emptySet(),
+    val autofillSuggestion: TransactionAutofillSuggestionUiModel? = null,
+    val isAutofillLoading: Boolean = false,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
 ) {
@@ -27,4 +29,13 @@ data class TransactionCategoryOption(
 data class TransactionTagOption(
     val id: String,
     val name: String,
+)
+
+data class TransactionAutofillSuggestionUiModel(
+    val categoryId: String?,
+    val categoryName: String?,
+    val recurring: Boolean?,
+    val amountInput: String?,
+    val confidenceLabel: String,
+    val reason: String,
 )

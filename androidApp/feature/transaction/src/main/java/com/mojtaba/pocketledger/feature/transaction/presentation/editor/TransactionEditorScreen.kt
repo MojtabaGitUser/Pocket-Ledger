@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -246,6 +247,14 @@ private fun SecondaryFields(
                     uiState.validationResult.errors.note?.message?.let { error(it) }
                 },
         )
+        SmartAutofillPanel(
+            suggestion = uiState.autofillSuggestion,
+            isLoading = uiState.isAutofillLoading,
+            onSuggest = { onAction(TransactionEditorAction.SmartAutofillClicked) },
+            onAccept = { onAction(TransactionEditorAction.SmartAutofillAccepted) },
+            onDismiss = { onAction(TransactionEditorAction.SmartAutofillDismissed) },
+            modifier = Modifier.fillMaxWidth(),
+        )
         FilterChip(
             selected = uiState.formState.isRecurring,
             onClick = {
@@ -284,6 +293,63 @@ private fun SecondaryFields(
     }
 }
 
+
+@Composable
+private fun SmartAutofillPanel(
+    suggestion: TransactionAutofillSuggestionUiModel?,
+    isLoading: Boolean,
+    onSuggest: () -> Unit,
+    onAccept: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ElevatedCard(
+        modifier = modifier.semantics {
+            contentDescription = "Smart autofill suggestions"
+            stateDescription = when {
+                isLoading -> "Loading"
+                suggestion != null -> "Suggestion available"
+                else -> "No suggestion"
+            }
+        },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(PocketLedgerThemeDefaults.spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(PocketLedgerThemeDefaults.spacing.small),
+        ) {
+            Text(
+                text = "Smart autofill",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.pocketLedgerHeading(),
+            )
+            if (suggestion == null) {
+                Text(
+                    text = "Use local history to suggest category, amount, or recurring status.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TextButton(onClick = onSuggest, enabled = !isLoading) {
+                    Text(if (isLoading) "Checking" else "Suggest")
+                }
+            } else {
+                suggestion.categoryName?.let { Text("Category: $it") }
+                suggestion.amountInput?.let { Text("Amount: $it") }
+                suggestion.recurring?.let { Text("Recurring: ${if (it) "Yes" else "No"}") }
+                Text(
+                    text = "Confidence: ${suggestion.confidenceLabel}. ${suggestion.reason}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(PocketLedgerThemeDefaults.spacing.small)) {
+                    Button(onClick = onAccept) { Text("Accept") }
+                    TextButton(onClick = onDismiss) { Text("Dismiss") }
+                }
+            }
+        }
+    }
+}
 private fun List<TransactionCategoryOption>.filterFor(type: TransactionType): List<TransactionCategoryOption> =
     filter { category ->
         when (type) {

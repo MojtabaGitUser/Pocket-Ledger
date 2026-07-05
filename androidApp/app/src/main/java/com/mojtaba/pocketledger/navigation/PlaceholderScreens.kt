@@ -5,14 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.EmptyState
 import com.mojtaba.pocketledger.core.designsystem.component.SectionHeader
@@ -63,22 +59,12 @@ fun SettingsPlaceholderScreen() {
     )
 }
 
-@Composable
-fun DebugHealthPlaceholderScreen() {
-    PlaceholderDestinationScreen(
-        title = "Debug health",
-        subtitle = "Debug-only tools",
-        body = "This destination is registered only in debug builds.",
-        debugOnly = true,
-    )
-}
 
 @Composable
 private fun PlaceholderDestinationScreen(
     title: String,
     subtitle: String,
     body: String,
-    debugOnly: Boolean = false,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
 
@@ -95,18 +81,6 @@ private fun PlaceholderDestinationScreen(
                 title = title,
                 subtitle = subtitle,
             )
-            if (debugOnly) {
-                AssistChip(
-                    onClick = {},
-                    modifier = Modifier.semantics {
-                        contentDescription = "Debug health availability"
-                        stateDescription = "Debug build only"
-                    },
-                    label = {
-                        Text(text = "Debug build only")
-                    },
-                )
-            }
             EmptyState(
                 title = "$title placeholder",
                 message = body,

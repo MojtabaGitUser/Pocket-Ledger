@@ -8,5 +8,11 @@ interface AiProvider {
 
     suspend fun generateSummary(request: AiSummaryRequest): AiInferenceResult<AiSummaryResult>
 
+    suspend fun generateMonthlySummary(
+        request: MonthlySummaryRequest,
+    ): AiInferenceResult<MonthlySummaryResult>
+
     suspend fun semanticSearch(request: SemanticSearchRequest): AiInferenceResult<SemanticSearchResult>
+
+    suspend fun smartAutofill(request: SmartAutofillRequest): AiInferenceResult<SmartAutofillResult>
 }

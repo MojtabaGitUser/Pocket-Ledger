@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -63,31 +64,45 @@ private fun CategorySpendRow(
     val spacing = PocketLedgerThemeDefaults.spacing
     val percentText = DashboardFormatters.percent(category.percentageOfExpense)
     val amount = DashboardFormatters.formatAmountMinor(category.amountMinor, category.currencyCode)
+    val highFontScale = LocalDensity.current.fontScale >= 2f
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .semantics {
                 contentDescription = "${category.categoryName}, $amount, $percentText of expenses"
-            },
+        },
         verticalArrangement = Arrangement.spacedBy(spacing.small),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.medium),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        if (highFontScale) {
             Text(
                 text = category.categoryName,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
             )
             Text(
                 text = "$amount ($percentText)",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(spacing.medium),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = category.categoryName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = "$amount ($percentText)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         LinearProgressIndicator(
             progress = { (category.percentageOfExpense / 100.0).coerceIn(0.0, 1.0).toFloat() },
