@@ -22,19 +22,25 @@ class DefaultFeatureFlagsTest {
     }
 
     @Test
-    fun incompleteAndOptionalFeaturesDefaultToDisabled() {
-        DefaultFeatureFlags.All
-            .filterIsInstance<BooleanFeatureFlag>()
-            .forEach { flag ->
-                assertFalse(
-                    "${flag.key} should default to disabled.",
-                    flag.defaultValue,
-                )
-            }
+    fun implementedLocalAiFeaturesDefaultToEnabled() {
+        assertTrue(DefaultFeatureFlags.SemanticSearchEnabled.defaultValue)
+        assertTrue(DefaultFeatureFlags.AiInsightsEnabled.defaultValue)
+        assertTrue(DefaultFeatureFlags.SmartAutofillEnabled.defaultValue)
     }
 
     @Test
-    fun semanticSearchDefaultsToDisabled() {
-        assertFalse(DefaultFeatureFlags.SemanticSearchEnabled.defaultValue)
+    fun incompleteAndOptionalFeaturesDefaultToDisabled() {
+        listOf(
+            DefaultFeatureFlags.PasskeyAccountFlowEnabled,
+            DefaultFeatureFlags.CloudSyncEnabled,
+            DefaultFeatureFlags.BackgroundJobsEnabled,
+            DefaultFeatureFlags.DemoDataToolsEnabled,
+            DefaultFeatureFlags.ScreenshotTestingEnabled,
+        ).forEach { flag ->
+            assertFalse(
+                "${flag.key} should default to disabled.",
+                flag.defaultValue,
+            )
+        }
     }
 }

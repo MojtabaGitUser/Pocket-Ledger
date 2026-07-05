@@ -13,12 +13,32 @@ class AiFallbackStrategy(
         )
     }
 
+    suspend fun generateMonthlySummary(
+        request: MonthlySummaryRequest,
+    ): AiInferenceResult<MonthlySummaryResult> {
+        val selected = selector.selectFor(AiCapability.MonthlySummary)
+        return selected.executeWithFallback(
+            capability = AiCapability.MonthlySummary,
+            fallback = { fallbackReason -> ruleBasedProvider.generateMonthlySummary(request).withFallbackReason(fallbackReason) },
+            operation = { generateMonthlySummary(request) },
+        )
+    }
+
     suspend fun semanticSearch(request: SemanticSearchRequest): AiInferenceResult<SemanticSearchResult> {
         val selected = selector.selectFor(AiCapability.SemanticSearch)
         return selected.executeWithFallback(
             capability = AiCapability.SemanticSearch,
             fallback = { fallbackReason -> ruleBasedProvider.semanticSearch(request).withFallbackReason(fallbackReason) },
             operation = { semanticSearch(request) },
+        )
+    }
+
+    suspend fun smartAutofill(request: SmartAutofillRequest): AiInferenceResult<SmartAutofillResult> {
+        val selected = selector.selectFor(AiCapability.SmartAutofill)
+        return selected.executeWithFallback(
+            capability = AiCapability.SmartAutofill,
+            fallback = { fallbackReason -> ruleBasedProvider.smartAutofill(request).withFallbackReason(fallbackReason) },
+            operation = { smartAutofill(request) },
         )
     }
 

@@ -44,6 +44,7 @@ explicitly changed to require external processing. In the current app:
 - There is no banking integration.
 - There is no import or export flow implemented.
 - There is no remote AI provider or network AI request path.
+- Private monthly insights, semantic search ranking, and smart autofill use on-device provider contracts with deterministic local fallback. Current on-device model provider shells are unavailable by default; the implemented fallback runs locally and offline.
 
 The local Room database is protected by the Android app sandbox, but it is not
 currently encrypted by Pocket Ledger. App-lock helps prevent casual access to
@@ -104,7 +105,7 @@ Logging is centralized behind a safe logging abstraction. Debug builds allow
 sanitized debug, info, warning, and error logs. Release builds allow sanitized
 warning and error logs only. Logging policy forbids transaction amounts,
 merchant names, notes, tags, search text, budget values, credentials, tokens,
-secrets, encryption keys, encrypted payloads, raw AI prompts, and generated
+secrets, encryption keys, encrypted payloads, raw AI prompts, provider diagnostics, and generated
 sensitive content.
 
 If crash reporting is added later, this policy must be updated to describe the

@@ -13,9 +13,17 @@ object NoOpAiProvider : AiProvider {
             providerType = type,
         )
 
+    override suspend fun generateMonthlySummary(
+        request: MonthlySummaryRequest,
+    ): AiInferenceResult<MonthlySummaryResult> =
+        AiInferenceResult.Unavailable(type, "AI monthly summaries are disabled.")
+
     override suspend fun semanticSearch(request: SemanticSearchRequest): AiInferenceResult<SemanticSearchResult> =
         AiInferenceResult.Success(
             value = SemanticSearchResult(emptyList()),
             providerType = type,
         )
+
+    override suspend fun smartAutofill(request: SmartAutofillRequest): AiInferenceResult<SmartAutofillResult> =
+        AiInferenceResult.Unavailable(type, "AI smart autofill is disabled.")
 }

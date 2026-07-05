@@ -32,6 +32,7 @@ class AiProviderSelector(
         when (capability) {
             AiCapability.MonthlySummary -> featureFlags.isEnabled(DefaultFeatureFlags.AiInsightsEnabled)
             AiCapability.SemanticSearch -> featureFlags.isEnabled(DefaultFeatureFlags.SemanticSearchEnabled)
+            AiCapability.SmartAutofill -> featureFlags.isEnabled(DefaultFeatureFlags.SmartAutofillEnabled)
         }
 
     private fun provider(type: AiProviderType): AiProvider? =

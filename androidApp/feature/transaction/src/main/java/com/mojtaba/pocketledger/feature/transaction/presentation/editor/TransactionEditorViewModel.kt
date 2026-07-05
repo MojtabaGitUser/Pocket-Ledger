@@ -1,6 +1,14 @@
 package com.mojtaba.pocketledger.feature.transaction.presentation.editor
 
 import androidx.lifecycle.SavedStateHandle
+import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
+import com.mojtaba.pocketledger.core.ai.AiInferenceResult
+import com.mojtaba.pocketledger.core.ai.AiResultQuality
+import com.mojtaba.pocketledger.core.ai.SmartAutofillCandidates
+import com.mojtaba.pocketledger.core.ai.SmartAutofillCategory
+import com.mojtaba.pocketledger.core.ai.SmartAutofillHistoryItem
+import com.mojtaba.pocketledger.core.ai.SmartAutofillInput
+import com.mojtaba.pocketledger.core.ai.SmartAutofillRequest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mojtaba.pocketledger.core.data.model.LedgerTransaction
@@ -36,6 +44,7 @@ class TransactionEditorViewModel(
     initialTransactionId: String? = null,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
     private val idGenerator: () -> String = { UUID.randomUUID().toString() },
+    private val aiFallbackStrategy: AiFallbackStrategy? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         TransactionEditorUiState(
@@ -67,6 +76,9 @@ class TransactionEditorViewModel(
             is TransactionEditorAction.DateChanged -> updateForm { copy(occurredAt = action.value) }
             is TransactionEditorAction.CurrencyChanged -> updateForm { copy(currencyCode = action.value) }
             is TransactionEditorAction.RecurringChanged -> updateForm { copy(isRecurring = action.value) }
+            TransactionEditorAction.SmartAutofillClicked -> generateSmartAutofillSuggestion()
+            TransactionEditorAction.SmartAutofillAccepted -> acceptSmartAutofillSuggestion()
+            TransactionEditorAction.SmartAutofillDismissed -> _uiState.update { it.copy(autofillSuggestion = null) }
             TransactionEditorAction.SaveClicked -> save()
         }
     }
@@ -225,6 +237,78 @@ class TransactionEditorViewModel(
         }
     }
 
+    private fun generateSmartAutofillSuggestion() {
+        val strategy = aiFallbackStrategy ?: return
+        val state = _uiState.value
+        val description = state.formState.merchant.ifBlank { state.formState.note }
+        if (description.isBlank()) {
+            viewModelScope.launch { _events.send(TransactionEditorEvent.ShowSnackbar("Add a merchant or note before requesting a suggestion.")) }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAutofillLoading = true, autofillSuggestion = null) }
+            val history = transactionRepository.observeRecentTransactions(limit = 50).first()
+            val request = SmartAutofillRequest(
+                partialInput = SmartAutofillInput(
+                    description = state.formState.merchant,
+                    note = state.formState.note,
+                    transactionType = state.formState.transactionType.name.lowercase(Locale.US),
+                    categoryId = state.formState.categoryId,
+                    amountMinor = state.formState.amountInput.toMinorOrNull(),
+                ),
+                candidates = SmartAutofillCandidates(
+                    categories = state.categories.map { category ->
+                        SmartAutofillCategory(category.id, category.name, category.type)
+                    },
+                ),
+                history = history.map { transaction ->
+                    SmartAutofillHistoryItem(
+                        transactionId = transaction.id,
+                        description = transaction.merchant,
+                        note = transaction.note,
+                        transactionType = transaction.type,
+                        categoryId = transaction.categoryId,
+                        amountMinor = kotlin.math.abs(transaction.amountMinor),
+                        isRecurring = transaction.isRecurring,
+                        occurredAtMillis = transaction.occurredAt,
+                    )
+                },
+                occurredAtMillis = state.formState.occurredAt ?: currentTimeMillis(),
+            )
+            val suggestion = when (val result = strategy.smartAutofill(request)) {
+                is AiInferenceResult.Success -> result.value.suggestion?.let { autofill ->
+                    TransactionAutofillSuggestionUiModel(
+                        categoryId = autofill.categoryId,
+                        categoryName = state.categories.firstOrNull { it.id == autofill.categoryId }?.name,
+                        recurring = autofill.recurring,
+                        amountInput = autofill.amountMinor?.toDisplayAmountInput(),
+                        confidenceLabel = result.value.confidence.label,
+                        reason = autofill.reason,
+                    )
+                }
+                is AiInferenceResult.Unavailable,
+                is AiInferenceResult.Failure,
+                -> null
+            }
+            _uiState.update { it.copy(isAutofillLoading = false, autofillSuggestion = suggestion) }
+            if (suggestion == null) {
+                _events.send(TransactionEditorEvent.ShowSnackbar("No local autofill suggestion found."))
+            }
+        }
+    }
+
+    private fun acceptSmartAutofillSuggestion() {
+        val suggestion = _uiState.value.autofillSuggestion ?: return
+        updateForm {
+            copy(
+                categoryId = suggestion.categoryId ?: categoryId,
+                amountInput = suggestion.amountInput ?: amountInput,
+                isRecurring = suggestion.recurring ?: isRecurring,
+            )
+        }
+        _uiState.update { it.copy(autofillSuggestion = null) }
+    }
+
     private fun updateType(type: TransactionType) {
         updateForm {
             copy(
@@ -237,7 +321,7 @@ class TransactionEditorViewModel(
     private fun updateForm(reducer: TransactionFormState.() -> TransactionFormState) {
         val updatedFormState = _uiState.value.formState.reducer()
         persistFormState(updatedFormState)
-        _uiState.update { it.copy(formState = updatedFormState) }
+        _uiState.update { it.copy(formState = updatedFormState, autofillSuggestion = null) }
         updateValidation()
     }
 
@@ -334,6 +418,14 @@ class TransactionEditorViewModel(
             isRecurring = isRecurring,
         )
     }
+
+    private fun String.toMinorOrNull(): Long? =
+        runCatching {
+            BigDecimal(this.trim()).movePointRight(2).setScale(0, RoundingMode.UNNECESSARY).longValueExact()
+        }.getOrNull()
+
+    private val AiResultQuality.label: String
+        get() = name.lowercase(Locale.US).replaceFirstChar { it.titlecase(Locale.US) }
 
     private fun Long.toDisplayAmountInput(): String =
         BigDecimal.valueOf(kotlin.math.abs(this))

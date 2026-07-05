@@ -122,3 +122,6 @@ observability, app health, and future crash triage a consistent vocabulary.
 Debug Health reports whether the taxonomy is configured and which provider
 behavior is active, but it does not display runtime event payloads through UI,
 accessibility labels, crash metadata, or release diagnostics.
+## E-12 AI privacy note
+
+AI feature analytics must remain provider-safe. Do not add transaction descriptions, merchant names, account names, category names, notes, search text, exact amounts, exact balances, raw prompts, provider errors, stack traces, or raw IDs to AI events. Use only approved typed event names, result values, feature-flag state, buckets, and generic item types.
