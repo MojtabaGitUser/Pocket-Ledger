@@ -57,10 +57,20 @@ not replace human review for signing, privacy, and Play Store readiness.
   in release and not wired to Firebase Analytics.
 - [ ] Play Console permissions declarations use release merged-manifest
   permissions only and exclude debug/test-only permissions.
-- [ ] Backup and device-transfer behavior was reviewed. If
-  `backup_rules.xml` or `data_extraction_rules.xml` remain template-style, the
-  release owner accepted that as a blocker or documented the final policy before
-  submission.
+- [ ] Backup and device-transfer behavior was reviewed for #227, #7, #81, and
+  #129 traceability.
+- [ ] `backup_rules.xml` uses explicit deny-by-default rules and is not
+  template-style.
+- [ ] `data_extraction_rules.xml` defines both `cloud-backup` and
+  `device-transfer` behavior.
+- [ ] Caches, logs, temp files, debug artifacts, generated reports, external app
+  files, local-only state, and device-protected storage are excluded.
+- [ ] Ledger database files and SQLite sidecars are excluded unless a future
+  backup-ready profile intentionally changes that policy.
+- [ ] Encrypted/shared preferences are not accidentally exposed through backup
+  or device transfer.
+- [ ] Privacy policy and security model match the final merged manifest and XML
+  backup/data-extraction behavior.
 - [ ] Crash/observability configuration was reviewed.
 - [ ] Product event taxonomy changes, if any, remain privacy-safe.
 - [ ] Debug Health remains debug-only and is not routable in release builds.
