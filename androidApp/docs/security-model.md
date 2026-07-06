@@ -200,9 +200,11 @@ Current providers:
 - `AiInsightsEnabled` gates monthly summary capability.
 - `SemanticSearchEnabled` gates semantic search capability.
 
-Both flags default to false in `DefaultFeatureFlags`. When disabled, `NoOp` is
-selected. When enabled, unavailable or failing preferred providers fall back to
-`RuleBasedAiProvider`.
+Implemented local AI flags default to enabled in `DefaultFeatureFlags`, while
+incomplete optional account, cloud sync, background job, demo tooling, and
+screenshot feature flags default to disabled. When an AI flag is disabled,
+`NoOp` is selected. When enabled, unavailable or failing preferred providers
+fall back to `RuleBasedAiProvider`.
 
 Search and dashboard integration:
 
@@ -232,8 +234,9 @@ falls back to safe defaults.
 
 Relevant defaults:
 
-- `SemanticSearchEnabled`: false.
-- `AiInsightsEnabled`: false.
+- `SemanticSearchEnabled`: true; implemented local semantic search with deterministic fallback.
+- `AiInsightsEnabled`: true; implemented local monthly insights with deterministic fallback.
+- `SmartAutofillEnabled`: true; implemented local smart autofill suggestions.
 - `PasskeyAccountFlowEnabled`: false.
 - `CloudSyncEnabled`: false.
 - `BackgroundJobsEnabled`: false.
@@ -307,11 +310,12 @@ In scope for the current implementation:
 - Avoid composing or showing protected ledger UI while locked.
 - Require Android system authentication on launch and resume when app lock is
   enabled and available.
-- Keep AI processing local, no-op, or rule-based in the current build.
+- Keep AI processing local, on-device-provider-shell, no-op, or rule-based in
+  the current build.
 - Avoid remote AI/network inference in current AI paths.
 - Avoid logging sensitive ledger, credential, and raw user-entered values.
-- Keep incomplete AI, sync, passkey, and background capabilities disabled by
-  default through feature flags.
+- Keep incomplete sync, passkey, background, demo tooling, and screenshot
+  capabilities disabled by default through feature flags.
 
 Out of scope and known limitations:
 
@@ -360,6 +364,37 @@ generates future missing-class rules, review whether each missing class is an
 annotation metadata dependency, an optional runtime integration, or a real
 missing runtime dependency before adding rules.
 
+## #7 Sensitive Local Data Traceability
+
+| Acceptance criterion | Current evidence | Status |
+| --- | --- | --- |
+| Sensitive preferences use encrypted storage. | `EncryptedSensitivePreferences` stores sensitive keys in `pocket_ledger_sensitive_prefs` using AndroidX Security Crypto. `AppGraph` uses it for normal app builds; benchmark builds use in-memory storage to avoid blocking measurement. | Implemented for sensitive preferences. The Room ledger database is app-private but not encrypted by Pocket Ledger. |
+| Secrets are stored in Android Keystore. | `EncryptedSensitivePreferences` builds a `MasterKey` with `AES256_GCM`; AndroidX Security Crypto stores the backing key through Android Keystore. | Implemented for sensitive preference encryption keys. No production account/passkey secrets are currently written by app flows. |
+| Debug-only diagnostics are hidden from release builds. | `BuildConfig.IS_INTERNAL_BUILD` and `LOGGING_ENABLED` are false for release. Debug Health has a debug source-set implementation and release source-set stub, and navigation registers it only when debug destinations are enabled. | Implemented for current Debug Health diagnostics. |
+| App follows local-first privacy principles. | Ledger data is stored in app-private Room, current app code has no bank connection, no account login, no cloud sync, no remote AI, and #227 excludes app-private ledger data from Android backup and device transfer. | Implemented for current MVP behavior. Firebase Analytics dependency and Android permissions still require conservative Play Console disclosure. |
+| Security-sensitive flows are documented. | This security model documents local storage, encrypted preferences, app lock, logging, backup/data extraction, AI privacy, feature flags, and release limitations. `docs/privacy-policy.md`, `docs/play-store-readiness.md`, and `docs/release/release-checklist.md` mirror release-facing claims. | Implemented as documentation; must be re-reviewed when behavior changes. |
+
+Historical E-08 security checklist mapping:
+
+- T-E08-01 Configure EncryptedSharedPreferences: implemented for sensitive preferences via `EncryptedSensitivePreferences`.
+- T-E08-02 Add Android Keystore integration: implemented through AndroidX Security Crypto `MasterKey`.
+- T-E08-03 Implement privacy settings screen: partially implemented as Settings > Security app lock. No separate privacy/export/account/backup settings screen exists.
+- T-E08-04 Add Play Integrity abstraction: not implemented. Treat as remaining work tied to future account/passkey/server trust scope, not as completed by #7 or #81.
+- T-E08-05 Add security review checklist: implemented through this document, `androidApp/docs/logging-policy.md`, `docs/ai-privacy-safety-checklist.md`, and `docs/release/release-checklist.md`.
+
+## #81 Optional Backup-Ready Profile Traceability
+
+The repository now documents the planned #81 profile in
+`docs/backup-ready-profile.md`. Current code only has disabled feature flags for
+future passkey/account and cloud sync entry points plus reserved sensitive
+preference keys. It does not implement user opt-in, backup encryption,
+backend/profile contracts, recovery flows, or restore behavior.
+
+Until those pieces exist, #227 remains the correct privacy-safe policy: exclude
+ledger database files, encrypted sensitive preferences, app-private files,
+local-only state, caches, logs, temp files, debug artifacts, generated reports,
+and external app files from Android cloud backup and device-to-device transfer.
+
 ## Developer Checklist
 
 Before adding or changing security/privacy behavior:
@@ -388,7 +423,7 @@ app lock helps prevent casual access to app screens by requiring Android system
 authentication, but it does not encrypt the ledger database and does not replace
 the security of the device lock screen.
 
-Current AI behavior is local, disabled by default, stubbed, or rule-based. The
+Current AI behavior is local, on-device-provider-shell, no-op, or rule-based. The
 app does not currently send ledger data to a remote AI service.
 
 Logs are designed to be sanitized and must not include personal finance data,

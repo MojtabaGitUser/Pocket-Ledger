@@ -1,6 +1,7 @@
 # Pocket Ledger Privacy Policy
 
 Effective date: July 5, 2026
+Last updated: July 5, 2026
 
 Contact: [add public support email before Play Store submission]
 
@@ -41,10 +42,14 @@ explicitly changed to require external processing. In the current app:
 - There is no account login.
 - There is no server-backed user profile.
 - There is no cloud sync implementation.
-- There is no banking integration.
+- There is no banking integration or bank connection.
+- There is no advertising UI or ad-serving feature.
 - There is no import or export flow implemented.
 - There is no remote AI provider or network AI request path.
-- Private monthly insights, semantic search ranking, and smart autofill use on-device provider contracts with deterministic local fallback. Current on-device model provider shells are unavailable by default; the implemented fallback runs locally and offline.
+- Private monthly insights, semantic search ranking, and smart autofill use
+  on-device provider contracts with deterministic local fallback. Current
+  on-device model provider shells are unavailable by default; the implemented
+  fallback runs locally and offline.
 
 The local Room database is protected by the Android app sandbox, but it is not
 currently encrypted by Pocket Ledger. App-lock helps prevent casual access to
@@ -55,7 +60,9 @@ default. Pocket Ledger excludes app-private ledger data, the Room database,
 SQLite sidecar files, encrypted sensitive preferences, local-only settings,
 caches, logs, temporary files, debug files, generated reports, and external app
 files from automatic Android cloud backup and Android device-to-device transfer.
-No optional backup-ready profile is implemented in the current app.
+No optional backup-ready profile is implemented in the current app. Future
+account, passkey, cloud sync, or backup-ready profile behavior would require a
+separate implementation, privacy review, and policy update before release.
 
 ## Information Not Collected By Current App Features
 
@@ -183,9 +190,9 @@ Pocket Ledger does not currently include Firebase Crashlytics in the app module.
 
 ## Data Sharing
 
-Pocket Ledger does not sell personal data. Current app code does not send ledger
-records to Pocket Ledger servers because no Pocket Ledger server, account, or
-cloud sync feature is implemented.
+Pocket Ledger does not sell personal data and does not serve ads. Current app
+code does not send ledger records to Pocket Ledger servers because no Pocket
+Ledger server, account, or cloud sync feature is implemented.
 
 Firebase/Google SDKs may receive technical analytics or attribution data when
 their SDK behavior is active. Internal testing builds may be distributed through
@@ -259,4 +266,3 @@ crash reporting, cloud sync, account login, import/export, AI providers,
 permissions, backup behavior, third-party services, or Play Store disclosures.
 The effective date at the top of this document should be updated when the policy
 changes.
-

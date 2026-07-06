@@ -171,3 +171,46 @@ section before public release and after any future backup/profile work.
 - Complete Play Console content rating, target audience, financial features,
   data safety, app access, ads, and permissions forms using this checklist and
   the final release artifact.
+
+## Store Listing And Assets
+
+Repository-ready listing copy, release notes, screenshot sources, asset file
+names, expected dimensions to verify, and manual Play Console steps are tracked
+in `docs/release/play-store-assets.md`.
+
+Current #131 status:
+
+- Store listing copy is prepared in the repository.
+- App name and launcher icon resources compile from the Android app resources.
+- A screenshot/feature-graphic capture plan exists for deterministic sample-safe
+  data.
+- Final binary screenshots, high-res icon export, feature graphic creation, and
+  Play Console upload remain manual release work unless completed in a future
+  asset commit.
+
+Do not claim final Play Store graphic upload or Play Console approval from this
+repository state alone.
+
+## Optional Backup-Ready Profile
+
+The future #81 backup-ready profile design is documented in
+`docs/backup-ready-profile.md`. The current app does not implement account
+login, passkey recovery, cloud sync, encrypted ledger backup payloads, or a
+restore contract. The #227 deny-by-default Android backup policy remains the
+correct Play Store disclosure basis until that implementation exists.
+
+## Issue Traceability
+
+- #129: release hardening checklist is expanded in
+  `docs/release/release-checklist.md`; signed release, Play Console upload,
+  public hosting, legal review, and hardware performance checks remain manual
+  release gates.
+- #131: store listing copy and asset plan are repository-ready; final graphics
+  and Play Console upload remain manual.
+- #132: privacy policy is maintained in `docs/privacy-policy.md` and must be
+  hosted before public release.
+- #7: local data security criteria are mapped in
+  `androidApp/docs/security-model.md`; do not claim full database encryption or
+  Play Integrity enforcement.
+- #81: optional backup-ready profile is planned and documented, not implemented.
+  Ledger data remains excluded from Android backup and device transfer.
