@@ -39,10 +39,20 @@ Sensitive app preferences use a separate encrypted preferences file rather than
 Room. Production construction creates `EncryptedSensitivePreferences` in
 `AppGraph`; tests can use `InMemorySensitivePreferences`.
 
-Current backup XML files are still template-style files. `backup_rules.xml` and
-`data_extraction_rules.xml` do not currently define explicit include or exclude
-rules for ledger data, database files, or encrypted preferences. Future backup
-behavior needs a separate privacy review before release policy claims are made.
+T-E10-06 (#227) hardens Android backup and data extraction rules with explicit
+deny-by-default XML policy. `backup_rules.xml` covers pre-Android 12 Auto
+Backup, and `data_extraction_rules.xml` covers Android 12+ cloud backup and
+device-to-device transfer. The policy excludes the Room ledger database, SQLite
+sidecar files, encrypted sensitive preferences, app-private files, shared
+preferences, external app files, device-protected storage, caches, logs, temp
+folders, debug folders, and generated report folders.
+
+No app-private Pocket Ledger data is intentionally included in automatic cloud
+backup or device-to-device transfer. This is a privacy-safe default because the
+optional backup-ready profile from #81 is not implemented and the ledger
+database is not encrypted by Pocket Ledger. This hardening supports related
+security story #7 and release-hardening story #129, but it does not complete
+those parent stories by itself.
 
 ## Sensitive Preferences
 
@@ -131,6 +141,41 @@ App lock limits casual access to the UI, but it does not replace OS-level device
 security. It does not encrypt the Room database, prevent screenshots, prevent
 screen recording, protect against malware with screen or accessibility access,
 or protect a device with weak or shared credentials.
+
+
+## Android Backup And Data Extraction Policy
+
+T-E10-06 (#227) keeps `android:allowBackup="true"` so Android backup plumbing
+is explicit, but both configured rule files deny app-private data by default:
+
+- `androidApp/app/src/main/res/xml/backup_rules.xml` is used by pre-Android 12
+  Auto Backup behavior through `android:fullBackupContent`.
+- `androidApp/app/src/main/res/xml/data_extraction_rules.xml` is used by
+  Android 12+ for both `cloud-backup` and `device-transfer` behavior.
+
+Backed up or transferred by Pocket Ledger rules:
+
+- No app-private Pocket Ledger files are intentionally included.
+
+Excluded by both cloud backup and device-to-device transfer rules:
+
+- `pocket-ledger.db` and SQLite sidecars: `pocket-ledger.db-shm`,
+  `pocket-ledger.db-wal`, and `pocket-ledger.db-journal`.
+- `pocket_ledger_sensitive_prefs.xml` encrypted sensitive preferences.
+- App-private files, databases, shared preferences, external app files, and
+  device-protected storage domains.
+- Cache, code-cache, no-backup, logs, temp, debug, generated, and report
+  folders when such folders exist under app-controlled domains.
+
+The ledger database contains personal finance data and is not encrypted by
+Pocket Ledger, so it is excluded from automatic cloud backup and device transfer
+until a separate #81 backup-ready profile designs safe user-facing behavior.
+Encrypted preferences are also excluded because their security depends on
+Android Keystore state and they can contain local-only security settings or
+future account/passkey values.
+
+This #227 policy supports #7 local-data security and #129 release hardening, but
+it is not a claim that #7, #81, or #129 are complete.
 
 ## AI Privacy Model
 
@@ -277,8 +322,9 @@ Out of scope and known limitations:
 - Full database encryption. The Room database is not currently encrypted by
   Pocket Ledger.
 - Weak, shared, or compromised device credentials.
-- Cloud backup or device-transfer exposure where Android backup rules are not
-  explicitly restricted.
+- Cloud backup or device-transfer of ledger data. Android backup rules are
+  explicitly restricted by #227, but runtime restore/transfer behavior still
+  depends on Android platform services and should be release-tested.
 - Real Gemini Nano or ML Kit inference. Current providers are stubs.
 - Remote AI or cloud sync privacy controls. Those features are not implemented.
 - Multi-user profile edge cases beyond Android's normal app sandbox behavior.
@@ -349,5 +395,7 @@ Logs are designed to be sanitized and must not include personal finance data,
 credentials, or raw user text. Logging redaction reduces risk but does not make
 it acceptable to log sensitive values.
 
-Cloud backup and device transfer rules are not yet explicitly locked down in
-the app XML configuration, so backup behavior needs a separate privacy review.
+Cloud backup and device transfer rules are explicitly locked down by #227 to
+exclude app-private ledger data and local-only sensitive state. This remains a
+privacy-safe default until a separately reviewed optional backup-ready profile
+from #81 exists.
