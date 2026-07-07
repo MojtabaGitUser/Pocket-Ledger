@@ -156,6 +156,9 @@ Run connected checks when hardware is available:
 
 ## Known Limitations
 
+- [ ] E-21 future extension docs under `docs/future/` were reviewed when
+  release copy mentions cloud sync, OCR/import, export/accountant workflows,
+  monetization, or entitlements.
 - [ ] No cloud sync, account/passkey flow, Play Integrity enforcement, import,
   export, OCR, bank connection, full database encryption, or remote AI behavior
   is claimed unless separately implemented and validated.
