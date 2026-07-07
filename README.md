@@ -53,6 +53,8 @@ or device and are intentionally not part of default PR validation.
 
 - [Architecture](docs/architecture.md): module responsibilities, dependency rules, ownership boundaries, and architectural rationale.
 - [Desktop demo](docs/desktop-demo.md): Compose Multiplatform desktop run command, Insights screen access, sample data behavior, and current limitations.
+- [Future product growth](docs/future-growth.md): E-21 future extension plan for cloud sync, OCR/import, export/accountant workflows, and monetization without implementing those features.
+- [Future extension contracts](docs/future/extension-contracts.md): issue-traceable future contract index for #142-#146.
 - [ADR 0001: Modular Architecture and KMP-Ready Structure](docs/adr/0001-modular-architecture.md): decision record for the modular architecture direction.
 - [Android testing report](androidApp/docs/testing-report.md): current test suite inventory, validation results, performance checks, release/R8 coverage, and known gaps.
 - [Android performance benchmarks](androidApp/docs/performance-report.md): Macrobenchmark and Baseline Profile generation setup, local device requirements, and update commands.
