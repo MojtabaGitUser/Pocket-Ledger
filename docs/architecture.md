@@ -1,4 +1,4 @@
-# Pocket Ledger Architecture
+﻿# Pocket Ledger Architecture
 
 This document explains the current Android/Kotlin Multiplatform project structure, the intended module ownership boundaries, and the dependency rules reviewers should enforce during PR review.
 
@@ -15,8 +15,18 @@ Current implemented Gradle modules:
 :core:designsystem
 :core:database
 :core:data
+:core:background
+:core:ai
+:core:analytics
+:core:featureflags
+:core:security
+:core:testing
+:feature:dashboard
+:feature:search
 :feature:transaction
 :shared
+:desktopApp
+:macrobenchmark
 ```
 
 The project also includes `androidApp/build-logic` as an included build. It contains Gradle convention plugins for Android application modules, Android library modules, Compose setup, and Kotlin Multiplatform setup. It is build infrastructure, not an application runtime module.
@@ -37,7 +47,7 @@ The current implemented project dependency graph is:
   -> external Kotlin coroutines dependencies
 
 :core:database
-  -> external Room dependencies
+  -> external Room KMP and SQLite dependencies
 
 :feature:transaction
   -> external JUnit dependency for local validation tests
@@ -123,9 +133,25 @@ Future core modules should be split by responsibility:
 
 - `:core:domain`: Android-app domain models, use cases, and repository contracts.
 - `:core:data`: repository contracts, local repository implementations, data orchestration, and mapping between database entities and external data models.
-- `:core:database`: local persistence configuration, DAOs/queries, entities, and migrations.
+- `:core:database`: Room KMP local persistence configuration, shared DAOs/queries, entities, migrations, and Android/desktop database builders.
 
 Domain code should stay free of Android framework APIs, Compose, database implementations, and network DTOs. Data and database modules should not expose persistence entities or DTOs directly to UI modules.
+#### Room KMP Persistence Boundary
+
+`:core:database` is a Kotlin Multiplatform Room module with Android and
+desktop/JVM targets. Shared schema code lives in `src/commonMain`: entities,
+DAOs, `PocketLedgerDatabase`, migration registration, and schema versioning.
+Platform-specific source sets own only construction details:
+
+- `src/androidMain` builds the database from Android `Context` and the stable
+  app database name.
+- `src/desktopMain` builds a file-backed desktop database at
+  `~/.pocket-ledger/pocket-ledger.db`.
+
+Consumers should depend on repository contracts or UI models rather than Room
+entities. Android production flows continue to go through `:core:data` local
+repositories. The desktop demo reads a local database snapshot through a
+small desktop data source and maps it into desktop UI models.
 
 ### Future Benchmark Module
 
@@ -237,7 +263,7 @@ Modularity keeps the application shell small, makes ownership clear, and lets PR
 
 ### Selectively KMP-based
 
-`:shared` exists for platform-independent business logic that is worth reusing and testing outside Android-specific code. Android-only UI, persistence, and framework integration should stay in Android modules. This keeps KMP useful without making the architecture more complex than the current product needs.
+`:shared` exists for platform-independent business logic that is worth reusing and testing outside Android-specific code. Android-only UI and framework integration should stay in Android modules. Persistence is now split by responsibility: Room schema, entities, DAOs, migrations, and database versioning live in `:core:database` common source, while database construction remains platform-specific for Android and desktop/JVM. This keeps KMP useful without making unrelated product modules more complex than the current product needs.
 
 ## Placement Rules
 
@@ -250,7 +276,7 @@ Use these defaults when adding code:
 - Screen UI, ViewModels, UI state, and feature routes: future `:feature:*`
 - Use cases and cross-module domain contracts: future `:core:domain`
 - Repository contracts, repository implementations, data model mapping, and data orchestration: `:core:data`
-- Entities, DAOs/queries, migrations, and database setup: `:core:database`
+- Entities, DAOs/queries, migrations, schema versioning, and platform database builders: `:core:database`
 - Macrobenchmarks and benchmark harnesses: future benchmark module
 - Baseline profile generation setup: future baseline profile module
 
