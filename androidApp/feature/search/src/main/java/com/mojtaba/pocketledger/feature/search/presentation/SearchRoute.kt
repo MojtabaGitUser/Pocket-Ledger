@@ -5,6 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
@@ -59,7 +61,10 @@ private class SearchViewModelFactory(
     private val aiFallbackStrategy: AiFallbackStrategy,
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(
+        modelClass: Class<T>,
+        extras: CreationExtras,
+    ): T {
         if (!modelClass.isAssignableFrom(SearchViewModel::class.java)) {
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
@@ -70,6 +75,7 @@ private class SearchViewModelFactory(
             featureFlags = featureFlags,
             aiProviderSelector = aiProviderSelector,
             aiFallbackStrategy = aiFallbackStrategy,
+            savedStateHandle = extras.createSavedStateHandle(),
         ) as T
     }
 }

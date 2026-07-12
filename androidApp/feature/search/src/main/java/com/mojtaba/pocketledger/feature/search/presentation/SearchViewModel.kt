@@ -1,5 +1,6 @@
 package com.mojtaba.pocketledger.feature.search.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mojtaba.pocketledger.core.ai.AiCapability
@@ -13,8 +14,13 @@ import com.mojtaba.pocketledger.core.data.model.LedgerTransaction
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
 import com.mojtaba.pocketledger.core.data.repository.TransactionRepository
+import com.mojtaba.pocketledger.core.data.search.SearchAmountRange
+import com.mojtaba.pocketledger.core.data.search.SearchDateRange
+import com.mojtaba.pocketledger.core.data.search.SearchFilters
 import com.mojtaba.pocketledger.core.data.search.SearchMode
 import com.mojtaba.pocketledger.core.data.search.SearchQuery
+import com.mojtaba.pocketledger.core.data.search.SearchRecurringFilter
+import com.mojtaba.pocketledger.core.data.search.SearchSort
 import com.mojtaba.pocketledger.core.data.search.SearchTransactionType
 import com.mojtaba.pocketledger.core.featureflags.DefaultFeatureFlags
 import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
@@ -45,8 +51,9 @@ class SearchViewModel(
     private val featureFlags: FeatureFlagEvaluator,
     private val aiProviderSelector: AiProviderSelector,
     private val aiFallbackStrategy: AiFallbackStrategy,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-    private val query = MutableStateFlow(SearchQuery())
+    private val query = MutableStateFlow(savedStateHandle.restoredSearchQuery())
     private val refreshRequests = MutableStateFlow(0)
     private val modeUnavailableMessage = MutableStateFlow<String?>(null)
 
@@ -114,7 +121,7 @@ class SearchViewModel(
             }
             SearchAction.ClearFiltersClicked -> {
                 modeUnavailableMessage.value = null
-                query.value = SearchQuery()
+                setQuery(SearchQuery())
             }
             is SearchAction.ResultClicked -> {
                 viewModelScope.launch {
@@ -127,21 +134,27 @@ class SearchViewModel(
 
     private fun updateQuery(reducer: (SearchQuery) -> SearchQuery) {
         modeUnavailableMessage.value = null
-        query.update { reducer(it).normalized() }
+        setQuery(reducer(query.value))
+    }
+
+    private fun setQuery(nextQuery: SearchQuery) {
+        val normalized = nextQuery.normalized()
+        savedStateHandle.saveSearchQuery(normalized)
+        query.value = normalized
     }
 
     private fun selectSearchMode(mode: SearchMode) {
         when (mode) {
             SearchMode.Keyword -> {
                 modeUnavailableMessage.value = null
-                query.update { current -> current.copy(mode = SearchMode.Keyword).normalized() }
+                setQuery(query.value.copy(mode = SearchMode.Keyword))
             }
             SearchMode.Semantic -> {
                 if (capabilities.semanticSearchAvailable) {
-                    query.update { current -> current.copy(mode = SearchMode.Semantic).normalized() }
+                    setQuery(query.value.copy(mode = SearchMode.Semantic))
                 } else {
                     modeUnavailableMessage.value = "Semantic search is not available on this device."
-                    query.update { current -> current.copy(mode = SearchMode.Keyword).normalized() }
+                    setQuery(query.value.copy(mode = SearchMode.Keyword))
                 }
             }
         }
@@ -267,8 +280,24 @@ class SearchViewModel(
                 "currency" to currencyCode,
             ),
         )
+
 }
 
+
+private object SearchSavedStateKeys {
+    const val TEXT = "search.query.text"
+    const val MODE = "search.query.mode"
+    const val TRANSACTION_TYPES = "search.query.transactionTypes"
+    const val CATEGORY_IDS = "search.query.categoryIds"
+    const val TAG_IDS = "search.query.tagIds"
+    const val DATE_START = "search.query.dateStart"
+    const val DATE_END = "search.query.dateEnd"
+    const val AMOUNT_MIN = "search.query.amountMin"
+    const val AMOUNT_MAX = "search.query.amountMax"
+    const val CURRENCY = "search.query.currency"
+    const val RECURRING = "search.query.recurring"
+    const val SORT = "search.query.sort"
+}
 private data class SearchQueryState(
     val query: SearchQuery,
     val modeUnavailableMessage: String?,
@@ -276,3 +305,56 @@ private data class SearchQueryState(
 
 private fun Set<String>.toggle(value: String): Set<String> =
     if (value in this) this - value else this + value
+
+private fun SavedStateHandle.restoredSearchQuery(): SearchQuery {
+    val dateRange = SearchDateRange(
+        startMillis = this[SearchSavedStateKeys.DATE_START],
+        endMillis = this[SearchSavedStateKeys.DATE_END],
+    ).takeUnless { it.isEmpty }
+    val amountRange = SearchAmountRange(
+        minMinor = this[SearchSavedStateKeys.AMOUNT_MIN],
+        maxMinor = this[SearchSavedStateKeys.AMOUNT_MAX],
+    ).takeUnless { it.isEmpty }
+    return SearchQuery(
+        text = this[SearchSavedStateKeys.TEXT] ?: "",
+        mode = enumValueOrDefault(this[SearchSavedStateKeys.MODE], SearchMode.Keyword),
+        filters = SearchFilters(
+            transactionTypes = restoredStringList(SearchSavedStateKeys.TRANSACTION_TYPES)
+                .mapNotNull { enumValueOrNull<SearchTransactionType>(it) }
+                .toSet(),
+            categoryIds = restoredStringList(SearchSavedStateKeys.CATEGORY_IDS).toSet(),
+            tagIds = restoredStringList(SearchSavedStateKeys.TAG_IDS).toSet(),
+            dateRange = dateRange,
+            amountRange = amountRange,
+            currencyCode = this[SearchSavedStateKeys.CURRENCY],
+            recurring = enumValueOrDefault(this[SearchSavedStateKeys.RECURRING], SearchRecurringFilter.Any),
+        ),
+        sort = enumValueOrDefault(this[SearchSavedStateKeys.SORT], SearchSort.DateDescending),
+    ).normalized()
+}
+
+private fun SavedStateHandle.saveSearchQuery(query: SearchQuery) {
+    this[SearchSavedStateKeys.TEXT] = query.text
+    this[SearchSavedStateKeys.MODE] = query.mode.name
+    this[SearchSavedStateKeys.TRANSACTION_TYPES] = ArrayList(query.filters.transactionTypes.map { it.name }.sorted())
+    this[SearchSavedStateKeys.CATEGORY_IDS] = ArrayList(query.filters.categoryIds.sorted())
+    this[SearchSavedStateKeys.TAG_IDS] = ArrayList(query.filters.tagIds.sorted())
+    this[SearchSavedStateKeys.DATE_START] = query.filters.dateRange?.startMillis
+    this[SearchSavedStateKeys.DATE_END] = query.filters.dateRange?.endMillis
+    this[SearchSavedStateKeys.AMOUNT_MIN] = query.filters.amountRange?.minMinor
+    this[SearchSavedStateKeys.AMOUNT_MAX] = query.filters.amountRange?.maxMinor
+    this[SearchSavedStateKeys.CURRENCY] = query.filters.currencyCode
+    this[SearchSavedStateKeys.RECURRING] = query.filters.recurring.name
+    this[SearchSavedStateKeys.SORT] = query.sort.name
+}
+
+private fun SavedStateHandle.restoredStringList(key: String): List<String> =
+    get<ArrayList<String>>(key).orEmpty()
+
+private inline fun <reified T : Enum<T>> enumValueOrDefault(
+    rawValue: String?,
+    defaultValue: T,
+): T = enumValueOrNull<T>(rawValue) ?: defaultValue
+
+private inline fun <reified T : Enum<T>> enumValueOrNull(rawValue: String?): T? =
+    rawValue?.let { value -> enumValues<T>().firstOrNull { it.name == value } }
