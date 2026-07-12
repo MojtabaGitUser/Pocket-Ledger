@@ -1,5 +1,6 @@
 package com.mojtaba.pocketledger.feature.search.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
 import com.mojtaba.pocketledger.core.ai.AiProviderSelector
 import com.mojtaba.pocketledger.core.ai.NoOpAiProvider
@@ -161,6 +162,49 @@ class SearchViewModelTest {
     }
 
     @Test
+    fun searchQueryAndFiltersRestoreAfterViewModelRecreation() = runTest {
+        val savedStateHandle = SavedStateHandle()
+        val transactionRepository = FakeTransactionRepository(
+            listOf(testTransaction(id = "coffee")),
+            listOf(testTransactionTagLink(transactionId = "coffee", tagId = "work")),
+        )
+        val firstViewModel = newViewModel(
+            transactionRepository = transactionRepository,
+            savedStateHandle = savedStateHandle,
+        )
+        val firstJob = launch { firstViewModel.uiState.collect {} }
+        val dateRange = SearchDateRange(TestClock.NovemberPeriodStart, TestClock.NovemberPeriodEnd)
+        val amountRange = SearchAmountRange(minMinor = 1_000, maxMinor = 9_999)
+
+        firstViewModel.onAction(SearchAction.KeywordChanged(" coffee "))
+        firstViewModel.onAction(SearchAction.TypeFilterChanged(SearchTransactionType.Expense))
+        firstViewModel.onAction(SearchAction.CategoryToggled("food"))
+        firstViewModel.onAction(SearchAction.TagToggled("work"))
+        firstViewModel.onAction(SearchAction.DateRangeChanged(dateRange))
+        firstViewModel.onAction(SearchAction.AmountRangeChanged(amountRange))
+        advanceUntilIdle()
+        firstJob.cancel()
+
+        val restoredViewModel = newViewModel(
+            transactionRepository = transactionRepository,
+            savedStateHandle = savedStateHandle,
+        )
+        val restoredJob = launch { restoredViewModel.uiState.collect {} }
+        advanceUntilIdle()
+
+        val restoredState = restoredViewModel.uiState.value
+        assertEquals("coffee", restoredState.query.text)
+        assertEquals("coffee", restoredState.keywordInput)
+        assertEquals(setOf(SearchTransactionType.Expense), restoredState.query.filters.transactionTypes)
+        assertEquals(setOf("food"), restoredState.query.filters.categoryIds)
+        assertEquals(setOf("work"), restoredState.query.filters.tagIds)
+        assertEquals(dateRange, restoredState.query.filters.dateRange)
+        assertEquals(amountRange, restoredState.query.filters.amountRange)
+        assertEquals(listOf("coffee"), restoredState.results.map { it.transactionId })
+        restoredJob.cancel()
+    }
+
+    @Test
     fun clearFiltersResetsKeywordAndFilters() = runTest {
         val viewModel = newViewModel(
             transactionRepository = FakeTransactionRepository(listOf(testTransaction())),
@@ -259,6 +303,7 @@ class SearchViewModelTest {
             initialTags = listOf(testLedgerTag(id = "work", name = "Work")),
         ),
         featureFlags: FakeFeatureFlagProvider = FakeFeatureFlagProvider(),
+        savedStateHandle: SavedStateHandle = SavedStateHandle(),
     ): SearchViewModel {
         val evaluator = FeatureFlagEvaluator(featureFlags)
         val aiProviderSelector = AiProviderSelector(
@@ -272,6 +317,7 @@ class SearchViewModelTest {
             featureFlags = evaluator,
             aiProviderSelector = aiProviderSelector,
             aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
+            savedStateHandle = savedStateHandle,
         )
     }
 
