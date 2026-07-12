@@ -9,13 +9,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.room.Room
 import com.mojtaba.pocketledger.core.data.seed.DemoDataSeeder
 import com.mojtaba.pocketledger.core.data.repository.local.LocalBudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
+import com.mojtaba.pocketledger.core.database.createPocketLedgerDatabase
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
 
 class BenchmarkSetupActivity : ComponentActivity() {
@@ -45,11 +45,7 @@ class BenchmarkSetupActivity : ComponentActivity() {
     }
 
     private suspend fun seedBenchmarkData(seedMode: String) {
-        val database = Room.databaseBuilder(
-            applicationContext,
-            PocketLedgerDatabase::class.java,
-            PocketLedgerDatabase.DATABASE_NAME,
-        ).build()
+        val database = createPocketLedgerDatabase(applicationContext)
         try {
             database.clearAllTables()
             val categoryRepository = LocalCategoryRepository(database.categoryDao())
