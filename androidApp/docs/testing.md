@@ -77,9 +77,7 @@ modules. Run connected Android tests when a device is available.
 
 ## Room And Repository Integration Tests
 
-Room integration tests live in `:core:database` under
-`core/database/src/androidTest`. They use isolated in-memory databases for DAO
-behavior and `MigrationTestHelper` with the committed schema JSON files under
+Room KMP tests live in `:core:database` across common, desktop, and Android source sets. Common tests verify migration registry metadata. Desktop tests create a file-backed Room database, close it, reopen it, and verify rows persist across instances. Android integration tests live under `core/database/src/androidTest`; they use isolated in-memory databases for DAO behavior and `MigrationTestHelper` with the committed schema JSON files under
 `core/database/schemas` for file-backed migration validation. Coverage includes
 transaction CRUD, date/category/tag/search queries, category and budget active
 filters, transaction-tag relationships, budget period/category queries, Flow
@@ -95,14 +93,16 @@ filters, and category/tag/budget relationship behavior.
 Run the focused suites with an attached emulator or device:
 
 ```bash
-./gradlew :core:database:connectedDebugAndroidTest
+./gradlew :core:database:desktopTest
+./gradlew :core:database:connectedAndroidDeviceTest
 ./gradlew :core:data:connectedDebugAndroidTest
 ```
 
 When no emulator or device is available, compile the Android test APKs instead:
 
 ```bash
-./gradlew :core:database:assembleDebugAndroidTest
+./gradlew :core:database:compileAndroidMain
+./gradlew :core:database:assembleAndroidDeviceTest
 ./gradlew :core:data:assembleDebugAndroidTest
 ```
 

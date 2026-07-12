@@ -13,6 +13,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":core:database"))
     implementation(compose.desktop.currentOs)
     implementation(compose.foundation)
     implementation(compose.material3)

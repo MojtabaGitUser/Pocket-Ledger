@@ -1,4 +1,4 @@
-package com.mojtaba.pocketledger.desktop
+﻿package com.mojtaba.pocketledger.desktop
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -9,51 +9,65 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.mojtaba.pocketledger.core.database.createPocketLedgerDatabase
 import com.mojtaba.pocketledger.desktop.insights.DesktopInsightsScreen
 import com.mojtaba.pocketledger.desktop.insights.DesktopInsightsStateMapper
 import com.mojtaba.pocketledger.desktop.insights.RuleBasedDesktopInsightsProvider
-import com.mojtaba.pocketledger.desktop.insights.SampleDesktopInsightsDataSource
+import com.mojtaba.pocketledger.desktop.persistence.DesktopLedgerLocalDataSource
+import com.mojtaba.pocketledger.desktop.persistence.DesktopLedgerSnapshot
 import com.mojtaba.pocketledger.desktop.search.DesktopSearchScreen
-import com.mojtaba.pocketledger.desktop.search.SampleDesktopSearchDataSource
 import com.mojtaba.pocketledger.desktop.theme.PocketLedgerDesktopTheme
 
 @Composable
 fun PocketLedgerDesktopApp() {
+    val database = remember { createPocketLedgerDatabase() }
+    DisposableEffect(database) {
+        onDispose { database.close() }
+    }
+    val ledgerSnapshot by produceState<DesktopLedgerSnapshot?>(initialValue = null, database) {
+        value = DesktopLedgerLocalDataSource(database).loadSnapshot()
+    }
+
     PocketLedgerDesktopTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
         ) {
             var destination by remember { mutableStateOf(DesktopDestination.Insights) }
-            val insightsState = remember {
+            val insightsMapper = remember {
                 DesktopInsightsStateMapper(RuleBasedDesktopInsightsProvider())
-                    .map(SampleDesktopInsightsDataSource.monthlySummary())
             }
-            val searchRecords = remember { SampleDesktopSearchDataSource.records() }
+            val snapshot = ledgerSnapshot
 
             Row(modifier = Modifier.fillMaxSize()) {
                 DesktopNavigationRail(
                     selected = destination,
                     onDestinationSelected = { destination = it },
                 )
-                when (destination) {
-                    DesktopDestination.Dashboard -> DesktopPlaceholderScreen("Dashboard")
-                    DesktopDestination.Search -> DesktopSearchScreen(
-                        records = searchRecords,
-                        modifier = Modifier.weight(1f),
-                    )
-                    DesktopDestination.Insights -> DesktopInsightsScreen(
-                        state = insightsState,
-                        modifier = Modifier.weight(1f),
-                    )
+                if (snapshot == null) {
+                    DesktopLoadingScreen(modifier = Modifier.weight(1f))
+                } else {
+                    when (destination) {
+                        DesktopDestination.Dashboard -> DesktopPlaceholderScreen("Dashboard")
+                        DesktopDestination.Search -> DesktopSearchScreen(
+                            records = snapshot.searchRecords,
+                            modifier = Modifier.weight(1f),
+                        )
+                        DesktopDestination.Insights -> DesktopInsightsScreen(
+                            state = insightsMapper.map(snapshot.monthlySummary),
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
         }
@@ -81,6 +95,19 @@ private fun DesktopNavigationRail(
                 },
             )
         }
+    }
+}
+
+@Composable
+private fun DesktopLoadingScreen(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "Loading local ledger",
+            style = MaterialTheme.typography.titleLarge,
+        )
     }
 }
 
