@@ -1,4 +1,4 @@
-# Pocket Ledger Testing Report
+﻿# Pocket Ledger Testing Report
 
 ## Executive Summary
 
@@ -78,7 +78,7 @@ Windows Gradle wrapper lives and where CI runs Gradle.
 | `:core:testing` | Shared fake/fixture unit tests | `src/test` | Protect deterministic fixtures, large benchmark dataset generation, fake repositories, fake feature flags, and scheduler test helpers. | `.\gradlew.bat :core:testing:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
 | `:core:database` | Migration registry unit test | `src/commonTest` | Verify migration metadata and current-version registration across KMP targets. | `.\gradlew.bat :core:database:desktopTest` | JVM/local | No | Passed in this validation run. |
 | `:core:database` | Room KMP desktop persistence test | `src/desktopTest` | Verify the desktop/JVM Room database writes to a file and persists rows across database instances. | `.\gradlew.bat :core:database:desktopTest` | JVM/local | No | Passed in this validation run. |
-| `:core:database` | Room DAO and migration integration tests | `src/androidTest` | Verify DAO CRUD/query/Flow behavior and Room migration path using in-memory databases and schema assets. | `.\gradlew.bat :core:database:connectedAndroidDeviceTest` | Android instrumentation | Yes | Not run in this validation run because this environment has no Android SDK configured. |
+| `:core:database` | Room DAO and migration integration tests | `src/androidTest` | Verify DAO CRUD/query/Flow behavior and Room migration path using in-memory databases and schema assets. | `.\gradlew.bat :core:database:connectedAndroidDeviceTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:core:database:assembleAndroidDeviceTest`. |
 | `:core:data` | Search model unit tests | `src/test` | Verify `SearchQuery`, filter normalization, validation, and deterministic query behavior. | `.\gradlew.bat :core:data:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
 | `:core:data` | Local repository integration tests | `src/androidTest` | Verify local repositories over real in-memory Room database, Flow emissions, sync state, and seed data. | `.\gradlew.bat :core:data:connectedDebugAndroidTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:core:data:assembleDebugAndroidTest`. |
 | `:core:ai` | AI selector unit tests | `src/test` | Verify provider selection, disabled-feature fallbacks, and local fallback behavior. | `.\gradlew.bat :core:ai:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
@@ -155,7 +155,8 @@ implemented tests cover:
 Current validation status:
 
 - `:core:database:desktopTest` passed.
-- `:core:database:compileAndroidMain` was not run to completion because no Android SDK is configured in this environment.
+- `:core:database:compileAndroidMain` passed.
+- `:core:database:assembleAndroidDeviceTest` passed.
 - `:core:data:assembleDebugAndroidTest` passed.
 - `:core:database:connectedAndroidDeviceTest` and
   `:core:data:connectedDebugAndroidTest` were not run because `adb devices`

@@ -1,4 +1,4 @@
-# Pocket Ledger
+﻿# Pocket Ledger
 
 Pocket Ledger is an Android-first Kotlin project with a modular foundation and a selectively Kotlin Multiplatform shared module.
 
@@ -11,8 +11,9 @@ The Android project lives in `androidApp/`.
 
 The Compose Multiplatform desktop demo lives in `androidApp/desktopApp`.
 Run it with `.\androidApp\gradlew.bat :desktopApp:run --console=plain` and
-open `Insights` from the desktop navigation rail. More details are in
-[Desktop demo](docs/desktop-demo.md).
+open `Search` or `Insights` from the desktop navigation rail. The desktop demo
+uses the shared Room KMP database for local file-backed demo persistence. More
+details are in [Desktop demo](docs/desktop-demo.md).
 
 ## CI Commands
 
@@ -52,7 +53,7 @@ or device and are intentionally not part of default PR validation.
 ## Documentation
 
 - [Architecture](docs/architecture.md): module responsibilities, dependency rules, ownership boundaries, and architectural rationale.
-- [Desktop demo](docs/desktop-demo.md): Compose Multiplatform desktop run command, Insights screen access, sample data behavior, and current limitations.
+- [Desktop demo](docs/desktop-demo.md): Compose Multiplatform desktop run command, Search/Insights access, Room KMP local persistence behavior, and current limitations.
 - [Future product growth](docs/future-growth.md): E-21 future extension plan for cloud sync, OCR/import, export/accountant workflows, and monetization without implementing those features.
 - [Future extension contracts](docs/future/extension-contracts.md): issue-traceable future contract index for #142-#146.
 - [ADR 0001: Modular Architecture and KMP-Ready Structure](docs/adr/0001-modular-architecture.md): decision record for the modular architecture direction.
