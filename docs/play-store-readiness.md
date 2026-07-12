@@ -52,7 +52,7 @@ Backlog context that is present lives in `docs/github-issue-import-report.md`.
 | Encryption and security | Room database is app-private but not encrypted by Pocket Ledger. Sensitive preferences use AndroidX Security Crypto. Optional app lock uses Android system authentication. No network transport claim should be made for ledger sync because sync is not implemented. | Do not claim full database encryption or cloud transport protection for ledger data. |
 | App category | Personal finance, budgeting, or finance utility. | Final category should match store listing copy and screenshots. |
 | Internal testing readiness | Release candidate workflow creates release APK/AAB artifacts for Play Console internal testing. Firebase App Distribution distributes debug APKs only and remains separate from Play Store artifacts. | Use release AAB for Play Console internal testing. |
-| Backup/device-transfer behavior | `allowBackup=true`; `dataExtractionRules` and `fullBackupContent` are configured, but both XML files are template-style and do not define explicit ledger or preference include/exclude rules. | Required pre-release action: finalize backup/device-transfer policy before public release. |
+| Backup/device-transfer behavior | `allowBackup=true`; `dataExtractionRules` and `fullBackupContent` are configured with explicit deny-by-default rules from #227. Ledger database files, encrypted preferences, app-private files, caches, logs, temp/debug/generated files, and external app files are excluded from cloud backup and device transfer. | Review before release; do not claim optional backup-ready profile support until #81 is implemented. |
 | Release diagnostics/privacy safety | Debug Health exists only in debug navigation with a release source-set stub. CI/CD and Debug Health docs prohibit secrets, tester emails, stack traces, IDs, and sensitive ledger values in diagnostics. | Keep release diagnostics hidden and recheck before submission. |
 
 ## Release Permissions
@@ -142,16 +142,18 @@ Current configuration:
 - `android:allowBackup="true"`.
 - `android:dataExtractionRules="@xml/data_extraction_rules"`.
 - `android:fullBackupContent="@xml/backup_rules"`.
-- `backup_rules.xml` is a sample/template file with no active include or
-  exclude rules.
-- `data_extraction_rules.xml` has a `cloud-backup` block with only TODO
-  comments and no active device-transfer block.
+- `backup_rules.xml` has active explicit deny-by-default rules for pre-Android
+  12 backup behavior.
+- `data_extraction_rules.xml` has active explicit deny-by-default rules for
+  Android 12+ `cloud-backup` and `device-transfer` behavior.
 
-Because backup is enabled and explicit include/exclude rules are not finalized,
-do not claim backup is disabled or that ledger data is excluded from cloud
-backup or device transfer. Before public release, choose and implement the
-intended policy, then update this document, `docs/privacy-policy.md`, and
-`androidApp/docs/security-model.md`.
+No app-private Pocket Ledger files are intentionally included in automatic
+Android cloud backup or device-to-device transfer. Ledger database files,
+SQLite sidecars, encrypted sensitive preferences, local-only settings, caches,
+logs, temp files, debug artifacts, generated reports, device-protected storage,
+and external app files are excluded. This is the safe default for #227 because
+#81 optional backup-ready profile behavior is not implemented. Re-review this
+section before public release and after any future backup/profile work.
 
 ## Required Pre-Release Actions
 
@@ -159,8 +161,8 @@ intended policy, then update this document, `docs/privacy-policy.md`, and
   Play Console.
 - Replace the privacy policy support-contact placeholder with a real public
   support contact and use the same contact in the Play Store listing.
-- Finalize Android backup and device-transfer rules for ledger database files,
-  app settings, and encrypted preferences.
+- Re-review Android backup and device-transfer rules for ledger database files,
+  app settings, and encrypted preferences before each public release.
 - Rebuild or regenerate the release merged manifest after any dependency,
   manifest, Firebase, WorkManager, or build-type change and update the
   permission list if it changes.
@@ -169,3 +171,46 @@ intended policy, then update this document, `docs/privacy-policy.md`, and
 - Complete Play Console content rating, target audience, financial features,
   data safety, app access, ads, and permissions forms using this checklist and
   the final release artifact.
+
+## Store Listing And Assets
+
+Repository-ready listing copy, release notes, screenshot sources, asset file
+names, expected dimensions to verify, and manual Play Console steps are tracked
+in `docs/release/play-store-assets.md`.
+
+Current #131 status:
+
+- Store listing copy is prepared in the repository.
+- App name and launcher icon resources compile from the Android app resources.
+- A screenshot/feature-graphic capture plan exists for deterministic sample-safe
+  data.
+- Final binary screenshots, high-res icon export, feature graphic creation, and
+  Play Console upload remain manual release work unless completed in a future
+  asset commit.
+
+Do not claim final Play Store graphic upload or Play Console approval from this
+repository state alone.
+
+## Optional Backup-Ready Profile
+
+The future #81 backup-ready profile design is documented in
+`docs/backup-ready-profile.md`. The current app does not implement account
+login, passkey recovery, cloud sync, encrypted ledger backup payloads, or a
+restore contract. The #227 deny-by-default Android backup policy remains the
+correct Play Store disclosure basis until that implementation exists.
+
+## Issue Traceability
+
+- #129: release hardening checklist is expanded in
+  `docs/release/release-checklist.md`; signed release, Play Console upload,
+  public hosting, legal review, and hardware performance checks remain manual
+  release gates.
+- #131: store listing copy and asset plan are repository-ready; final graphics
+  and Play Console upload remain manual.
+- #132: privacy policy is maintained in `docs/privacy-policy.md` and must be
+  hosted before public release.
+- #7: local data security criteria are mapped in
+  `androidApp/docs/security-model.md`; do not claim full database encryption or
+  Play Integrity enforcement.
+- #81: optional backup-ready profile is planned and documented, not implemented.
+  Ledger data remains excluded from Android backup and device transfer.

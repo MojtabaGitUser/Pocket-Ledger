@@ -1,6 +1,7 @@
 # Pocket Ledger Privacy Policy
 
-Effective date: June 30, 2026
+Effective date: July 5, 2026
+Last updated: July 5, 2026
 
 Contact: [add public support email before Play Store submission]
 
@@ -41,18 +42,27 @@ explicitly changed to require external processing. In the current app:
 - There is no account login.
 - There is no server-backed user profile.
 - There is no cloud sync implementation.
-- There is no banking integration.
+- There is no banking integration or bank connection.
+- There is no advertising UI or ad-serving feature.
 - There is no import or export flow implemented.
 - There is no remote AI provider or network AI request path.
-- Private monthly insights, semantic search ranking, and smart autofill use on-device provider contracts with deterministic local fallback. Current on-device model provider shells are unavailable by default; the implemented fallback runs locally and offline.
+- Private monthly insights, semantic search ranking, and smart autofill use
+  on-device provider contracts with deterministic local fallback. Current
+  on-device model provider shells are unavailable by default; the implemented
+  fallback runs locally and offline.
 
 The local Room database is protected by the Android app sandbox, but it is not
 currently encrypted by Pocket Ledger. App-lock helps prevent casual access to
 screens when enabled, but it does not encrypt ledger records.
 
-Android backup and device-transfer XML files are still template-style files and
-do not yet define explicit include or exclude rules for ledger data, database
-files, or encrypted preferences. This must be reviewed before public release.
+Android backup and device-transfer rules are explicit and privacy-safe by
+default. Pocket Ledger excludes app-private ledger data, the Room database,
+SQLite sidecar files, encrypted sensitive preferences, local-only settings,
+caches, logs, temporary files, debug files, generated reports, and external app
+files from automatic Android cloud backup and Android device-to-device transfer.
+No optional backup-ready profile is implemented in the current app. Future
+account, passkey, cloud sync, or backup-ready profile behavior would require a
+separate implementation, privacy review, and policy update before release.
 
 ## Information Not Collected By Current App Features
 
@@ -180,9 +190,9 @@ Pocket Ledger does not currently include Firebase Crashlytics in the app module.
 
 ## Data Sharing
 
-Pocket Ledger does not sell personal data. Current app code does not send ledger
-records to Pocket Ledger servers because no Pocket Ledger server, account, or
-cloud sync feature is implemented.
+Pocket Ledger does not sell personal data and does not serve ads. Current app
+code does not send ledger records to Pocket Ledger servers because no Pocket
+Ledger server, account, or cloud sync feature is implemented.
 
 Firebase/Google SDKs may receive technical analytics or attribution data when
 their SDK behavior is active. Internal testing builds may be distributed through
@@ -193,10 +203,10 @@ private release data in logs or artifacts.
 ## Data Retention
 
 Ledger records remain on the user's device until the user deletes them in the
-app, clears app storage, uninstalls the app, or restores/transfers app data
-through Android platform behavior. Because explicit backup rules are not yet
-finalized, Android backup or device-transfer behavior requires review before
-release claims are finalized.
+app, clears app storage, or uninstalls the app. Pocket Ledger's Android backup
+and data-extraction rules exclude the local ledger database from automatic
+cloud backup and device-to-device transfer by default because a backup-ready
+profile is not implemented.
 
 Firebase or Google SDK data retention, if collected by enabled SDK behavior, is
 governed by the relevant Firebase/Google service settings and policies.
@@ -210,6 +220,26 @@ Android system settings to remove local app data from the device.
 There is currently no Pocket Ledger account portal or server-side deletion
 request process because the app does not implement user accounts or server-side
 ledger storage.
+
+
+## Android Backup And Device Transfer
+
+The Android manifest enables backup plumbing with explicit rule files:
+`backup_rules.xml` for pre-Android 12 backup behavior and
+`data_extraction_rules.xml` for Android 12+ cloud backup and device-to-device
+transfer.
+
+Pocket Ledger does not intentionally include app-private data in automatic
+Android cloud backup or device-to-device transfer. The rules exclude the local
+Room ledger database `pocket-ledger.db`, SQLite sidecar files, encrypted
+sensitive preferences, app-private files, shared preferences, external app
+files, device-protected storage, caches, logs, temporary files, debug artifacts,
+and generated reports.
+
+This is a conservative default for #227 because the app does not currently
+implement the optional backup-ready profile tracked by #81. It supports the
+local-data security goals related to #7, but it does not complete #7 or #81 by
+itself.
 
 ## Security
 

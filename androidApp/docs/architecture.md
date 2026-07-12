@@ -369,7 +369,7 @@ category-name keyword search, and tag-name keyword search are deferred.
 
 ## Core Database
 
-`:core:database` owns the Room database, entities, DAOs, exported schema snapshots, and migration registration.
+`:core:database` owns the Room KMP database, entities, DAOs, exported schema snapshots, and migration registration. The module keeps the Room schema surface in `src/commonMain` so Android and desktop/JVM use the same entities, DAO contracts, database version, and migration registry. Platform source sets provide only filesystem-specific database builders: Android resolves the app database path from `Context`, while desktop stores the database at `~/.pocket-ledger/pocket-ledger.db`. Common database construction uses `BundledSQLiteDriver` and the shared migration list so SQLite behavior stays consistent across supported targets.
 
 Room migration rules:
 - Version 1 is the initial Pocket Ledger schema.
@@ -385,8 +385,12 @@ Migration workflow:
 4. Register it in `DatabaseMigrations.ALL`.
 5. Run schema export.
 6. Commit the new schema JSON.
-7. Add or update `MigrationTestHelper` coverage.
-8. Run `:core:database` unit, androidTest assembly, and connected migration tests when a device is available.
+7. Add or update `MigrationTestHelper` coverage for Android and JVM persistence coverage where the schema behavior is platform-neutral.
+8. Run `:core:database:desktopTest`, `:core:database:compileAndroidMain`, and Android device tests when an SDK and device are available.
+
+## Desktop Local Persistence
+
+`:desktopApp` depends on the desktop variant of `:core:database` and reads its Search and Insights demo surfaces from a real local Room database instead of process-only sample lists. On first launch, `DesktopLedgerLocalDataSource` seeds deterministic local records only when the transaction table is empty; subsequent launches read the persisted file. The desktop app must keep persistence behind this local data source boundary so Compose screens continue to receive UI models rather than DAOs or Room entities directly.
 
 ## Demo Seed Data
 

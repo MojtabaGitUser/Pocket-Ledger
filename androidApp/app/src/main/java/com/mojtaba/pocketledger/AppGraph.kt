@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.FragmentActivity
-import androidx.room.Room
 import androidx.work.WorkManager
 import com.mojtaba.pocketledger.background.TaskWorkerRegistry
 import com.mojtaba.pocketledger.background.WorkManagerScheduler
@@ -29,7 +28,7 @@ import com.mojtaba.pocketledger.core.data.repository.local.LocalBudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
-import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
+import com.mojtaba.pocketledger.core.database.createPocketLedgerDatabase
 import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
 import com.mojtaba.pocketledger.core.security.applock.AppLockManager
@@ -102,11 +101,7 @@ class PocketLedgerAppGraph private constructor(
             context: Context,
             activityProvider: () -> FragmentActivity? = { null },
         ): PocketLedgerAppGraph {
-            val database = Room.databaseBuilder(
-                context,
-                PocketLedgerDatabase::class.java,
-                PocketLedgerDatabase.DATABASE_NAME,
-            ).build()
+            val database = createPocketLedgerDatabase(context)
             val loggingPolicy = if (BuildConfig.LOGGING_ENABLED) {
                 LoggingPolicy.Debug
             } else {

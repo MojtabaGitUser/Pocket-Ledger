@@ -76,8 +76,9 @@ Windows Gradle wrapper lives and where CI runs Gradle.
 | Module | Test type | Source set | Purpose | Command | Runtime | Device required | Current status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `:core:testing` | Shared fake/fixture unit tests | `src/test` | Protect deterministic fixtures, large benchmark dataset generation, fake repositories, fake feature flags, and scheduler test helpers. | `.\gradlew.bat :core:testing:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
-| `:core:database` | Migration registry unit test | `src/test` | Verify migration metadata and current-version registration. | `.\gradlew.bat :core:database:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
-| `:core:database` | Room DAO and migration integration tests | `src/androidTest` | Verify DAO CRUD/query/Flow behavior and Room migration path using in-memory databases and schema assets. | `.\gradlew.bat :core:database:connectedDebugAndroidTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:core:database:assembleDebugAndroidTest`. |
+| `:core:database` | Migration registry unit test | `src/commonTest` | Verify migration metadata and current-version registration across KMP targets. | `.\gradlew.bat :core:database:desktopTest` | JVM/local | No | Passed in this validation run. |
+| `:core:database` | Room KMP desktop persistence test | `src/desktopTest` | Verify the desktop/JVM Room database writes to a file and persists rows across database instances. | `.\gradlew.bat :core:database:desktopTest` | JVM/local | No | Passed in this validation run. |
+| `:core:database` | Room DAO and migration integration tests | `src/androidTest` | Verify DAO CRUD/query/Flow behavior and Room migration path using in-memory databases and schema assets. | `.\gradlew.bat :core:database:connectedAndroidDeviceTest` | Android instrumentation | Yes | Not run in this validation run because this environment has no Android SDK configured. |
 | `:core:data` | Search model unit tests | `src/test` | Verify `SearchQuery`, filter normalization, validation, and deterministic query behavior. | `.\gradlew.bat :core:data:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
 | `:core:data` | Local repository integration tests | `src/androidTest` | Verify local repositories over real in-memory Room database, Flow emissions, sync state, and seed data. | `.\gradlew.bat :core:data:connectedDebugAndroidTest` | Android instrumentation | Yes | Not run because no device was attached. APK compiled with `:core:data:assembleDebugAndroidTest`. |
 | `:core:ai` | AI selector unit tests | `src/test` | Verify provider selection, disabled-feature fallbacks, and local fallback behavior. | `.\gradlew.bat :core:ai:testDebugUnitTest` | JVM/local | No | Passed in this validation run. |
@@ -124,8 +125,7 @@ WorkManager, network, sleeps, random IDs, and wall-clock timing.
 
 ## Room And Repository Integration Coverage
 
-Room integration tests live in `:core:database` under `src/androidTest`. They
-construct isolated in-memory `PocketLedgerDatabase` instances for DAO behavior.
+Room KMP tests live in `:core:database` under `src/commonTest`, `src/desktopTest`, and Android device-test source sets. Desktop tests validate file-backed persistence across database instances; Android tests construct isolated in-memory `PocketLedgerDatabase` instances for DAO behavior when an SDK and device are available.
 Migration coverage uses Room `MigrationTestHelper` with committed schema JSON
 assets under `core/database/schemas`.
 
@@ -154,9 +154,10 @@ implemented tests cover:
 
 Current validation status:
 
-- `:core:database:assembleDebugAndroidTest` passed.
+- `:core:database:desktopTest` passed.
+- `:core:database:compileAndroidMain` was not run to completion because no Android SDK is configured in this environment.
 - `:core:data:assembleDebugAndroidTest` passed.
-- `:core:database:connectedDebugAndroidTest` and
+- `:core:database:connectedAndroidDeviceTest` and
   `:core:data:connectedDebugAndroidTest` were not run because `adb devices`
   reported no attached device or emulator.
 
@@ -335,7 +336,7 @@ Validation commands for this review:
 .\gradlew.bat :app:assembleRelease
 .\gradlew.bat :app:assembleBenchmark
 .\gradlew.bat :macrobenchmark:assemble
-.\gradlew.bat :app:testDebugUnitTest :core:security:testDebugUnitTest :core:data:testDebugUnitTest :core:database:testDebugUnitTest :feature:dashboard:testDebugUnitTest :feature:search:testDebugUnitTest :feature:transaction:testDebugUnitTest
+.\gradlew.bat :app:testDebugUnitTest :core:security:testDebugUnitTest :core:data:testDebugUnitTest :core:database:desktopTest :feature:dashboard:testDebugUnitTest :feature:search:testDebugUnitTest :feature:transaction:testDebugUnitTest
 .\gradlew.bat :app:dependencyInsight --configuration debugRuntimeClasspath --dependency leakcanary
 .\gradlew.bat :app:dependencyInsight --configuration releaseRuntimeClasspath --dependency leakcanary
 .\gradlew.bat :app:dependencyInsight --configuration benchmarkRuntimeClasspath --dependency leakcanary
@@ -572,7 +573,7 @@ Focused unit tests:
 
 ```powershell
 .\gradlew.bat :core:testing:testDebugUnitTest
-.\gradlew.bat :core:database:testDebugUnitTest
+.\gradlew.bat :core:database:desktopTest
 .\gradlew.bat :core:data:testDebugUnitTest
 .\gradlew.bat :core:ai:testDebugUnitTest
 .\gradlew.bat :core:security:testDebugUnitTest
@@ -594,14 +595,14 @@ Database and repository instrumentation tests with an attached device or
 emulator:
 
 ```powershell
-.\gradlew.bat :core:database:connectedDebugAndroidTest
+.\gradlew.bat :core:database:connectedAndroidDeviceTest
 .\gradlew.bat :core:data:connectedDebugAndroidTest
 ```
 
 Compile Android test APKs when no device is available:
 
 ```powershell
-.\gradlew.bat :core:database:assembleDebugAndroidTest
+.\gradlew.bat :core:database:assembleAndroidDeviceTest
 .\gradlew.bat :core:data:assembleDebugAndroidTest
 .\gradlew.bat :core:security:assembleDebugAndroidTest
 .\gradlew.bat :feature:dashboard:assembleDebugAndroidTest
@@ -689,7 +690,7 @@ Commands run successfully:
 ```powershell
 .\gradlew.bat :core:testing:testDebugUnitTest
 .\gradlew.bat :core:data:testDebugUnitTest
-.\gradlew.bat :core:database:testDebugUnitTest
+.\gradlew.bat :core:database:desktopTest
 .\gradlew.bat :macrobenchmark:assemble
 .\gradlew.bat :app:assembleBenchmark
 .\gradlew.bat :app:assembleDebug
@@ -706,7 +707,7 @@ T-E15-05 release/R8 validation commands run successfully:
 .\gradlew.bat :core:security:testDebugUnitTest
 .\gradlew.bat :core:ai:testDebugUnitTest
 .\gradlew.bat :core:data:testDebugUnitTest
-.\gradlew.bat :core:database:testDebugUnitTest
+.\gradlew.bat :core:database:desktopTest
 .\gradlew.bat :app:testDebugUnitTest
 .\gradlew.bat clean build
 ```
@@ -730,7 +731,7 @@ adb devices
 Commands not run because no device or emulator was attached:
 
 ```powershell
-.\gradlew.bat :core:database:connectedDebugAndroidTest
+.\gradlew.bat :core:database:connectedAndroidDeviceTest
 .\gradlew.bat :core:data:connectedDebugAndroidTest
 .\gradlew.bat :core:security:connectedDebugAndroidTest
 .\gradlew.bat :feature:dashboard:connectedDebugAndroidTest
