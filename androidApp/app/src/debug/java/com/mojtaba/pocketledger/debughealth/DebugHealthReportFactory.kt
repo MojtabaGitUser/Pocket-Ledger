@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import com.mojtaba.pocketledger.BuildConfig
 import com.mojtaba.pocketledger.core.analytics.ProductAnalyticsProviderState
+import com.mojtaba.pocketledger.core.background.BackgroundTaskScheduler
+import com.mojtaba.pocketledger.core.background.TaskStatus
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationTask
 import com.mojtaba.pocketledger.core.database.DatabaseMigrations
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
 import com.mojtaba.pocketledger.core.featureflags.BooleanFeatureFlag
@@ -13,8 +16,10 @@ import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 class DebugHealthReportFactory(
     private val buildInfo: DebugHealthBuildInfo,
     private val featureFlagStates: List<DebugHealthStatus>,
+    private val backgroundTaskScheduler: BackgroundTaskScheduler? = null,
+    private val backgroundJobsEnabled: Boolean = false,
 ) {
-    fun create(): DebugHealthReport =
+    suspend fun create(): DebugHealthReport =
         DebugHealthReport(
             sections = listOf(
                 buildSection(),
@@ -24,6 +29,7 @@ class DebugHealthReportFactory(
                 observabilitySection(),
                 databaseSection(),
                 featureFlagSection(),
+                backgroundJobsSection(),
                 releaseSafetySection(),
             ),
         )
@@ -226,6 +232,29 @@ class DebugHealthReportFactory(
             },
         )
 
+
+    private suspend fun backgroundJobsSection(): DebugHealthSection {
+        val status = runCatching {
+            backgroundTaskScheduler?.status(MonthlySummaryPreparationTask.Id) ?: TaskStatus.Unknown
+        }.getOrDefault(TaskStatus.Unknown)
+        return DebugHealthSection(
+            title = "Background Jobs",
+            statuses = listOf(
+                status(
+                    "Global background jobs",
+                    enabledValue(backgroundJobsEnabled),
+                    "Global feature flag gate for active WorkManager scheduling.",
+                    if (backgroundJobsEnabled) DebugHealthSeverity.Ready else DebugHealthSeverity.Neutral,
+                ),
+                status(
+                    "Monthly summary preparation",
+                    status.displayValue(),
+                    "Status is read through BackgroundTaskScheduler for the monthly summary unique work.",
+                    status.severity(),
+                ),
+            ),
+        )
+    }
     private fun releaseSafetySection(): DebugHealthSection =
         DebugHealthSection(
             title = "Release Safety",
@@ -264,11 +293,40 @@ class DebugHealthReportFactory(
             severity = severity,
         )
 
+
+    private fun TaskStatus.displayValue(): String =
+        when (this) {
+            TaskStatus.NotScheduled -> "Not scheduled"
+            TaskStatus.Enqueued -> "Enqueued"
+            TaskStatus.Running -> "Running"
+            TaskStatus.Succeeded -> "Succeeded"
+            TaskStatus.Failed -> "Failed"
+            TaskStatus.Cancelled -> "Cancelled"
+            TaskStatus.Blocked -> "Blocked"
+            TaskStatus.Unknown -> "Unknown"
+        }
+
+    private fun TaskStatus.severity(): DebugHealthSeverity =
+        when (this) {
+            TaskStatus.Enqueued,
+            TaskStatus.Running,
+            TaskStatus.Succeeded,
+            -> DebugHealthSeverity.Ready
+            TaskStatus.Failed,
+            TaskStatus.Blocked,
+            TaskStatus.Unknown,
+            -> DebugHealthSeverity.Warning
+            TaskStatus.NotScheduled,
+            TaskStatus.Cancelled,
+            -> DebugHealthSeverity.Neutral
+        }
+
     companion object {
         fun from(
             context: Context,
             featureFlags: FeatureFlagEvaluator,
             analyticsProviderState: ProductAnalyticsProviderState,
+            backgroundTaskScheduler: BackgroundTaskScheduler? = null,
         ): DebugHealthReportFactory =
             DebugHealthReportFactory(
                 buildInfo = DebugHealthBuildInfo(
@@ -301,6 +359,8 @@ class DebugHealthReportFactory(
                             severity = DebugHealthSeverity.Neutral,
                         )
                     },
+                backgroundTaskScheduler = backgroundTaskScheduler,
+                backgroundJobsEnabled = featureFlags.isEnabled(DefaultFeatureFlags.BackgroundJobsEnabled),
             )
 
         private fun ApplicationInfo.isDebuggable(): Boolean =

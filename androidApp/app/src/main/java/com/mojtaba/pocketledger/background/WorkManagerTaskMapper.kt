@@ -2,6 +2,7 @@ package com.mojtaba.pocketledger.background
 
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ListenableWorker
@@ -15,6 +16,8 @@ import com.mojtaba.pocketledger.core.background.TaskConstraints
 import com.mojtaba.pocketledger.core.background.TaskPolicy
 import com.mojtaba.pocketledger.core.background.TaskSchedule
 import com.mojtaba.pocketledger.core.background.TaskStatus
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationInput
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationTask
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -65,12 +68,49 @@ object WorkManagerTaskMapper {
             is TaskSchedule.Periodic -> periodicWorkRequest(task, schedule, workerClass)
         }
 
+    fun data(inputData: Map<String, Any>): Data {
+        val builder = Data.Builder()
+        inputData.forEach { (key, value) ->
+            when (value) {
+                is String -> builder.putString(key, value)
+                is Long -> builder.putLong(key, value)
+                is Int -> builder.putInt(key, value)
+                is Boolean -> builder.putBoolean(key, value)
+                is Double -> builder.putDouble(key, value)
+                is Float -> builder.putFloat(key, value)
+                else -> error("Unsupported WorkManager input data type for key: $key")
+            }
+        }
+        return builder.build()
+    }
+
+    fun monthlySummaryInput(data: Data): MonthlySummaryPreparationInput? {
+        val label = data.getString(MonthlySummaryPreparationTask.InputPeriodLabel)?.takeIf { it.isNotBlank() }
+            ?: return null
+        val currency = data.getString(MonthlySummaryPreparationTask.InputCurrencyCode)?.takeIf { it.isNotBlank() }
+            ?: return null
+        val start = data.getLong(MonthlySummaryPreparationTask.InputPeriodStartMillis, Long.MIN_VALUE)
+        val end = data.getLong(MonthlySummaryPreparationTask.InputPeriodEndMillis, Long.MIN_VALUE)
+        val generatedAt = data.getLong(MonthlySummaryPreparationTask.InputGeneratedAtMillis, Long.MIN_VALUE)
+        if (start == Long.MIN_VALUE || end == Long.MIN_VALUE || generatedAt == Long.MIN_VALUE) return null
+        return runCatching {
+            MonthlySummaryPreparationInput(
+                periodStartMillis = start,
+                periodEndMillis = end,
+                periodLabel = label,
+                currencyCode = currency,
+                generatedAtMillis = generatedAt,
+            ).normalized()
+        }.getOrNull()
+    }
+
     private fun oneTimeWorkRequest(
         task: ScheduledTask,
         schedule: TaskSchedule.OneTime,
         workerClass: Class<out ListenableWorker>,
     ): OneTimeWorkRequest =
         OneTimeWorkRequest.Builder(workerClass)
+            .setInputData(data(task.inputData))
             .setConstraints(constraints(task.constraints))
             .setInitialDelay(schedule.initialDelay.inWholeMilliseconds, TimeUnit.MILLISECONDS)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, MinimumBackoff.inWholeMilliseconds, TimeUnit.MILLISECONDS)
@@ -100,6 +140,7 @@ object WorkManagerTaskMapper {
         }
 
         return builder
+            .setInputData(data(task.inputData))
             .setConstraints(constraints(task.constraints))
             .setInitialDelay(schedule.initialDelay.inWholeMilliseconds, TimeUnit.MILLISECONDS)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, MinimumBackoff.inWholeMilliseconds, TimeUnit.MILLISECONDS)
