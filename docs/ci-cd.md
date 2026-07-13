@@ -4,6 +4,30 @@ Pocket Ledger uses GitHub Actions to keep normal pull-request validation fast
 and to keep screenshot and benchmark work controlled. The Android Gradle wrapper
 lives in `androidApp/`, and workflow commands run from that directory.
 
+
+## Workflow Badges And Required Checks
+
+README badges are published for all repository workflows:
+
+```markdown
+[![PR Validation](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/pr-validation.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/pr-validation.yml)
+[![Screenshot And Benchmark Validation](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/screenshot-benchmark.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/screenshot-benchmark.yml)
+[![Release Candidate](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/release-candidate.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/release-candidate.yml)
+[![Internal Distribution](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/internal-distribution.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/internal-distribution.yml)
+```
+
+Configure GitHub branch protection for `dev` and `main` so pull requests cannot
+merge unless the `PR Validation / Android validation` check is successful and
+up to date with the target branch. Keep stale review dismissal and linear-history
+requirements aligned with the repository policy. The release candidate,
+screenshot/benchmark, and internal distribution workflows are intentionally
+manual, scheduled, or tag/branch triggered; require them only for PRs whose risk
+profile needs that extra gate.
+
+This repository setting is the enforcement layer for the #16 acceptance criterion
+"CI failures block unsafe merges". The workflow file defines the check; GitHub
+branch protection must require it.
+
 ## Pull Request Validation
 
 `.github/workflows/pr-validation.yml` runs for pull requests targeting `dev` and
@@ -45,7 +69,9 @@ Android wrapper:
 PR validation intentionally does not publish builds, upload to Play Store,
 generate signed release artifacts, run connected Android tests, run
 Macrobenchmark measurements, or generate Baseline Profiles. Those tasks either
-need device infrastructure, release credentials, or manual review.
+need device infrastructure, release credentials, or manual review. For merge
+safety, `PR Validation / Android validation` is the check that branch protection
+should require on `dev` and `main`.
 
 ## Screenshot Workflow
 
@@ -242,3 +268,17 @@ For performance-sensitive, Baseline Profile, or release-build changes:
 The connected benchmark and Baseline Profile commands require an attached
 emulator or device. They should be run on stable, comparable hardware when a
 change affects startup, scrolling, release/R8 behavior, or profile coverage.
+
+## Issue Closure Readiness
+
+- #23 is covered by `.github/workflows/pr-validation.yml`, Gradle setup/cache,
+  automated lint/test/build verification, release/R8 assembly, benchmark artifact
+  assembly, README badges, and this workflow documentation.
+- #123 is covered by the PR validation, release candidate, screenshot/benchmark,
+  and internal distribution workflows plus the README badges and local commands.
+- #16 is implemented from the repository side once GitHub branch protection
+  requires `PR Validation / Android validation` before merging to `dev` and
+  `main`. Keep #16 open only if that repository setting has not been enabled.
+- #17 remains open until Play Store assets, published privacy policy URL, Play
+  Console app-content declarations, and final production submission evidence are
+  complete.

@@ -62,6 +62,7 @@ or device and are intentionally not part of default PR validation.
 - [Android security model](androidApp/docs/security-model.md): current local data storage, app lock, AI privacy, logging, threat model, and known limitations.
 - [CI/CD strategy](docs/ci-cd.md): PR validation, controlled screenshot and benchmark workflows, artifacts, and release-safety boundaries.
 - [Release signing and versioning](docs/release/signing-versioning.md): secure signing inputs, version policy, local release-ready commands, and CI release candidate behavior.
+- [Release candidate workflow](docs/release/release-candidate.md): release workflow triggers, version inputs, signing behavior, retained artifacts, and Play Store handoff boundaries.
 - [Release readiness checklist](docs/release/release-checklist.md): signing, versioning, artifact, accessibility, privacy, and rollout review items.
 - [Play Store readiness and app content checklist](docs/play-store-readiness.md): Play Console declarations for privacy policy, Data Safety, permissions, backup/device transfer, ads, financial features, and target audience.
 - [Privacy policy](docs/privacy-policy.md): Play Store-ready privacy policy draft based on current app behavior, Firebase setup, permissions, and diagnostics.
