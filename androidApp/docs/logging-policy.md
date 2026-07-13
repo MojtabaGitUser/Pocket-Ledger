@@ -135,3 +135,14 @@ logger.error(
 ```
 
 `SafeAppLogger` sanitizes throwable messages before they reach Logcat.
+## Crash Reporting And Startup Failures
+
+Release crash reporting uses the app-level `CrashReporter` abstraction backed by
+Firebase Crashlytics. Debug and benchmark builds keep collection disabled with
+`BuildConfig.CRASH_REPORTING_ENABLED=false`.
+
+Critical startup failures are reported through `StartupFailureReporter`. The
+reporter may log and submit only sanitized operational metadata: startup stage,
+throwable class name, timestamp, and whether Crashlytics accepted the event.
+Never add user-entered financial data, credentials, Firebase service account
+contents, tester emails, tokens, or raw exception messages as crash attributes.
