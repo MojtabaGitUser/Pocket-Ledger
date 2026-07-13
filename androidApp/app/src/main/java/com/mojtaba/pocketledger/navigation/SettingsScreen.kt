@@ -2,6 +2,7 @@ package com.mojtaba.pocketledger.navigation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,9 +10,14 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -19,6 +25,9 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mojtaba.pocketledger.background.BackgroundJobSettingsManager
+import com.mojtaba.pocketledger.background.BackgroundJobSettingsState
+import com.mojtaba.pocketledger.background.MonthlySummaryReminderTime
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.SectionHeader
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerThemeDefaults
@@ -33,9 +42,15 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     appLockManager: AppLockManager,
     modifier: Modifier = Modifier,
+    backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
 ) {
     val state by appLockManager.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    var backgroundState by remember(backgroundJobSettingsManager) { mutableStateOf(BackgroundJobSettingsState()) }
+    LaunchedEffect(backgroundJobSettingsManager) {
+        backgroundState = backgroundJobSettingsManager?.state() ?: BackgroundJobSettingsState()
+    }
+
     val spacing = PocketLedgerThemeDefaults.spacing
     val canToggle = state.canEnable && state.status != AppLockStatus.Authenticating && state.status != AppLockStatus.Loading
     val appLockStateDescription = state.appLockStateDescription(canToggle)
@@ -53,45 +68,134 @@ fun SettingsScreen(
                 title = "Settings",
                 subtitle = "Security and privacy",
             )
-            Column {
-                Text(
-                    text = "Security",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .padding(horizontal = spacing.medium)
-                        .semantics { heading() },
-                )
-                ListItem(
-                    modifier = Modifier.semantics {
-                        contentDescription = "App lock"
-                        stateDescription = appLockStateDescription
-                        if (!canToggle) disabled()
+            SecuritySettingsSection(
+                state = state,
+                canToggle = canToggle,
+                appLockStateDescription = appLockStateDescription,
+                onAppLockEnabledChange = { enabled ->
+                    scope.launch { appLockManager.setAppLockEnabled(enabled) }
+                },
+            )
+            backgroundJobSettingsManager?.let { manager ->
+                BackgroundJobsSettingsSection(
+                    state = backgroundState,
+                    onEnabledChange = { enabled ->
+                        scope.launch {
+                            backgroundState = manager.setMonthlySummaryEnabled(enabled)
+                        }
                     },
-                    headlineContent = {
-                        Text(text = "App lock")
-                    },
-                    supportingContent = {
-                        Text(text = state.availability.description())
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = state.isEnabled,
-                            onCheckedChange = { enabled ->
-                                scope.launch {
-                                    appLockManager.setAppLockEnabled(enabled)
-                                }
-                            },
-                            enabled = canToggle,
-                            modifier = Modifier.semantics {
-                                contentDescription = "App lock switch"
-                                stateDescription = appLockStateDescription
-                                if (!canToggle) disabled()
-                            },
-                        )
+                    onTimeSelected = { time ->
+                        scope.launch {
+                            backgroundState = manager.setMonthlySummaryTime(time)
+                        }
                     },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun SecuritySettingsSection(
+    state: AppLockState,
+    canToggle: Boolean,
+    appLockStateDescription: String,
+    onAppLockEnabledChange: (Boolean) -> Unit,
+) {
+    val spacing = PocketLedgerThemeDefaults.spacing
+    Column {
+        Text(
+            text = "Security",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .padding(horizontal = spacing.medium)
+                .semantics { heading() },
+        )
+        ListItem(
+            modifier = Modifier.semantics {
+                contentDescription = "App lock"
+                stateDescription = appLockStateDescription
+                if (!canToggle) disabled()
+            },
+            headlineContent = { Text(text = "App lock") },
+            supportingContent = { Text(text = state.availability.description()) },
+            trailingContent = {
+                Switch(
+                    checked = state.isEnabled,
+                    onCheckedChange = onAppLockEnabledChange,
+                    enabled = canToggle,
+                    modifier = Modifier.semantics {
+                        contentDescription = "App lock switch"
+                        stateDescription = appLockStateDescription
+                        if (!canToggle) disabled()
+                    },
+                )
+            },
+        )
+    }
+}
+
+@Composable
+private fun BackgroundJobsSettingsSection(
+    state: BackgroundJobSettingsState,
+    onEnabledChange: (Boolean) -> Unit,
+    onTimeSelected: (MonthlySummaryReminderTime) -> Unit,
+) {
+    val spacing = PocketLedgerThemeDefaults.spacing
+    Column {
+        Text(
+            text = "Background jobs",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .padding(horizontal = spacing.medium)
+                .semantics { heading() },
+        )
+        ListItem(
+            modifier = Modifier.semantics {
+                contentDescription = "Monthly summary preparation"
+                stateDescription = if (state.monthlySummaryEnabled) "On" else "Off"
+                if (!state.controlsEnabled) disabled()
+            },
+            headlineContent = { Text(text = "Monthly summary preparation") },
+            supportingContent = { Text(text = state.monthlySummarySupportingText) },
+            trailingContent = {
+                Switch(
+                    checked = state.monthlySummaryEnabled,
+                    onCheckedChange = onEnabledChange,
+                    enabled = state.controlsEnabled,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Monthly summary preparation switch"
+                        stateDescription = if (state.monthlySummaryEnabled) "On" else "Off"
+                        if (!state.controlsEnabled) disabled()
+                    },
+                )
+            },
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = spacing.medium),
+            horizontalArrangement = Arrangement.spacedBy(spacing.small),
+        ) {
+            listOf(
+                MonthlySummaryReminderTime(hour = 9, minute = 0),
+                MonthlySummaryReminderTime(hour = 18, minute = 0),
+            ).forEach { time ->
+                TextButton(
+                    onClick = { onTimeSelected(time) },
+                    enabled = state.controlsEnabled && state.monthlySummaryEnabled,
+                ) {
+                    Text(text = time.displayLabel())
+                }
+            }
+        }
+        state.errorMessage?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = spacing.medium),
+            )
         }
     }
 }

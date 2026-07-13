@@ -1,5 +1,9 @@
 package com.mojtaba.pocketledger.debughealth
 
+import com.mojtaba.pocketledger.core.background.TaskStatus
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationTask
+import com.mojtaba.pocketledger.core.testing.scheduler.FakeScheduler
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -7,7 +11,7 @@ import org.junit.Test
 
 class DebugHealthReportFactoryTest {
     @Test
-    fun reportIncludesExpectedSafeSectionsAndStatuses() {
+    fun reportIncludesExpectedSafeSectionsAndStatuses() = runTest {
         val report = factory().create()
 
         assertEquals(
@@ -19,6 +23,7 @@ class DebugHealthReportFactoryTest {
                 "Observability",
                 "Database",
                 "Feature Flags",
+                "Background Jobs",
                 "Release Safety",
             ),
             report.sections.map { it.title },
@@ -28,11 +33,23 @@ class DebugHealthReportFactoryTest {
         assertStatus(report, "App Distribution", "Configured via CI")
         assertStatus(report, "Product event taxonomy", "Configured")
         assertStatus(report, "Analytics provider", "Debug sink")
+        assertStatus(report, "Monthly summary preparation", "Not scheduled")
         assertStatus(report, "Release diagnostics privacy", "Release hidden")
     }
 
     @Test
-    fun reportDoesNotExposeSensitiveDiagnosticFields() {
+    fun reportIncludesBackgroundWorkerStatus() = runTest {
+        val scheduler = FakeScheduler().apply {
+            setStatus(MonthlySummaryPreparationTask.Id, TaskStatus.Running)
+        }
+        val report = factory(scheduler = scheduler, backgroundJobsEnabled = true).create()
+
+        assertStatus(report, "Global background jobs", "Enabled")
+        assertStatus(report, "Monthly summary preparation", "Running")
+    }
+
+    @Test
+    fun reportDoesNotExposeSensitiveDiagnosticFields() = runTest {
         val renderedText = factory().create().allStatuses.joinToString(separator = "\n") {
             "${it.label} ${it.value} ${it.description}"
         }.lowercase()
@@ -60,7 +77,10 @@ class DebugHealthReportFactoryTest {
         assertEquals("Logging mode: Debug logging sanitized", status.accessibilityState)
     }
 
-    private fun factory(): DebugHealthReportFactory =
+    private fun factory(
+        scheduler: FakeScheduler = FakeScheduler(),
+        backgroundJobsEnabled: Boolean = false,
+    ): DebugHealthReportFactory =
         DebugHealthReportFactory(
             buildInfo = DebugHealthBuildInfo(
                 appName = "Pocket Ledger",
@@ -84,6 +104,8 @@ class DebugHealthReportFactoryTest {
                     description = "Safe flag summary.",
                 ),
             ),
+            backgroundTaskScheduler = scheduler,
+            backgroundJobsEnabled = backgroundJobsEnabled,
         )
 
     private fun assertStatus(

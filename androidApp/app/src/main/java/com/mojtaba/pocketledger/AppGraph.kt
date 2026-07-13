@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.FragmentActivity
 import androidx.work.WorkManager
+import com.mojtaba.pocketledger.background.BackgroundJobSettingsManager
+import com.mojtaba.pocketledger.background.MonthlySummaryPreparationWorker
 import com.mojtaba.pocketledger.background.TaskWorkerRegistry
 import com.mojtaba.pocketledger.background.WorkManagerScheduler
 import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
@@ -20,6 +22,7 @@ import com.mojtaba.pocketledger.core.analytics.NoOpProductAnalyticsLogger
 import com.mojtaba.pocketledger.core.analytics.ProductAnalyticsLogger
 import com.mojtaba.pocketledger.core.analytics.ProductAnalyticsProviderState
 import com.mojtaba.pocketledger.core.background.BackgroundTaskScheduler
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationTask
 import com.mojtaba.pocketledger.core.data.repository.BudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.CategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.TagRepository
@@ -60,6 +63,7 @@ class PocketLedgerAppGraph private constructor(
     val appLockManager: AppLockManager,
     @Suppress("unused")
     val backgroundTaskScheduler: BackgroundTaskScheduler,
+    val backgroundJobSettingsManager: BackgroundJobSettingsManager,
     @Suppress("unused")
     val appLogger: AppLogger,
     @Suppress("unused")
@@ -78,6 +82,7 @@ class PocketLedgerAppGraph private constructor(
             sensitivePreferences: SensitivePreferences,
             appLockManager: AppLockManager,
             backgroundTaskScheduler: BackgroundTaskScheduler,
+            backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
             appLogger: AppLogger,
             productAnalyticsLogger: ProductAnalyticsLogger = NoOpProductAnalyticsLogger(),
             productAnalyticsProviderState: ProductAnalyticsProviderState = ProductAnalyticsProviderState.NoOp,
@@ -92,6 +97,11 @@ class PocketLedgerAppGraph private constructor(
             sensitivePreferences = sensitivePreferences,
             appLockManager = appLockManager,
             backgroundTaskScheduler = backgroundTaskScheduler,
+            backgroundJobSettingsManager = backgroundJobSettingsManager ?: BackgroundJobSettingsManager(
+                preferences = sensitivePreferences,
+                scheduler = backgroundTaskScheduler,
+                featureFlags = featureFlags,
+            ),
             appLogger = appLogger,
             productAnalyticsLogger = productAnalyticsLogger,
             productAnalyticsProviderState = productAnalyticsProviderState,
@@ -136,6 +146,13 @@ class PocketLedgerAppGraph private constructor(
                 EncryptedSensitivePreferences(context)
             }
 
+            val backgroundTaskScheduler = WorkManagerScheduler(
+                workManager = WorkManager.getInstance(context),
+                workerRegistry = TaskWorkerRegistry(
+                    mapOf(MonthlySummaryPreparationTask.Id to MonthlySummaryPreparationWorker::class.java),
+                ),
+            )
+
             return PocketLedgerAppGraph(
                 transactionRepository = LocalTransactionRepository(database.transactionDao()),
                 budgetRepository = LocalBudgetRepository(database.budgetDao()),
@@ -152,9 +169,11 @@ class PocketLedgerAppGraph private constructor(
                         activityProvider = activityProvider,
                     ),
                 ),
-                backgroundTaskScheduler = WorkManagerScheduler(
-                    workManager = WorkManager.getInstance(context),
-                    workerRegistry = TaskWorkerRegistry.Empty,
+                backgroundTaskScheduler = backgroundTaskScheduler,
+                backgroundJobSettingsManager = BackgroundJobSettingsManager(
+                    preferences = sensitivePreferences,
+                    scheduler = backgroundTaskScheduler,
+                    featureFlags = featureFlags,
                 ),
                 appLogger = appLogger,
                 productAnalyticsLogger = productAnalyticsLogger,

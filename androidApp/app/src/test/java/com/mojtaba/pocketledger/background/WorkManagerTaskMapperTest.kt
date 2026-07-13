@@ -16,6 +16,8 @@ import com.mojtaba.pocketledger.core.background.TaskConstraints
 import com.mojtaba.pocketledger.core.background.TaskPolicy
 import com.mojtaba.pocketledger.core.background.TaskSchedule
 import com.mojtaba.pocketledger.core.background.TaskStatus
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationInput
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationTask
 import kotlin.time.Duration.Companion.hours
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -93,6 +95,31 @@ class WorkManagerTaskMapperTest {
         assertEquals(TaskStatus.Failed, WorkManagerTaskMapper.workStatus(WorkInfo.State.FAILED))
         assertEquals(TaskStatus.Cancelled, WorkManagerTaskMapper.workStatus(WorkInfo.State.CANCELLED))
         assertEquals(TaskStatus.Blocked, WorkManagerTaskMapper.workStatus(WorkInfo.State.BLOCKED))
+    }
+
+    @Test
+    fun createsMonthlySummaryWorkRequestWithInputData() {
+        val input = MonthlySummaryPreparationInput(
+            periodStartMillis = 100L,
+            periodEndMillis = 200L,
+            periodLabel = "  June   2026  ",
+            currencyCode = " usd ",
+            generatedAtMillis = 300L,
+        ).normalized()
+        val task = MonthlySummaryPreparationTask.scheduledTask(input = input, initialDelay = 1.hours)
+
+        val request = WorkManagerTaskMapper.workRequest(task, TestWorker::class.java)
+        val decoded = WorkManagerTaskMapper.monthlySummaryInput(request.workSpec.input)
+
+        assertEquals(input, decoded)
+        assertEquals(100L, request.workSpec.input.getLong(MonthlySummaryPreparationTask.InputPeriodStartMillis, -1L))
+        assertEquals("June 2026", request.workSpec.input.getString(MonthlySummaryPreparationTask.InputPeriodLabel))
+        assertEquals("USD", request.workSpec.input.getString(MonthlySummaryPreparationTask.InputCurrencyCode))
+    }
+
+    @Test
+    fun monthlySummaryInputReturnsNullWhenRequiredDataIsMissing() {
+        assertEquals(null, WorkManagerTaskMapper.monthlySummaryInput(androidx.work.Data.EMPTY))
     }
 
     class TestWorker(
