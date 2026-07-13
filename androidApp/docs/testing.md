@@ -164,7 +164,8 @@ transaction list, detail, missing, error, and adaptive list/detail states;
 search initial, populated, empty-ledger, no-results, error, and filter-visible
 states; adaptive navigation chrome; key large-font variants at 1.3 and 1.5
 font scale; and focused 200% font-scale coverage for dashboard, transactions,
-search, budget setup, settings, and app lock. `ThemeScreenshotMatrixTest` adds
+search, budget setup, settings, and app lock. The #117 validation record is
+kept in [accessibility-200-font-scale.md](accessibility-200-font-scale.md). `ThemeScreenshotMatrixTest` adds
 an explicit light/dark matrix over
 compact phone and expanded tablet layouts for dashboard content, transaction
 adaptive content, populated search, settings app-lock availability states, and
