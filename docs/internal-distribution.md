@@ -33,6 +33,8 @@ configuration and uses the `.debug` application ID suffix. It is appropriate for
 internal tester feedback, not staged Play Store rollout or production testing.
 Version metadata for artifact names comes from the non-secret
 `POCKET_LEDGER_VERSION_CODE` and `POCKET_LEDGER_VERSION_NAME` Gradle properties.
+The workflow validates the version name and version code before building so
+misconfigured internal artifacts fail early instead of reaching testers.
 
 A future task can add a dedicated `internal` build type when the project is
 ready to define internal signing, logging, app ID, and diagnostics behavior
@@ -73,9 +75,10 @@ account JSON value with permission to upload Firebase App Distribution releases.
 aliases, not raw tester email addresses.
 
 The workflow writes the service account JSON only to the runner temporary
-directory, exposes it through `GOOGLE_APPLICATION_CREDENTIALS`, and does not
-upload it as an artifact. Missing secrets cause the workflow to fail before the
-Firebase upload step.
+directory, locks the file to the current runner user, exposes it through
+`GOOGLE_APPLICATION_CREDENTIALS`, and deletes it in an `always()` cleanup step.
+The Firebase app ID and tester-group aliases are masked in logs. Missing secrets
+cause the workflow to fail before the Firebase upload step.
 
 ## Artifacts
 
@@ -94,7 +97,9 @@ androidApp/app/build/outputs/apk/debug/*.apk
 
 No keystores, service-account files, Firebase credentials, Play Store
 credentials, mapping files, crash-reporting tokens, or private tester data are
-uploaded by this workflow.
+uploaded by this workflow. The workflow summary records only the ref, version,
+APK artifact name, and job result; it intentionally omits tester groups, release
+notes content, and secret values.
 
 ## Release Notes
 
@@ -124,3 +129,28 @@ Intentionally not automated here:
 Keep production publishing and internal tester distribution separate until a
 future release workflow explicitly defines promotion rules, approval gates,
 Play Console credentials, and rollback behavior.
+
+## Closure Checklist For #120
+
+`T-E17-02 - Configure App Distribution/internal tester flow` is complete when
+all of these repository-side items remain true:
+
+- `.github/workflows/internal-distribution.yml` can be run manually or from a
+  `beta-*` tag.
+- The workflow validates Gradle project discovery, debug lint, JVM/shared tests,
+  and debug APK assembly before upload.
+- The debug APK is retained as a GitHub Actions artifact with version, version
+  code, ref, and run number in the artifact name.
+- Firebase upload requires `FIREBASE_APP_ID`,
+  `FIREBASE_SERVICE_ACCOUNT_JSON`, and `FIREBASE_TESTER_GROUPS` secrets and
+  fails before upload when any are missing.
+- Firebase credentials are written only to runner temp storage, are not uploaded
+  as artifacts, are masked where practical, and are removed during cleanup.
+- Release notes support both manual workflow input and tag-triggered commit
+  messages, with no release-note content echoed into summaries.
+- The workflow is documented here and summarized from `docs/ci-cd.md` so
+  maintainers know it is for internal debug tester feedback only, not Play Store
+  publication or production release promotion.
+
+After those checks are present in `dev`, #120 can be closed. Its parent #119 can
+then be closed once #121 and #122 are also closed.

@@ -274,6 +274,9 @@ change affects startup, scrolling, release/R8 behavior, or profile coverage.
 - #23 is covered by `.github/workflows/pr-validation.yml`, Gradle setup/cache,
   automated lint/test/build verification, release/R8 assembly, benchmark artifact
   assembly, README badges, and this workflow documentation.
+- #120 is covered by `.github/workflows/internal-distribution.yml`, Firebase
+  App Distribution secret validation, internal debug APK artifact upload,
+  release-note handling, credential cleanup, and `docs/internal-distribution.md`.
 - #123 is covered by the PR validation, release candidate, screenshot/benchmark,
   and internal distribution workflows plus the README badges and local commands.
 - #16 is implemented from the repository side once GitHub branch protection
