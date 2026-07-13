@@ -72,6 +72,8 @@ Prefer accessibility semantics over arbitrary test tags when the same signal is
 useful to users and tests. Add test tags only for stable containers or controls
 that cannot be addressed reliably by text/content description.
 
+Manual TalkBack, keyboard/D-pad, 200% font-scale, and contrast QA for #14 lives in [accessibility-qa.md](accessibility-qa.md). UI PRs should run that pass for changed primary screens or document why it is N/A.
+
 When no emulator or device is attached, assemble Android test APKs for changed
 modules. Run connected Android tests when a device is available.
 

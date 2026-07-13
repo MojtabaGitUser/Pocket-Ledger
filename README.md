@@ -58,6 +58,7 @@ or device and are intentionally not part of default PR validation.
 - [Future extension contracts](docs/future/extension-contracts.md): issue-traceable future contract index for #142-#146.
 - [ADR 0001: Modular Architecture and KMP-Ready Structure](docs/adr/0001-modular-architecture.md): decision record for the modular architecture direction.
 - [Android testing report](androidApp/docs/testing-report.md): current test suite inventory, validation results, performance checks, release/R8 coverage, and known gaps.
+- [Accessibility QA pass](androidApp/docs/accessibility-qa.md): #14 TalkBack, keyboard/D-pad, 200% font-scale, and contrast QA gates for UI changes and release candidates.
 - [Android performance benchmarks](androidApp/docs/performance-report.md): Macrobenchmark and Baseline Profile generation setup, local device requirements, and update commands.
 - [Android security model](androidApp/docs/security-model.md): current local data storage, app lock, AI privacy, logging, threat model, and known limitations.
 - [CI/CD strategy](docs/ci-cd.md): PR validation, controlled screenshot and benchmark workflows, artifacts, and release-safety boundaries.

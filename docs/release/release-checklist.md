@@ -162,6 +162,8 @@ Run connected checks when hardware is available:
   accessibility labels, logs, crash metadata, or artifacts.
 - [ ] E-16 accessibility semantics, state descriptions, and 200% font scaling
   checks were preserved.
+- [ ] #14 TalkBack, keyboard/D-pad, 200% font-scale, and contrast QA pass in
+  androidApp/docs/accessibility-qa.md was completed or marked N/A with a reason.
 - [ ] AI/privacy behavior was reviewed against `docs/ai-architecture.md` and
   `docs/ai-privacy-safety-checklist.md`; current AI behavior remains local,
   on-device-provider-shell, no-op, or deterministic rule-based fallback only.
@@ -192,7 +194,8 @@ Run connected checks when hardware is available:
 - [ ] Adaptive screenshot/font-scale evidence was reviewed when UI changes are
   included.
 - [ ] Accessibility labels, headings, state descriptions, focus order, and large
-  font behavior were checked for changed screens.
+  font behavior were checked for changed screens using
+  androidApp/docs/accessibility-qa.md.
 
 ## Known Limitations
 
