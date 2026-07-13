@@ -137,7 +137,9 @@ handoff.
 This workflow supports `US-E18-01 - Prepare production-ready Play Store release`
 by producing repeatable release candidate artifacts, validating the release/R8
 path, preserving mapping files, and giving internal testers an AAB candidate for
-Play Console upload. It does not replace the remaining Play Store readiness
-work: privacy policy, app content declarations, store listing assets,
-screenshots, device smoke tests, and the final release checklist in `docs/release/release-checklist.md` still needs
-to be completed before production submission.
+Play Console upload. Before promoting any artifact, complete
+`docs/release/release-checklist.md`; that checklist is the human release gate
+for signing evidence, artifact retention, privacy review, Play Console app-content
+declarations, store listing assets, screenshots, device smoke tests, accessibility,
+and performance checks. The workflow and checklist do not close #17 by themselves
+until those Play Store items are complete and reviewed.

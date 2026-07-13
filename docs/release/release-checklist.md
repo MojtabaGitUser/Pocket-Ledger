@@ -4,6 +4,46 @@ Use this checklist before treating a Pocket Ledger artifact as release-ready.
 PR validation and release-candidate workflows support this process, but they do
 not replace human review for signing, privacy, and Play Store readiness.
 
+This file completes #216 and is also the release-gate reference for #23, #123,
+and the release-workflow portion of #16.
+
+
+## Release Candidate Artifact Inventory
+
+Record these artifacts for every candidate before internal testing or Play Store
+promotion:
+
+- [ ] Release APK from `androidApp/app/build/outputs/apk/release/` is attached
+  to the release record for smoke testing and reviewer install checks.
+- [ ] Release AAB from `androidApp/app/build/outputs/bundle/release/` is attached
+  to the release record and is the artifact intended for Play Console upload.
+- [ ] R8 mapping files from `androidApp/app/build/outputs/mapping/release/` are
+  retained with the exact app version and Git commit.
+- [ ] Lint, JVM/shared test, and release validation reports are retained from the
+  release candidate workflow artifacts.
+- [ ] Version metadata is recorded: `versionName`, `versionCode`, Git SHA,
+  branch or tag, GitHub run number, signing-required flag, and whether the build
+  was signed or unsigned validation output.
+
+
+## CI Validation Gates
+
+- [ ] `PR Validation / Android validation` passed for the candidate commit or
+  merge commit.
+- [ ] GitHub branch protection requires `PR Validation / Android validation` on
+  `dev` and `main` before unsafe merges are allowed.
+- [ ] `.github/workflows/release-candidate.yml` passed for the selected release
+  branch, `rc/**` branch, `v*` tag, `rc-*` tag, or manual dispatch run.
+- [ ] Release/R8 path was validated through `:app:assembleRelease`.
+- [ ] Android lint passed through `lintDebug` for PR validation and `lintRelease`
+  for release candidate validation.
+- [ ] JVM/shared tests passed through `testDebugUnitTest :shared:allTests`.
+- [ ] Benchmark artifacts were assembled through
+  `:app:assembleBenchmark :macrobenchmark:assemble`.
+- [ ] Screenshot/benchmark workflow was run manually or from schedule when UI,
+  layout, accessibility font-scale, theme, or performance-sensitive behavior
+  changed.
+
 ## Signing And Versioning
 
 - [ ] Build variants were reviewed: `debug` is for local/internal diagnostics,
@@ -173,6 +213,14 @@ Run connected checks when hardware is available:
 - [ ] PR checklist items were completed or marked N/A with a reason.
 - [ ] Known limitations were accepted by the release owner.
 - [ ] Issue traceability is documented:
+  - #216 release checklist completed and linked from README/release docs.
+  - #23 GitHub Actions workflow, PR quality gates, badges, and docs complete.
+  - #123 delivery pipeline tasks are represented by PR validation, release
+    candidate, screenshot/benchmark, and internal distribution workflows.
+  - #16 CI/CD automation is closeable after GitHub branch protection requires
+    `PR Validation / Android validation` for `dev` and `main`.
+  - #17 stays open until Play Store assets, public privacy URL, app-content
+    declarations, and production submission evidence are complete.
   - #129 release checklist completed/updated; manual release gates remain.
   - #131 store listing copy and asset plan prepared; Play Console upload and
     final binary graphics remain manual unless completed separately.
