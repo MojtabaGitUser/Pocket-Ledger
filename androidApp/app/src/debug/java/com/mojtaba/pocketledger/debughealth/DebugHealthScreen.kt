@@ -32,12 +32,21 @@ fun DebugHealthScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current.applicationContext
-    val factory = remember(context, appGraph.featureFlags, appGraph.productAnalyticsProviderState, appGraph.backgroundTaskScheduler) {
+    val factory = remember(
+        context,
+        appGraph.featureFlags,
+        appGraph.productAnalyticsProviderState,
+        appGraph.backgroundTaskScheduler,
+        appGraph.crashReporter.status,
+        appGraph.startupFailureReporter.status,
+    ) {
         DebugHealthReportFactory.from(
             context = context,
             featureFlags = appGraph.featureFlags,
             analyticsProviderState = appGraph.productAnalyticsProviderState,
             backgroundTaskScheduler = appGraph.backgroundTaskScheduler,
+            crashReportingStatus = appGraph.crashReporter.status,
+            startupFailureStatus = appGraph.startupFailureReporter.status,
         )
     }
     val report = produceState<DebugHealthReport?>(initialValue = null, factory) {

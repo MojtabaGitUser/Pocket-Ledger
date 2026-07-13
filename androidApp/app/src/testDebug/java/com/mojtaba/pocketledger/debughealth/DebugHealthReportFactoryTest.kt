@@ -3,6 +3,9 @@ package com.mojtaba.pocketledger.debughealth
 import com.mojtaba.pocketledger.core.background.TaskStatus
 import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationTask
 import com.mojtaba.pocketledger.core.testing.scheduler.FakeScheduler
+import com.mojtaba.pocketledger.observability.CrashReportingStatus
+import com.mojtaba.pocketledger.observability.StartupFailureSnapshot
+import com.mojtaba.pocketledger.observability.StartupFailureStatus
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -31,10 +34,46 @@ class DebugHealthReportFactoryTest {
         assertStatus(report, "Build type", "debug")
         assertStatus(report, "PR validation", "Configured via CI")
         assertStatus(report, "App Distribution", "Configured via CI")
+        assertStatus(report, "Crash reporting", "Configured but disabled")
+        assertStatus(report, "Crash collection gate", "Disabled")
+        assertStatus(report, "Startup failure tracker", "Enabled")
+        assertStatus(report, "Last critical startup failure", "None recorded")
         assertStatus(report, "Product event taxonomy", "Configured")
         assertStatus(report, "Analytics provider", "Debug sink")
         assertStatus(report, "Monthly summary preparation", "Not scheduled")
         assertStatus(report, "Release diagnostics privacy", "Release hidden")
+    }
+
+    @Test
+    fun reportIncludesActiveCrashReportingStatus() = runTest {
+        val report = factory(
+            crashReportingStatus = CrashReportingStatus(
+                provider = "Firebase Crashlytics",
+                configured = true,
+                collectionEnabled = true,
+            ),
+            crashReportingEnabled = true,
+        ).create()
+
+        assertStatus(report, "Crash reporting", "Configured and enabled")
+        assertStatus(report, "Crash collection gate", "Enabled")
+    }
+
+    @Test
+    fun reportIncludesStartupFailureSnapshotWithoutRawThrowableMessage() = runTest {
+        val report = factory(
+            startupFailureStatus = StartupFailureStatus(
+                trackerEnabled = true,
+                lastFailure = StartupFailureSnapshot(
+                    stage = "app_graph_create",
+                    throwableClassName = IllegalStateException::class.java.name,
+                    occurredAtMillis = 1_234L,
+                    reportedToCrashReporter = true,
+                ),
+            ),
+        ).create()
+
+        assertStatus(report, "Last critical startup failure", "IllegalStateException at app_graph_create reported=true")
     }
 
     @Test
@@ -80,6 +119,16 @@ class DebugHealthReportFactoryTest {
     private fun factory(
         scheduler: FakeScheduler = FakeScheduler(),
         backgroundJobsEnabled: Boolean = false,
+        crashReportingStatus: CrashReportingStatus = CrashReportingStatus(
+            provider = "Firebase Crashlytics",
+            configured = true,
+            collectionEnabled = false,
+        ),
+        crashReportingEnabled: Boolean = false,
+        startupFailureStatus: StartupFailureStatus = StartupFailureStatus(
+            trackerEnabled = true,
+            lastFailure = null,
+        ),
     ): DebugHealthReportFactory =
         DebugHealthReportFactory(
             buildInfo = DebugHealthBuildInfo(
@@ -93,6 +142,7 @@ class DebugHealthReportFactoryTest {
                 debuggable = true,
                 internalBuild = true,
                 loggingEnabled = true,
+                crashReportingEnabled = crashReportingEnabled,
                 ci = false,
                 firebaseConfigured = true,
                 analyticsProviderState = "Debug sink",
@@ -106,6 +156,8 @@ class DebugHealthReportFactoryTest {
             ),
             backgroundTaskScheduler = scheduler,
             backgroundJobsEnabled = backgroundJobsEnabled,
+            crashReportingStatus = crashReportingStatus,
+            startupFailureStatus = startupFailureStatus,
         )
 
     private fun assertStatus(

@@ -32,6 +32,7 @@ window = "1.4.0"
 work = "2.11.2"
 firebaseBom = "34.15.0"
 googleServices = "4.4.3"
+crashlyticsGradle = "3.0.6"
 composeMultiplatform = "1.9.0"
 
 [libraries]
@@ -84,6 +85,7 @@ androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx"
 androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 
 
 [plugins]
@@ -98,5 +100,6 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlyticsGradle" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

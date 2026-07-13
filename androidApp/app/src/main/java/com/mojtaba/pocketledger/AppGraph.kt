@@ -41,6 +41,13 @@ import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
 import com.mojtaba.pocketledger.core.security.preferences.EncryptedSensitivePreferences
 import com.mojtaba.pocketledger.core.security.preferences.InMemorySensitivePreferences
 import com.mojtaba.pocketledger.core.security.preferences.SensitivePreferences
+import com.mojtaba.pocketledger.observability.CrashReporter
+import com.mojtaba.pocketledger.observability.CrashReporterFactory
+import com.mojtaba.pocketledger.observability.CrashReportingStatus
+import com.mojtaba.pocketledger.observability.DefaultStartupFailureReporter
+import com.mojtaba.pocketledger.observability.NoOpCrashReporter
+import com.mojtaba.pocketledger.observability.NoOpStartupFailureReporter
+import com.mojtaba.pocketledger.observability.StartupFailureReporter
 import com.mojtaba.pocketledger.security.AndroidBiometricAppLockAuthenticator
 
 @Composable
@@ -66,6 +73,8 @@ class PocketLedgerAppGraph private constructor(
     val backgroundJobSettingsManager: BackgroundJobSettingsManager,
     @Suppress("unused")
     val appLogger: AppLogger,
+    val crashReporter: CrashReporter,
+    val startupFailureReporter: StartupFailureReporter,
     @Suppress("unused")
     val productAnalyticsLogger: ProductAnalyticsLogger,
     val productAnalyticsProviderState: ProductAnalyticsProviderState,
@@ -84,6 +93,10 @@ class PocketLedgerAppGraph private constructor(
             backgroundTaskScheduler: BackgroundTaskScheduler,
             backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
             appLogger: AppLogger,
+            crashReporter: CrashReporter = NoOpCrashReporter(
+                CrashReportingStatus(provider = "No-op", configured = false, collectionEnabled = false),
+            ),
+            startupFailureReporter: StartupFailureReporter = NoOpStartupFailureReporter(),
             productAnalyticsLogger: ProductAnalyticsLogger = NoOpProductAnalyticsLogger(),
             productAnalyticsProviderState: ProductAnalyticsProviderState = ProductAnalyticsProviderState.NoOp,
         ): PocketLedgerAppGraph = PocketLedgerAppGraph(
@@ -103,6 +116,8 @@ class PocketLedgerAppGraph private constructor(
                 featureFlags = featureFlags,
             ),
             appLogger = appLogger,
+            crashReporter = crashReporter,
+            startupFailureReporter = startupFailureReporter,
             productAnalyticsLogger = productAnalyticsLogger,
             productAnalyticsProviderState = productAnalyticsProviderState,
         )
@@ -111,74 +126,93 @@ class PocketLedgerAppGraph private constructor(
             context: Context,
             activityProvider: () -> FragmentActivity? = { null },
         ): PocketLedgerAppGraph {
-            val database = createPocketLedgerDatabase(context)
             val loggingPolicy = if (BuildConfig.LOGGING_ENABLED) {
                 LoggingPolicy.Debug
             } else {
                 LoggingPolicy.Release
             }
             val appLogger = SafeAppLogger(policy = loggingPolicy)
-            val analyticsProviderState = if (BuildConfig.LOGGING_ENABLED) {
-                ProductAnalyticsProviderState.DebugSink
-            } else {
-                ProductAnalyticsProviderState.NoOp
-            }
-            val productAnalyticsLogger = if (BuildConfig.LOGGING_ENABLED) {
-                DebugProductAnalyticsLogger { event ->
-                    appLogger.debug("Product event logged name=${event.name} parameters=${event.parameters}")
-                }
-            } else {
-                NoOpProductAnalyticsLogger()
-            }
-            val featureFlags = FeatureFlagEvaluator(LocalFeatureFlagProvider())
-            val aiProviderSelector = AiProviderSelector(
-                providers = listOf(
-                    GeminiNanoAiProvider(),
-                    MlKitAiProvider(),
-                    RuleBasedAiProvider,
-                    NoOpAiProvider,
-                ),
-                featureFlags = featureFlags,
+            val crashReporter = CrashReporterFactory.create(
+                context = context,
+                collectionEnabled = BuildConfig.CRASH_REPORTING_ENABLED,
             )
-            val sensitivePreferences = if (BuildConfig.APP_ENV == "benchmark") {
-                InMemorySensitivePreferences()
-            } else {
-                EncryptedSensitivePreferences(context)
-            }
-
-            val backgroundTaskScheduler = WorkManagerScheduler(
-                workManager = WorkManager.getInstance(context),
-                workerRegistry = TaskWorkerRegistry(
-                    mapOf(MonthlySummaryPreparationTask.Id to MonthlySummaryPreparationWorker::class.java),
-                ),
-            )
-
-            return PocketLedgerAppGraph(
-                transactionRepository = LocalTransactionRepository(database.transactionDao()),
-                budgetRepository = LocalBudgetRepository(database.budgetDao()),
-                categoryRepository = LocalCategoryRepository(database.categoryDao()),
-                tagRepository = LocalTagRepository(database.tagDao()),
-                featureFlags = featureFlags,
-                aiProviderSelector = aiProviderSelector,
-                aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
-                sensitivePreferences = sensitivePreferences,
-                appLockManager = AppLockManager(
-                    preferences = sensitivePreferences,
-                    authenticator = AndroidBiometricAppLockAuthenticator(
-                        biometricManager = BiometricManager.from(context),
-                        activityProvider = activityProvider,
-                    ),
-                ),
-                backgroundTaskScheduler = backgroundTaskScheduler,
-                backgroundJobSettingsManager = BackgroundJobSettingsManager(
-                    preferences = sensitivePreferences,
-                    scheduler = backgroundTaskScheduler,
-                    featureFlags = featureFlags,
-                ),
+            val startupFailureReporter = DefaultStartupFailureReporter(
+                crashReporter = crashReporter,
                 appLogger = appLogger,
-                productAnalyticsLogger = productAnalyticsLogger,
-                productAnalyticsProviderState = analyticsProviderState,
             )
+
+            return runCatching {
+                val database = createPocketLedgerDatabase(context)
+                val analyticsProviderState = if (BuildConfig.LOGGING_ENABLED) {
+                    ProductAnalyticsProviderState.DebugSink
+                } else {
+                    ProductAnalyticsProviderState.NoOp
+                }
+                val productAnalyticsLogger = if (BuildConfig.LOGGING_ENABLED) {
+                    DebugProductAnalyticsLogger { event ->
+                        appLogger.debug("Product event logged name=${event.name} parameters=${event.parameters}")
+                    }
+                } else {
+                    NoOpProductAnalyticsLogger()
+                }
+                val featureFlags = FeatureFlagEvaluator(LocalFeatureFlagProvider())
+                val aiProviderSelector = AiProviderSelector(
+                    providers = listOf(
+                        GeminiNanoAiProvider(),
+                        MlKitAiProvider(),
+                        RuleBasedAiProvider,
+                        NoOpAiProvider,
+                    ),
+                    featureFlags = featureFlags,
+                )
+                val sensitivePreferences = if (BuildConfig.APP_ENV == "benchmark") {
+                    InMemorySensitivePreferences()
+                } else {
+                    EncryptedSensitivePreferences(context)
+                }
+
+                val backgroundTaskScheduler = WorkManagerScheduler(
+                    workManager = WorkManager.getInstance(context),
+                    workerRegistry = TaskWorkerRegistry(
+                        mapOf(MonthlySummaryPreparationTask.Id to MonthlySummaryPreparationWorker::class.java),
+                    ),
+                )
+
+                PocketLedgerAppGraph(
+                    transactionRepository = LocalTransactionRepository(database.transactionDao()),
+                    budgetRepository = LocalBudgetRepository(database.budgetDao()),
+                    categoryRepository = LocalCategoryRepository(database.categoryDao()),
+                    tagRepository = LocalTagRepository(database.tagDao()),
+                    featureFlags = featureFlags,
+                    aiProviderSelector = aiProviderSelector,
+                    aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
+                    sensitivePreferences = sensitivePreferences,
+                    appLockManager = AppLockManager(
+                        preferences = sensitivePreferences,
+                        authenticator = AndroidBiometricAppLockAuthenticator(
+                            biometricManager = BiometricManager.from(context),
+                            activityProvider = activityProvider,
+                        ),
+                    ),
+                    backgroundTaskScheduler = backgroundTaskScheduler,
+                    backgroundJobSettingsManager = BackgroundJobSettingsManager(
+                        preferences = sensitivePreferences,
+                        scheduler = backgroundTaskScheduler,
+                        featureFlags = featureFlags,
+                    ),
+                    appLogger = appLogger,
+                    crashReporter = crashReporter,
+                    startupFailureReporter = startupFailureReporter,
+                    productAnalyticsLogger = productAnalyticsLogger,
+                    productAnalyticsProviderState = analyticsProviderState,
+                )
+            }.getOrElse { throwable ->
+                startupFailureReporter.recordCriticalFailure(
+                    throwable = throwable,
+                    stage = "app_graph_create",
+                )
+                throw throwable
+            }
         }
     }
 }

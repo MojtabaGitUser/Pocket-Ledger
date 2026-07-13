@@ -37,6 +37,7 @@ data class DebugHealthBuildInfo(
     val debuggable: Boolean,
     val internalBuild: Boolean,
     val loggingEnabled: Boolean,
+    val crashReportingEnabled: Boolean,
     val ci: Boolean,
     val firebaseConfigured: Boolean,
     val analyticsProviderState: String,
