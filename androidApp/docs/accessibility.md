@@ -159,6 +159,10 @@ Examples:
 - `No matching transactions. Clear filters or try a different keyword.`
 - `Could not load dashboard. Retry`
 
+## TalkBack, Keyboard, And QA Pass
+
+Manual TalkBack, keyboard/D-pad traversal, 200% font-scale, and contrast review gates are recorded in [accessibility-qa.md](accessibility-qa.md). Use that pass for #14 closure, UI-heavy PRs, and release candidates.
+
 ## Tests
 
 Compose UI tests should assert semantics for primary paths, not only visible
