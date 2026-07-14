@@ -1,4 +1,4 @@
-﻿# Pocket Ledger Architecture
+# Pocket Ledger Architecture
 
 This document explains the current Android/Kotlin Multiplatform project structure, the intended module ownership boundaries, and the dependency rules reviewers should enforce during PR review.
 

@@ -33,6 +33,10 @@ sealed interface AppDestination {
         override val route = "debug/health"
     }
 
+    data object DebugFeatureFlags : AppDestination {
+        override val route = "debug/feature-flags"
+    }
+
     companion object {
         const val DEEP_LINK_SCHEME = "pocketledger"
         const val DEEP_LINK_HOST = "app"

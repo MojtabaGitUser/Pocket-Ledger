@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.mojtaba.pocketledger.adaptive.LocalAdaptiveNavigationState
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
+import com.mojtaba.pocketledger.debugflags.DebugFeatureFlagOverridesScreen
 import com.mojtaba.pocketledger.debughealth.DebugHealthScreen
 import com.mojtaba.pocketledger.feature.dashboard.insights.InsightsRoute
 import com.mojtaba.pocketledger.feature.dashboard.navigation.dashboardGraph
@@ -78,6 +79,9 @@ fun PocketLedgerNavGraph(
         if (includeDebugDestinations) {
             placeholderDestination(AppDestination.DebugHealth) {
                 DebugHealthScreen(appGraph = appGraph)
+            }
+            placeholderDestination(AppDestination.DebugFeatureFlags) {
+                DebugFeatureFlagOverridesScreen(appGraph = appGraph)
             }
         }
     }

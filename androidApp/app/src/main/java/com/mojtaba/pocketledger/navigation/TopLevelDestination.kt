@@ -35,4 +35,9 @@ enum class TopLevelDestination(
         label = "Debug",
         shortLabel = "D",
     ),
+    DebugFeatureFlags(
+        destination = AppDestination.DebugFeatureFlags,
+        label = "Flags",
+        shortLabel = "F",
+    ),
 }

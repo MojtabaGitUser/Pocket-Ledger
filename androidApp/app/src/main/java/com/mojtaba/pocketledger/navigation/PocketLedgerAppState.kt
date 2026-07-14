@@ -37,6 +37,7 @@ class PocketLedgerAppState(
             add(TopLevelDestination.Settings)
             if (includeDebugDestinations) {
                 add(TopLevelDestination.DebugHealth)
+                add(TopLevelDestination.DebugFeatureFlags)
             }
         }
 
