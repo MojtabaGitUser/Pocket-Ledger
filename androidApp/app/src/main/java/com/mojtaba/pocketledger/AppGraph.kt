@@ -33,7 +33,10 @@ import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
 import com.mojtaba.pocketledger.core.database.createPocketLedgerDatabase
 import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
+import com.mojtaba.pocketledger.core.featureflags.InMemoryFeatureFlagOverrideStore
 import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
+import com.mojtaba.pocketledger.core.featureflags.OverrideableFeatureFlagProvider
+import com.mojtaba.pocketledger.core.featureflags.SharedPreferencesFeatureFlagOverrideStore
 import com.mojtaba.pocketledger.core.security.applock.AppLockManager
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
 import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
@@ -64,6 +67,7 @@ class PocketLedgerAppGraph private constructor(
     val categoryRepository: CategoryRepository,
     val tagRepository: TagRepository,
     val featureFlags: FeatureFlagEvaluator,
+    val featureFlagProvider: OverrideableFeatureFlagProvider,
     val aiProviderSelector: AiProviderSelector,
     val aiFallbackStrategy: AiFallbackStrategy,
     val sensitivePreferences: SensitivePreferences,
@@ -86,6 +90,7 @@ class PocketLedgerAppGraph private constructor(
             categoryRepository: CategoryRepository,
             tagRepository: TagRepository,
             featureFlags: FeatureFlagEvaluator,
+            featureFlagProvider: OverrideableFeatureFlagProvider = OverrideableFeatureFlagProvider(),
             aiProviderSelector: AiProviderSelector,
             aiFallbackStrategy: AiFallbackStrategy,
             sensitivePreferences: SensitivePreferences,
@@ -105,6 +110,7 @@ class PocketLedgerAppGraph private constructor(
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
             featureFlags = featureFlags,
+            featureFlagProvider = featureFlagProvider,
             aiProviderSelector = aiProviderSelector,
             aiFallbackStrategy = aiFallbackStrategy,
             sensitivePreferences = sensitivePreferences,
@@ -155,7 +161,20 @@ class PocketLedgerAppGraph private constructor(
                 } else {
                     NoOpProductAnalyticsLogger()
                 }
-                val featureFlags = FeatureFlagEvaluator(LocalFeatureFlagProvider())
+                val featureFlagProvider = OverrideableFeatureFlagProvider(
+                    baseProvider = LocalFeatureFlagProvider(),
+                    overrideStore = if (BuildConfig.APP_ENV == "debug") {
+                        SharedPreferencesFeatureFlagOverrideStore(
+                            context.getSharedPreferences(
+                                "pocket_ledger_feature_flag_overrides",
+                                Context.MODE_PRIVATE,
+                            ),
+                        )
+                    } else {
+                        InMemoryFeatureFlagOverrideStore()
+                    },
+                )
+                val featureFlags = FeatureFlagEvaluator(featureFlagProvider)
                 val aiProviderSelector = AiProviderSelector(
                     providers = listOf(
                         GeminiNanoAiProvider(),
@@ -184,6 +203,7 @@ class PocketLedgerAppGraph private constructor(
                     categoryRepository = LocalCategoryRepository(database.categoryDao()),
                     tagRepository = LocalTagRepository(database.tagDao()),
                     featureFlags = featureFlags,
+                    featureFlagProvider = featureFlagProvider,
                     aiProviderSelector = aiProviderSelector,
                     aiFallbackStrategy = AiFallbackStrategy(aiProviderSelector),
                     sensitivePreferences = sensitivePreferences,
