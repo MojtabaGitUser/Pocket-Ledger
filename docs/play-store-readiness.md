@@ -28,8 +28,8 @@ checklist. If app behavior changes, update this document and
 - Runtime analytics boundary:
   `androidApp/app/src/main/java/com/mojtaba/pocketledger/AppGraph.kt` and
   `androidApp/core/analytics`.
-- Privacy, release, CI/CD, security, logging, accessibility, signing, and
-  internal distribution docs under `docs/` and `androidApp/docs/`.
+- Privacy, release, CI/CD, security, logging, accessibility, signing, install,
+  and internal distribution docs under `docs/` and `androidApp/docs/`.
 
 No `Pocket_Ledger_Complete_Backlog.docx` file is present in the repository.
 Backlog context that is present lives in `docs/github-issue-import-report.md`.
@@ -176,8 +176,8 @@ release and after any future backup/profile work.
 ## Store Listing And Assets
 
 Repository-ready listing copy, release notes, screenshot sources, asset file
-names, expected dimensions to verify, and manual Play Console steps are tracked
-in `docs/release/play-store-assets.md`.
+names, expected dimensions to verify, acceptance matrix, and manual Play
+Console steps are tracked in `docs/release/play-store-assets.md`.
 
 Current #131 status:
 
@@ -192,6 +192,25 @@ Current #131 status:
 Do not claim final Play Store graphic upload or Play Console approval from this
 repository state alone.
 
+
+## Release-Ready Install Evidence
+
+#128 is tracked by `docs/release/release-ready-install.md` and
+`docs/release/smoke-test.md`.
+
+Current #128 status:
+
+- Repository runbook defines signed release APK/AAB, Play internal testing AAB,
+  benchmark release-like APK, and debug APK boundaries.
+- Release signing validation is documented and must pass for true signed release
+  artifacts.
+- Benchmark APK remains the closest local release-like installer when signing
+  secrets are unavailable.
+- Actual install, launch, logcat, and core-flow smoke evidence still requires a
+  named physical device or emulator.
+
+Do not claim #128 complete until install evidence is recorded in the smoke-test
+record.
 ## Optional Backup-Ready Profile
 
 The #81 backup-ready profile foundation is documented in
@@ -207,8 +226,8 @@ correct Play Store disclosure basis.
   `docs/release/release-checklist.md`; signed release, Play Console upload,
   public hosting, legal review, and hardware performance checks remain manual
   release gates.
-- #131: store listing copy and asset plan are repository-ready; final graphics
-  and Play Console upload remain manual.
+- #131: store listing copy, asset acceptance matrix, and screenshot plan are
+  repository-ready; final graphics and Play Console upload remain manual.
 - #132: privacy policy is maintained in `docs/privacy-policy.md` and must be
   hosted before public release.
 - #7: local data security criteria are mapped in
@@ -216,3 +235,8 @@ correct Play Store disclosure basis.
   Play Integrity enforcement.
 - #81: optional backup-ready profile foundation is implemented and documented.
   Ledger data remains excluded from Android backup and device transfer.
+- #128: release-ready install runbook is repository-ready; actual close
+  evidence requires a named device/emulator or Play internal testing install.
+- #17: parent Play Store release story remains open until release signing,
+  install evidence, hosted privacy URL, app-content declarations, final assets,
+  and release checklist review are complete.
