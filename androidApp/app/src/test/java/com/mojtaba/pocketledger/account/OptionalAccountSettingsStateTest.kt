@@ -3,7 +3,6 @@ package com.mojtaba.pocketledger.account
 import com.mojtaba.pocketledger.core.featureflags.DefaultFeatureFlags
 import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
-import com.mojtaba.pocketledger.core.security.integrity.NoOpPlayIntegrityRequestHook
 import com.mojtaba.pocketledger.core.security.integrity.PlayIntegrityAvailability
 import com.mojtaba.pocketledger.core.security.integrity.PlayIntegrityRequest
 import com.mojtaba.pocketledger.core.security.integrity.PlayIntegrityRequestHook
@@ -31,6 +30,7 @@ class OptionalAccountSettingsStateTest {
         assertFalse(state.featureEnabled)
         assertFalse(state.controlsEnabled)
         assertEquals("Off", state.stateDescription)
+        assertEquals(OptionalAccountAuthenticationUiState.LocalOnly, state.authenticationUiState)
     }
 
     @Test
@@ -43,6 +43,7 @@ class OptionalAccountSettingsStateTest {
 
         assertTrue(state.controlsEnabled)
         assertEquals("Ready", state.stateDescription)
+        assertEquals(OptionalAccountAuthenticationUiState.Ready, state.authenticationUiState)
     }
 
     @Test
@@ -55,6 +56,20 @@ class OptionalAccountSettingsStateTest {
 
         assertFalse(state.controlsEnabled)
         assertEquals("Unavailable", state.stateDescription)
+        assertEquals(OptionalAccountAuthenticationUiState.ProviderUnavailable, state.authenticationUiState)
+    }
+
+    @Test
+    fun enabledFeatureReportsPartialReadinessWhenIntegrityHookIsUnavailable() {
+        val state = OptionalAccountSettingsState(
+            featureEnabled = true,
+            passkeyClientAvailable = true,
+            playIntegrityHookAvailable = false,
+        )
+
+        assertTrue(state.controlsEnabled)
+        assertEquals("Partially ready", state.stateDescription)
+        assertEquals(OptionalAccountAuthenticationUiState.ReadyWithoutIntegrity, state.authenticationUiState)
     }
 
     private fun availablePasskeyClient(): PasskeyClient = object : PasskeyClient {
