@@ -51,8 +51,9 @@ preferences, external app files, device-protected storage, caches, logs, temp
 folders, debug folders, and generated report folders.
 
 No app-private Pocket Ledger data is intentionally included in automatic cloud
-backup or device-to-device transfer. This is a privacy-safe default because the
-optional backup-ready profile from #81 is not implemented and the ledger
+backup or device-to-device transfer. This is a privacy-safe default because #81
+implements only the local-first backup-ready profile foundation; encrypted
+ledger backup, restore, and recovery are not implemented, and the ledger
 database is not encrypted by Pocket Ledger. This hardening supports related
 security story #7 and release-hardening story #129, but it does not complete
 those parent stories by itself.
@@ -172,13 +173,15 @@ Excluded by both cloud backup and device-to-device transfer rules:
 
 The ledger database contains personal finance data and is not encrypted by
 Pocket Ledger, so it is excluded from automatic cloud backup and device transfer
-until a separate #81 backup-ready profile designs safe user-facing behavior.
+because #81 intentionally keeps automatic ledger backup disabled until
+encrypted backup and restore behavior exist.
 Encrypted preferences are also excluded because their security depends on
 Android Keystore state and they can contain local-only security settings or
 future account/passkey values.
 
-This #227 policy supports #7 local-data security and #129 release hardening, but
-it is not a claim that #7, #81, or #129 are complete.
+This #227 policy supports #7 local-data security, #81 backup-ready profile
+foundation behavior, and #129 release hardening. It is not a claim that
+encrypted ledger backup, restore, or server-backed recovery is complete.
 
 ## AI Privacy Model
 
@@ -393,12 +396,11 @@ Historical E-08 security checklist mapping:
 
 ## #81 Optional Backup-Ready Profile Traceability
 
-The repository now documents the planned #81 profile in
-`docs/backup-ready-profile.md`. Current code has disabled feature flags for
-future passkey/account and cloud sync entry points, reserved sensitive
-preference keys, and the optional passkey foundation documented in
-`docs/optional-account-passkey-foundation.md`. It does not implement user
-opt-in for backup, backup encryption, recovery flows, restore behavior, or a
+The repository implements the local-first #81 profile foundation documented in
+`docs/backup-ready-profile.md`. Current code stores explicit opt-in state in
+`SensitivePreferences`, derives account/cloud prerequisites from feature flags
+and passkey/session state, and exposes the status in Settings. It does not
+implement encrypted ledger backup, recovery flows, restore behavior, or a
 production server-backed profile.
 
 Until those pieces exist, #227 remains the correct privacy-safe policy: exclude
@@ -442,6 +444,6 @@ credentials, or raw user text. Logging redaction reduces risk but does not make
 it acceptable to log sensitive values.
 
 Cloud backup and device transfer rules are explicitly locked down by #227 to
-exclude app-private ledger data and local-only sensitive state. This remains a
-privacy-safe default until a separately reviewed optional backup-ready profile
-from #81 exists.
+exclude app-private ledger data and local-only sensitive state. The #81
+foundation preserves that privacy-safe default until encrypted backup and
+restore are separately implemented and reviewed.

@@ -180,10 +180,10 @@ Run connected checks when hardware is available:
   raw secret storage was added.
 - [ ] Optional app lock remains user-controlled and does not claim to encrypt
   the Room ledger database.
-- [ ] #81 remains planned unless a real opt-in account/passkey/backend/recovery
-  profile flow is implemented and tested.
-- [ ] #227 deny-by-default backup and transfer policy remains correct until #81
-  changes it through reviewed implementation.
+- [ ] #81 local-first backup-ready profile foundation was reviewed; do not
+  claim encrypted ledger backup, restore, backend recovery, or cloud sync.
+- [ ] #227 deny-by-default backup and transfer policy remains correct because
+  #81 does not include ledger data in Android backup or device transfer.
 
 ## Performance And Accessibility Evidence
 
@@ -205,8 +205,8 @@ Run connected checks when hardware is available:
 - [ ] No cloud sync, account/passkey flow, Play Integrity enforcement, import,
   export, OCR, bank connection, full database encryption, or remote AI behavior
   is claimed unless separately implemented and validated.
-- [ ] Optional backup-ready profile behavior is documented in
-  `docs/backup-ready-profile.md` and remains planned/partial.
+- [ ] Optional backup-ready profile foundation is documented in
+  `docs/backup-ready-profile.md`; encrypted backup/restore remains future work.
 - [ ] Binary Play Store screenshots and feature graphic uploads are manual unless
   committed and validated in a future asset pass.
 
@@ -230,5 +230,5 @@ Run connected checks when hardware is available:
   - #132 privacy policy updated and ready for hosting/legal review.
   - #7 security criteria mapped to code/docs; remaining non-implemented items
     are explicit.
-  - #81 backup-ready profile design documented; implementation remains future
-    work until real opt-in profile behavior exists.
+  - #81 backup-ready profile foundation implemented and documented; encrypted
+    backup/restore and Android backup inclusion remain future work.

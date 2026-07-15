@@ -52,7 +52,7 @@ Backlog context that is present lives in `docs/github-issue-import-report.md`.
 | Encryption and security | Room database is app-private but not encrypted by Pocket Ledger. Sensitive preferences use AndroidX Security Crypto. Optional app lock uses Android system authentication. No network transport claim should be made for ledger sync because sync is not implemented. | Do not claim full database encryption or cloud transport protection for ledger data. |
 | App category | Personal finance, budgeting, or finance utility. | Final category should match store listing copy and screenshots. |
 | Internal testing readiness | Release candidate workflow creates release APK/AAB artifacts for Play Console internal testing. Firebase App Distribution distributes debug APKs only and remains separate from Play Store artifacts. | Use release AAB for Play Console internal testing. |
-| Backup/device-transfer behavior | `allowBackup=true`; `dataExtractionRules` and `fullBackupContent` are configured with explicit deny-by-default rules from #227. Ledger database files, encrypted preferences, app-private files, caches, logs, temp/debug/generated files, and external app files are excluded from cloud backup and device transfer. | Review before release; do not claim optional backup-ready profile support until #81 is implemented. |
+| Backup/device-transfer behavior | `allowBackup=true`; `dataExtractionRules` and `fullBackupContent` are configured with explicit deny-by-default rules from #227. Ledger database files, encrypted preferences, app-private files, caches, logs, temp/debug/generated files, and external app files are excluded from cloud backup and device transfer. | Review before release; claim only local-first backup-ready profile foundation unless encrypted backup and restore are separately implemented. |
 | Release diagnostics/privacy safety | Debug Health exists only in debug navigation with a release source-set stub. CI/CD and Debug Health docs prohibit secrets, tester emails, stack traces, IDs, and sensitive ledger values in diagnostics. | Keep release diagnostics hidden and recheck before submission. |
 
 ## Release Permissions
@@ -152,8 +152,9 @@ Android cloud backup or device-to-device transfer. Ledger database files,
 SQLite sidecars, encrypted sensitive preferences, local-only settings, caches,
 logs, temp files, debug artifacts, generated reports, device-protected storage,
 and external app files are excluded. This is the safe default for #227 because
-#81 optional backup-ready profile behavior is not implemented. Re-review this
-section before public release and after any future backup/profile work.
+#81 implements only the local-first backup-ready profile foundation, not
+encrypted ledger backup or restore. Re-review this section before public
+release and after any future backup/profile work.
 
 ## Required Pre-Release Actions
 
@@ -193,11 +194,12 @@ repository state alone.
 
 ## Optional Backup-Ready Profile
 
-The future #81 backup-ready profile design is documented in
-`docs/backup-ready-profile.md`. The current app does not implement account
+The #81 backup-ready profile foundation is documented in
+`docs/backup-ready-profile.md`. The current app exposes only a local-first
+opt-in state and prerequisite model. It does not implement production account
 login, passkey recovery, cloud sync, encrypted ledger backup payloads, or a
 restore contract. The #227 deny-by-default Android backup policy remains the
-correct Play Store disclosure basis until that implementation exists.
+correct Play Store disclosure basis.
 
 ## Issue Traceability
 
@@ -212,5 +214,5 @@ correct Play Store disclosure basis until that implementation exists.
 - #7: local data security criteria are mapped in
   `androidApp/docs/security-model.md`; do not claim full database encryption or
   Play Integrity enforcement.
-- #81: optional backup-ready profile is planned and documented, not implemented.
+- #81: optional backup-ready profile foundation is implemented and documented.
   Ledger data remains excluded from Android backup and device transfer.

@@ -3,8 +3,8 @@
     T-E10-06 (#227): Android 12+ data extraction policy.
 
     Cloud backup and device-to-device transfer both use deny-by-default rules
-    because Pocket Ledger has not implemented the optional backup-ready profile
-    from #81. The local Room ledger database is app-private but not encrypted by
+    because Pocket Ledger only implements the local-first #81 backup-ready profile
+    foundation, not encrypted backup or restore. The local Room ledger database is app-private but not encrypted by
     Pocket Ledger, so it is excluded from automatic extraction.
 -->
 <data-extraction-rules>
