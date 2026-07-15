@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mojtaba.pocketledger.background.BackgroundJobSettingsManager
 import com.mojtaba.pocketledger.background.BackgroundJobSettingsState
+import com.mojtaba.pocketledger.account.OptionalAccountSettingsState
 import com.mojtaba.pocketledger.background.MonthlySummaryReminderTime
 import com.mojtaba.pocketledger.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.pocketledger.core.designsystem.component.SectionHeader
@@ -43,6 +44,11 @@ fun SettingsScreen(
     appLockManager: AppLockManager,
     modifier: Modifier = Modifier,
     backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
+    optionalAccountSettingsState: OptionalAccountSettingsState = OptionalAccountSettingsState(
+        featureEnabled = false,
+        passkeyClientAvailable = false,
+        playIntegrityHookAvailable = false,
+    ),
 ) {
     val state by appLockManager.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -75,6 +81,7 @@ fun SettingsScreen(
                 onAppLockEnabledChange = { enabled ->
                     scope.launch { appLockManager.setAppLockEnabled(enabled) }
                 },
+                optionalAccountSettingsState = optionalAccountSettingsState,
             )
             backgroundJobSettingsManager?.let { manager ->
                 BackgroundJobsSettingsSection(
@@ -101,6 +108,7 @@ private fun SecuritySettingsSection(
     canToggle: Boolean,
     appLockStateDescription: String,
     onAppLockEnabledChange: (Boolean) -> Unit,
+    optionalAccountSettingsState: OptionalAccountSettingsState,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
     Column {
@@ -129,6 +137,26 @@ private fun SecuritySettingsSection(
                         contentDescription = "App lock switch"
                         stateDescription = appLockStateDescription
                         if (!canToggle) disabled()
+                    },
+                )
+            },
+        )
+        ListItem(
+            modifier = Modifier.semantics {
+                contentDescription = "Optional account profile"
+                stateDescription = optionalAccountSettingsState.stateDescription
+                if (!optionalAccountSettingsState.controlsEnabled) disabled()
+            },
+            headlineContent = { Text(text = "Optional account profile") },
+            supportingContent = { Text(text = optionalAccountSettingsState.supportingText) },
+            trailingContent = {
+                Text(
+                    text = optionalAccountSettingsState.stateDescription,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (optionalAccountSettingsState.controlsEnabled) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     },
                 )
             },
