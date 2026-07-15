@@ -10,6 +10,8 @@ import androidx.work.WorkManager
 import com.mojtaba.pocketledger.background.BackgroundJobSettingsManager
 import com.mojtaba.pocketledger.background.MonthlySummaryPreparationWorker
 import com.mojtaba.pocketledger.background.TaskWorkerRegistry
+import com.mojtaba.pocketledger.account.AndroidCredentialManagerPasskeyClient
+import com.mojtaba.pocketledger.account.AndroidPlayIntegrityRequestHook
 import com.mojtaba.pocketledger.background.WorkManagerScheduler
 import com.mojtaba.pocketledger.core.ai.AiFallbackStrategy
 import com.mojtaba.pocketledger.core.ai.AiProviderSelector
@@ -38,6 +40,12 @@ import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
 import com.mojtaba.pocketledger.core.featureflags.OverrideableFeatureFlagProvider
 import com.mojtaba.pocketledger.core.featureflags.SharedPreferencesFeatureFlagOverrideStore
 import com.mojtaba.pocketledger.core.security.applock.AppLockManager
+import com.mojtaba.pocketledger.core.security.integrity.PlayIntegrityRequestHook
+import com.mojtaba.pocketledger.core.security.integrity.NoOpPlayIntegrityRequestHook
+import com.mojtaba.pocketledger.core.security.passkey.NoOpPasskeyBackendContract
+import com.mojtaba.pocketledger.core.security.passkey.NoOpPasskeyClient
+import com.mojtaba.pocketledger.core.security.passkey.PasskeyBackendContract
+import com.mojtaba.pocketledger.core.security.passkey.PasskeyClient
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
 import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
 import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
@@ -72,6 +80,9 @@ class PocketLedgerAppGraph private constructor(
     val aiFallbackStrategy: AiFallbackStrategy,
     val sensitivePreferences: SensitivePreferences,
     val appLockManager: AppLockManager,
+    val passkeyClient: PasskeyClient,
+    val passkeyBackendContract: PasskeyBackendContract,
+    val playIntegrityRequestHook: PlayIntegrityRequestHook,
     @Suppress("unused")
     val backgroundTaskScheduler: BackgroundTaskScheduler,
     val backgroundJobSettingsManager: BackgroundJobSettingsManager,
@@ -95,6 +106,9 @@ class PocketLedgerAppGraph private constructor(
             aiFallbackStrategy: AiFallbackStrategy,
             sensitivePreferences: SensitivePreferences,
             appLockManager: AppLockManager,
+            passkeyClient: PasskeyClient = NoOpPasskeyClient(),
+            passkeyBackendContract: PasskeyBackendContract = NoOpPasskeyBackendContract(),
+            playIntegrityRequestHook: PlayIntegrityRequestHook = NoOpPlayIntegrityRequestHook(),
             backgroundTaskScheduler: BackgroundTaskScheduler,
             backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
             appLogger: AppLogger,
@@ -115,6 +129,9 @@ class PocketLedgerAppGraph private constructor(
             aiFallbackStrategy = aiFallbackStrategy,
             sensitivePreferences = sensitivePreferences,
             appLockManager = appLockManager,
+            passkeyClient = passkeyClient,
+            passkeyBackendContract = passkeyBackendContract,
+            playIntegrityRequestHook = playIntegrityRequestHook,
             backgroundTaskScheduler = backgroundTaskScheduler,
             backgroundJobSettingsManager = backgroundJobSettingsManager ?: BackgroundJobSettingsManager(
                 preferences = sensitivePreferences,
@@ -190,6 +207,9 @@ class PocketLedgerAppGraph private constructor(
                     EncryptedSensitivePreferences(context)
                 }
 
+                val passkeyClient = AndroidCredentialManagerPasskeyClient(context)
+                val playIntegrityRequestHook = AndroidPlayIntegrityRequestHook(context)
+
                 val backgroundTaskScheduler = WorkManagerScheduler(
                     workManager = WorkManager.getInstance(context),
                     workerRegistry = TaskWorkerRegistry(
@@ -214,6 +234,9 @@ class PocketLedgerAppGraph private constructor(
                             activityProvider = activityProvider,
                         ),
                     ),
+                    passkeyClient = passkeyClient,
+                    passkeyBackendContract = NoOpPasskeyBackendContract(),
+                    playIntegrityRequestHook = playIntegrityRequestHook,
                     backgroundTaskScheduler = backgroundTaskScheduler,
                     backgroundJobSettingsManager = BackgroundJobSettingsManager(
                         preferences = sensitivePreferences,

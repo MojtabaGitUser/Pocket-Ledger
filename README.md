@@ -67,6 +67,7 @@ For a fast portfolio review, start with [Portfolio documentation](docs/portfolio
 - [Accessibility QA pass](androidApp/docs/accessibility-qa.md): #14 TalkBack, keyboard/D-pad, 200% font-scale, and contrast QA gates for UI changes and release candidates.
 - [Android performance benchmarks](androidApp/docs/performance-report.md): Macrobenchmark and Baseline Profile generation setup, local device requirements, and update commands.
 - [Android security model](androidApp/docs/security-model.md): current local data storage, app lock, AI privacy, logging, threat model, and known limitations.
+- [Optional account and passkey foundation](docs/optional-account-passkey-foundation.md): local-first optional account entry, passkey contracts, Credential Manager prototype, Play Integrity hook, and #82-#86 traceability.
 - [CI/CD strategy](docs/ci-cd.md): PR validation, controlled screenshot and benchmark workflows, artifacts, and release-safety boundaries.
 - [Release signing and versioning](docs/release/signing-versioning.md): secure signing inputs, version policy, local release-ready commands, and CI release candidate behavior.
 - [Release candidate workflow](docs/release/release-candidate.md): release workflow triggers, version inputs, signing behavior, retained artifacts, and Play Store handoff boundaries.

@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import com.mojtaba.pocketledger.account.OptionalAccountSettingsState
 import com.mojtaba.pocketledger.adaptive.LocalAdaptiveNavigationState
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
 import com.mojtaba.pocketledger.debugflags.DebugFeatureFlagOverridesScreen
@@ -74,6 +75,11 @@ fun PocketLedgerNavGraph(
             SettingsScreen(
                 appLockManager = appGraph.appLockManager,
                 backgroundJobSettingsManager = appGraph.backgroundJobSettingsManager,
+                optionalAccountSettingsState = OptionalAccountSettingsState.from(
+                    featureFlags = appGraph.featureFlags,
+                    passkeyClient = appGraph.passkeyClient,
+                    playIntegrityRequestHook = appGraph.playIntegrityRequestHook,
+                ),
             )
         }
         if (includeDebugDestinations) {
