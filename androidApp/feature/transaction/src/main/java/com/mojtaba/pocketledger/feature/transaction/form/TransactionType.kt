@@ -1,6 +1,3 @@
 package com.mojtaba.pocketledger.feature.transaction.form
 
-enum class TransactionType {
-    EXPENSE,
-    INCOME,
-}
+typealias TransactionType = com.mojtaba.pocketledger.shared.domain.transaction.TransactionType

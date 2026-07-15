@@ -8,236 +8,168 @@ import com.mojtaba.pocketledger.feature.dashboard.model.BudgetProgressSummary
 import com.mojtaba.pocketledger.feature.dashboard.model.CashFlowSummary
 import com.mojtaba.pocketledger.feature.dashboard.model.CategorySpendSummary
 import com.mojtaba.pocketledger.feature.dashboard.model.DashboardInsight
+import com.mojtaba.pocketledger.feature.dashboard.model.DashboardPeriod
 import com.mojtaba.pocketledger.feature.dashboard.model.DashboardSummary
 import com.mojtaba.pocketledger.feature.dashboard.model.DashboardTransactionType
 import com.mojtaba.pocketledger.feature.dashboard.model.RecentTransactionSummary
-import java.util.Locale
-import kotlin.math.abs
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedBudgetProgressStatus
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedBudgetProgressSummary
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedCashFlowSummary
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedCategorySpendSummary
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardBudget
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardCategory
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardInput
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardInsight
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardPeriod
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardSummary
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardSummaryCalculator
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardTransaction
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedDashboardTransactionType
+import com.mojtaba.pocketledger.shared.domain.dashboard.SharedRecentTransactionSummary
 
 object DashboardSummaryCalculator {
-    const val DefaultRecentTransactionLimit = 5
-    const val DefaultTopCategoryLimit = 5
-    private const val NearLimitThreshold = 80.0
-    private const val OverspendingCategoryThreshold = 50.0
-    private const val NotePreviewLimit = 72
-    private const val Uncategorized = "Uncategorized"
+    const val DefaultRecentTransactionLimit = SharedDashboardSummaryCalculator.DefaultRecentTransactionLimit
+    const val DefaultTopCategoryLimit = SharedDashboardSummaryCalculator.DefaultTopCategoryLimit
 
-    fun calculate(input: DashboardSummaryInput): DashboardSummary {
-        require(input.currencyCode.isNotBlank()) { "DashboardSummaryInput currencyCode must not be blank." }
-        require(input.recentTransactionLimit >= 0) { "recentTransactionLimit must not be negative." }
-        require(input.topCategoryLimit >= 0) { "topCategoryLimit must not be negative." }
+    fun calculate(input: DashboardSummaryInput): DashboardSummary =
+        SharedDashboardSummaryCalculator.calculate(input.toSharedInput()).toFeatureSummary()
 
-        val normalizedCurrency = input.currencyCode.normalizedCurrency()
-        val categoriesById = input.categories.associateBy { it.id }
-        val periodTransactions = input.transactions
-            .asSequence()
-            .filter { input.period.contains(it.occurredAt) }
-            .filter { it.currencyCode.normalizedCurrency() == normalizedCurrency }
-            .mapNotNull { transaction ->
-                val type = transaction.dashboardType()
-                if (type == DashboardTransactionType.Unknown) null else transaction to type
-            }
-            .toList()
+    private fun DashboardSummaryInput.toSharedInput(): SharedDashboardInput = SharedDashboardInput(
+        period = period.toSharedPeriod(),
+        currencyCode = currencyCode,
+        transactions = transactions.map { it.toSharedTransaction() },
+        categories = categories.map { it.toSharedCategory() },
+        budgets = budgets.map { it.toSharedBudget() },
+        generatedAt = generatedAt,
+        recentTransactionLimit = recentTransactionLimit,
+        topCategoryLimit = topCategoryLimit,
+    )
 
-        val incomeMinor = periodTransactions
-            .filter { (_, type) -> type == DashboardTransactionType.Income }
-            .sumOf { (transaction, _) -> abs(transaction.amountMinor) }
-        val expenseMinor = periodTransactions
-            .filter { (_, type) -> type == DashboardTransactionType.Expense }
-            .sumOf { (transaction, _) -> abs(transaction.amountMinor) }
-        val cashFlow = CashFlowSummary(
-            incomeMinor = incomeMinor,
-            expenseMinor = expenseMinor,
-            netMinor = incomeMinor - expenseMinor,
-            currencyCode = normalizedCurrency,
-        )
+    private fun DashboardPeriod.toSharedPeriod(): SharedDashboardPeriod = SharedDashboardPeriod(
+        startMillis = startMillis,
+        endMillis = endMillis,
+        label = label,
+    )
 
-        val expenseTransactions = periodTransactions
-            .filter { (_, type) -> type == DashboardTransactionType.Expense }
-            .map { (transaction, _) -> transaction }
-        val topCategories = expenseTransactions
-            .groupBy { it.categoryId }
-            .map { (categoryId, transactions) ->
-                val amountMinor = transactions.sumOf { abs(it.amountMinor) }
-                CategorySpendSummary(
-                    categoryId = categoryId,
-                    categoryName = categoriesById[categoryId]?.name.cleanOrNull() ?: Uncategorized,
-                    amountMinor = amountMinor,
-                    currencyCode = normalizedCurrency,
-                    transactionCount = transactions.size,
-                    percentageOfExpense = percentage(amountMinor, expenseMinor),
-                )
-            }
-            .sortedWith(
-                compareByDescending<CategorySpendSummary> { it.amountMinor }
-                    .thenBy { it.categoryName.lowercase(Locale.US) }
-                    .thenBy { it.categoryId.orEmpty() },
-            )
-            .take(input.topCategoryLimit)
+    private fun LedgerTransaction.toSharedTransaction(): SharedDashboardTransaction = SharedDashboardTransaction(
+        id = id,
+        amountMinor = amountMinor,
+        type = type,
+        categoryId = categoryId,
+        note = note,
+        occurredAt = occurredAt,
+        currencyCode = currencyCode,
+    )
 
-        val recentTransactions = periodTransactions
-            .sortedWith(
-                compareByDescending<Pair<LedgerTransaction, DashboardTransactionType>> { it.first.occurredAt }
-                    .thenBy { it.first.id },
-            )
-            .take(input.recentTransactionLimit)
-            .map { (transaction, type) ->
-                RecentTransactionSummary(
-                    transactionId = transaction.id,
-                    amountMinor = transaction.amountMinor,
-                    currencyCode = normalizedCurrency,
-                    type = type,
-                    categoryName = categoriesById[transaction.categoryId]?.name.cleanOrNull(),
-                    notePreview = transaction.note.previewOrNull(),
-                    occurredAt = transaction.occurredAt,
-                )
-            }
+    private fun LedgerCategory.toSharedCategory(): SharedDashboardCategory = SharedDashboardCategory(
+        id = id,
+        name = name,
+    )
 
-        val budgetProgress = input.budgets
-            .asSequence()
-            .filter { it.isActive }
-            .filter { it.currencyCode.normalizedCurrency() == normalizedCurrency }
-            .filter { it.overlaps(input.period.startMillis, input.period.endMillis) }
-            .map { budget ->
-                val spentMinor = expenseTransactions
-                    .filter { transaction ->
-                        budget.categoryId == null || transaction.categoryId == budget.categoryId
-                    }
-                    .sumOf { abs(it.amountMinor) }
-                budget.toProgressSummary(
-                    spentMinor = spentMinor,
-                    categoriesById = categoriesById,
-                    currencyCode = normalizedCurrency,
-                )
-            }
-            .sortedWith(
-                compareByDescending<BudgetProgressSummary> { it.progressPercent }
-                    .thenBy { it.budgetName.lowercase(Locale.US) }
-                    .thenBy { it.budgetId },
-            )
-            .toList()
+    private fun LedgerBudget.toSharedBudget(): SharedDashboardBudget = SharedDashboardBudget(
+        id = id,
+        name = name,
+        amountMinor = amountMinor,
+        currencyCode = currencyCode,
+        periodStart = periodStart,
+        periodEnd = periodEnd,
+        categoryId = categoryId,
+        isActive = isActive,
+    )
 
-        return DashboardSummary(
-            period = input.period,
-            cashFlow = cashFlow,
-            topCategories = topCategories,
-            budgetProgress = budgetProgress,
-            recentTransactions = recentTransactions,
-            insights = insights(
-                cashFlow = cashFlow,
-                topCategories = topCategories,
-                budgetProgress = budgetProgress,
-                hasDashboardData = periodTransactions.isNotEmpty() || budgetProgress.isNotEmpty(),
-            ),
-            generatedAt = input.generatedAt,
-        )
+    private fun SharedDashboardSummary.toFeatureSummary(): DashboardSummary = DashboardSummary(
+        period = period.toFeaturePeriod(),
+        cashFlow = cashFlow.toFeatureCashFlow(),
+        topCategories = topCategories.map { it.toFeatureCategorySpend() },
+        budgetProgress = budgetProgress.map { it.toFeatureBudgetProgress() },
+        recentTransactions = recentTransactions.map { it.toFeatureRecentTransaction() },
+        insights = insights.map { it.toFeatureInsight() },
+        generatedAt = generatedAt,
+    )
+
+    private fun SharedDashboardPeriod.toFeaturePeriod(): DashboardPeriod = DashboardPeriod(
+        startMillis = startMillis,
+        endMillis = endMillis,
+        label = label,
+    )
+
+    private fun SharedCashFlowSummary.toFeatureCashFlow(): CashFlowSummary = CashFlowSummary(
+        incomeMinor = incomeMinor,
+        expenseMinor = expenseMinor,
+        netMinor = netMinor,
+        currencyCode = currencyCode,
+    )
+
+    private fun SharedCategorySpendSummary.toFeatureCategorySpend(): CategorySpendSummary = CategorySpendSummary(
+        categoryId = categoryId,
+        categoryName = categoryName,
+        amountMinor = amountMinor,
+        currencyCode = currencyCode,
+        transactionCount = transactionCount,
+        percentageOfExpense = percentageOfExpense,
+    )
+
+    private fun SharedBudgetProgressSummary.toFeatureBudgetProgress(): BudgetProgressSummary = BudgetProgressSummary(
+        budgetId = budgetId,
+        budgetName = budgetName,
+        categoryId = categoryId,
+        categoryName = categoryName,
+        spentMinor = spentMinor,
+        limitMinor = limitMinor,
+        currencyCode = currencyCode,
+        progressPercent = progressPercent,
+        status = status.toFeatureStatus(),
+    )
+
+    private fun SharedBudgetProgressStatus.toFeatureStatus(): BudgetProgressStatus = when (this) {
+        SharedBudgetProgressStatus.NoLimit -> BudgetProgressStatus.NoLimit
+        SharedBudgetProgressStatus.OnTrack -> BudgetProgressStatus.OnTrack
+        SharedBudgetProgressStatus.NearLimit -> BudgetProgressStatus.NearLimit
+        SharedBudgetProgressStatus.Exceeded -> BudgetProgressStatus.Exceeded
     }
 
-    private fun LedgerTransaction.dashboardType(): DashboardTransactionType =
-        when (type.trim().lowercase(Locale.US)) {
-            "income" -> DashboardTransactionType.Income
-            "expense" -> DashboardTransactionType.Expense
-            else -> DashboardTransactionType.Unknown
-        }
+    private fun SharedRecentTransactionSummary.toFeatureRecentTransaction(): RecentTransactionSummary = RecentTransactionSummary(
+        transactionId = transactionId,
+        amountMinor = amountMinor,
+        currencyCode = currencyCode,
+        type = type.toFeatureType(),
+        categoryName = categoryName,
+        notePreview = notePreview,
+        occurredAt = occurredAt,
+    )
 
-    private fun LedgerBudget.overlaps(startMillis: Long, endMillis: Long): Boolean =
-        periodStart <= endMillis && periodEnd >= startMillis
+    private fun SharedDashboardTransactionType.toFeatureType(): DashboardTransactionType = when (this) {
+        SharedDashboardTransactionType.Income -> DashboardTransactionType.Income
+        SharedDashboardTransactionType.Expense -> DashboardTransactionType.Expense
+        SharedDashboardTransactionType.Unknown -> DashboardTransactionType.Unknown
+    }
 
-    private fun LedgerBudget.toProgressSummary(
-        spentMinor: Long,
-        categoriesById: Map<String, LedgerCategory>,
-        currencyCode: String,
-    ): BudgetProgressSummary {
-        val progressPercent = if (amountMinor > 0L) {
-            spentMinor.toDouble() / amountMinor.toDouble() * 100.0
-        } else {
-            0.0
-        }
-        val status = when {
-            amountMinor <= 0L -> BudgetProgressStatus.NoLimit
-            progressPercent >= 100.0 -> BudgetProgressStatus.Exceeded
-            progressPercent >= NearLimitThreshold -> BudgetProgressStatus.NearLimit
-            else -> BudgetProgressStatus.OnTrack
-        }
-        return BudgetProgressSummary(
-            budgetId = id,
-            budgetName = name.cleanOrNull() ?: "Budget",
-            categoryId = categoryId,
-            categoryName = categoriesById[categoryId]?.name.cleanOrNull(),
-            spentMinor = spentMinor,
-            limitMinor = amountMinor,
+    private fun SharedDashboardInsight.toFeatureInsight(): DashboardInsight = when (this) {
+        SharedDashboardInsight.NoData -> DashboardInsight.NoData
+        is SharedDashboardInsight.PositiveCashFlow -> DashboardInsight.PositiveCashFlow(
+            netMinor = netMinor,
             currencyCode = currencyCode,
-            progressPercent = progressPercent,
-            status = status,
         )
-    }
-
-    private fun insights(
-        cashFlow: CashFlowSummary,
-        topCategories: List<CategorySpendSummary>,
-        budgetProgress: List<BudgetProgressSummary>,
-        hasDashboardData: Boolean,
-    ): List<DashboardInsight> {
-        if (!hasDashboardData) return listOf(DashboardInsight.NoData)
-
-        val items = mutableListOf<DashboardInsight>()
-        when {
-            cashFlow.netMinor > 0L -> items += DashboardInsight.PositiveCashFlow(
-                netMinor = cashFlow.netMinor,
-                currencyCode = cashFlow.currencyCode,
-            )
-            cashFlow.netMinor < 0L -> items += DashboardInsight.NegativeCashFlow(
-                netMinor = cashFlow.netMinor,
-                currencyCode = cashFlow.currencyCode,
-            )
-        }
-
-        topCategories.firstOrNull()
-            ?.takeIf { it.percentageOfExpense >= OverspendingCategoryThreshold }
-            ?.let { category ->
-                items += DashboardInsight.OverspendingCategory(
-                    categoryId = category.categoryId,
-                    categoryName = category.categoryName,
-                    amountMinor = category.amountMinor,
-                    currencyCode = category.currencyCode,
-                    percentageOfExpense = category.percentageOfExpense,
-                )
-            }
-
-        budgetProgress.forEach { budget ->
-            when (budget.status) {
-                BudgetProgressStatus.Exceeded -> items += DashboardInsight.BudgetExceeded(
-                    budgetId = budget.budgetId,
-                    budgetName = budget.budgetName,
-                    progressPercent = budget.progressPercent,
-                )
-                BudgetProgressStatus.NearLimit -> items += DashboardInsight.BudgetNearLimit(
-                    budgetId = budget.budgetId,
-                    budgetName = budget.budgetName,
-                    progressPercent = budget.progressPercent,
-                )
-                BudgetProgressStatus.NoLimit,
-                BudgetProgressStatus.OnTrack,
-                -> Unit
-            }
-        }
-
-        return items.ifEmpty { listOf(DashboardInsight.NoData) }
-    }
-
-    private fun percentage(part: Long, whole: Long): Double =
-        if (whole <= 0L) 0.0 else part.toDouble() / whole.toDouble() * 100.0
-
-    private fun String.normalizedCurrency(): String = trim().uppercase(Locale.US)
-
-    private fun String?.cleanOrNull(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
-
-    private fun String?.previewOrNull(): String? {
-        val cleaned = cleanOrNull() ?: return null
-        return if (cleaned.length <= NotePreviewLimit) {
-            cleaned
-        } else {
-            cleaned.take(NotePreviewLimit).trimEnd() + "..."
-        }
+        is SharedDashboardInsight.NegativeCashFlow -> DashboardInsight.NegativeCashFlow(
+            netMinor = netMinor,
+            currencyCode = currencyCode,
+        )
+        is SharedDashboardInsight.OverspendingCategory -> DashboardInsight.OverspendingCategory(
+            categoryId = categoryId,
+            categoryName = categoryName,
+            amountMinor = amountMinor,
+            currencyCode = currencyCode,
+            percentageOfExpense = percentageOfExpense,
+        )
+        is SharedDashboardInsight.BudgetNearLimit -> DashboardInsight.BudgetNearLimit(
+            budgetId = budgetId,
+            budgetName = budgetName,
+            progressPercent = progressPercent,
+        )
+        is SharedDashboardInsight.BudgetExceeded -> DashboardInsight.BudgetExceeded(
+            budgetId = budgetId,
+            budgetName = budgetName,
+            progressPercent = progressPercent,
+        )
     }
 }

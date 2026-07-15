@@ -54,6 +54,7 @@ or device and are intentionally not part of default PR validation.
 
 - [Architecture](docs/architecture.md): module responsibilities, dependency rules, ownership boundaries, and architectural rationale.
 - [Desktop demo](docs/desktop-demo.md): Compose Multiplatform desktop run command, Search/Insights access, Room KMP local persistence behavior, and current limitations.
+- [KMP shared business logic](docs/kmp-shared-business-logic.md): E-07 shared transaction validation, dashboard aggregation, search ranking, dependency boundaries, and issue traceability for #12/#62/#63/#64.
 - [Future product growth](docs/future-growth.md): E-21 future extension plan for cloud sync, OCR/import, export/accountant workflows, and monetization without implementing those features.
 - [Future extension contracts](docs/future/extension-contracts.md): issue-traceable future contract index for #142-#146.
 - [ADR 0001: Modular Architecture and KMP-Ready Structure](docs/adr/0001-modular-architecture.md): decision record for the modular architecture direction.
