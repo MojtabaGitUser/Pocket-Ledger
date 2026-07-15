@@ -50,8 +50,13 @@ Performance-sensitive or Baseline Profile changes:
 Connected benchmark and Baseline Profile commands require an attached emulator
 or device and are intentionally not part of default PR validation.
 
+## Portfolio Review Path
+
+For a fast portfolio review, start with [Portfolio documentation](docs/portfolio/README.md), then use the [portfolio demo script](docs/portfolio/demo-script.md), [architecture diagram](docs/portfolio/architecture-diagram.md), [testing and performance summary](docs/portfolio/testing-performance-summary.md), and [portfolio traceability](docs/portfolio/traceability.md).
+
 ## Documentation
 
+- [Portfolio documentation](docs/portfolio/README.md): reviewer path, architecture diagram, testing/performance summary, demo script, and E-20 traceability.
 - [Architecture](docs/architecture.md): module responsibilities, dependency rules, ownership boundaries, and architectural rationale.
 - [Desktop demo](docs/desktop-demo.md): Compose Multiplatform desktop run command, Search/Insights access, Room KMP local persistence behavior, and current limitations.
 - [KMP shared business logic](docs/kmp-shared-business-logic.md): E-07 shared transaction validation, dashboard aggregation, search ranking, dependency boundaries, and issue traceability for #12/#62/#63/#64.
