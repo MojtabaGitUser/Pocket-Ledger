@@ -20,8 +20,11 @@ privacy model is built around these goals:
 - Centralize logging behind `AppLogger` and redact known sensitive values.
 - Keep optional and incomplete capabilities behind safe default feature flags.
 
-The app does not currently implement accounts, passkeys, cloud sync, remote AI,
-production analytics collection, server-backed authentication, or full database encryption.
+The app does not currently implement production accounts, cloud sync, remote AI,
+production analytics collection, server-backed authentication, or full database
+encryption. It does include a disabled-by-default optional account/passkey
+foundation with Credential Manager and Play Integrity abstractions for future
+opt-in work.
 
 ## Data Storage Model
 
@@ -378,17 +381,25 @@ Historical E-08 security checklist mapping:
 
 - T-E08-01 Configure EncryptedSharedPreferences: implemented for sensitive preferences via `EncryptedSensitivePreferences`.
 - T-E08-02 Add Android Keystore integration: implemented through AndroidX Security Crypto `MasterKey`.
-- T-E08-03 Implement privacy settings screen: partially implemented as Settings > Security app lock. No separate privacy/export/account/backup settings screen exists.
-- T-E08-04 Add Play Integrity abstraction: not implemented. Treat as remaining work tied to future account/passkey/server trust scope, not as completed by #7 or #81.
+- T-E08-03 Implement privacy settings screen: implemented for current MVP
+  security controls through Settings > Security app lock plus the disabled
+  optional account profile entry. No export, cloud backup, or account recovery
+  settings screen exists because those features are not implemented.
+- T-E08-04 Add Play Integrity abstraction: implemented as
+  `PlayIntegrityRequestHook`, `AndroidPlayIntegrityRequestHook`, and
+  `NoOpPlayIntegrityRequestHook`. Production server-side verdict verification
+  and enforcement remain future account/backend work, not part of #7.
 - T-E08-05 Add security review checklist: implemented through this document, `androidApp/docs/logging-policy.md`, `docs/ai-privacy-safety-checklist.md`, and `docs/release/release-checklist.md`.
 
 ## #81 Optional Backup-Ready Profile Traceability
 
 The repository now documents the planned #81 profile in
-`docs/backup-ready-profile.md`. Current code only has disabled feature flags for
-future passkey/account and cloud sync entry points plus reserved sensitive
-preference keys. It does not implement user opt-in, backup encryption,
-backend/profile contracts, recovery flows, or restore behavior.
+`docs/backup-ready-profile.md`. Current code has disabled feature flags for
+future passkey/account and cloud sync entry points, reserved sensitive
+preference keys, and the optional passkey foundation documented in
+`docs/optional-account-passkey-foundation.md`. It does not implement user
+opt-in for backup, backup encryption, recovery flows, restore behavior, or a
+production server-backed profile.
 
 Until those pieces exist, #227 remains the correct privacy-safe policy: exclude
 ledger database files, encrypted sensitive preferences, app-private files,

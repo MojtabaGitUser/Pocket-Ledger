@@ -10,23 +10,31 @@ data class OptionalAccountSettingsState(
     val passkeyClientAvailable: Boolean,
     val playIntegrityHookAvailable: Boolean,
 ) {
-    val stateDescription: String
+    val authenticationUiState: OptionalAccountAuthenticationUiState
         get() = when {
-            !featureEnabled -> "Off"
-            passkeyClientAvailable && playIntegrityHookAvailable -> "Ready"
-            passkeyClientAvailable -> "Partially ready"
-            else -> "Unavailable"
+            !featureEnabled -> OptionalAccountAuthenticationUiState.LocalOnly
+            passkeyClientAvailable && playIntegrityHookAvailable -> OptionalAccountAuthenticationUiState.Ready
+            passkeyClientAvailable -> OptionalAccountAuthenticationUiState.ReadyWithoutIntegrity
+            else -> OptionalAccountAuthenticationUiState.ProviderUnavailable
+        }
+
+    val stateDescription: String
+        get() = when (authenticationUiState) {
+            OptionalAccountAuthenticationUiState.LocalOnly -> "Off"
+            OptionalAccountAuthenticationUiState.Ready -> "Ready"
+            OptionalAccountAuthenticationUiState.ReadyWithoutIntegrity -> "Partially ready"
+            OptionalAccountAuthenticationUiState.ProviderUnavailable -> "Unavailable"
         }
 
     val controlsEnabled: Boolean
         get() = featureEnabled && passkeyClientAvailable
 
     val supportingText: String
-        get() = when {
-            !featureEnabled -> "Optional account and passkey profile is off by default; Pocket Ledger stays fully local without login."
-            passkeyClientAvailable && playIntegrityHookAvailable -> "Prototype passkey client and Play Integrity request hook are available for a future opt-in profile."
-            passkeyClientAvailable -> "Prototype passkey client is available; Play Integrity enforcement is not configured."
-            else -> "This device or build cannot start a passkey profile right now."
+        get() = when (authenticationUiState) {
+            OptionalAccountAuthenticationUiState.LocalOnly -> "Optional account and passkey profile is off by default; Pocket Ledger stays fully local without login."
+            OptionalAccountAuthenticationUiState.Ready -> "Prototype passkey client and Play Integrity request hook are available for a future opt-in profile."
+            OptionalAccountAuthenticationUiState.ReadyWithoutIntegrity -> "Prototype passkey client is available; Play Integrity enforcement is not configured."
+            OptionalAccountAuthenticationUiState.ProviderUnavailable -> "This device or build cannot start a passkey profile right now."
         }
 
     companion object {
@@ -40,4 +48,11 @@ data class OptionalAccountSettingsState(
             playIntegrityHookAvailable = playIntegrityRequestHook.availability().available,
         )
     }
+}
+
+enum class OptionalAccountAuthenticationUiState {
+    LocalOnly,
+    Ready,
+    ReadyWithoutIntegrity,
+    ProviderUnavailable,
 }

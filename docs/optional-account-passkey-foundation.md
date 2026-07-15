@@ -1,6 +1,6 @@
 # Optional Account And Passkey Foundation
 
-This document records the implementation boundary for #83, #84, #85, #86, and parent technical story #82.
+This document records the implementation boundary for #83, #84, #85, #86, parent technical story #82, and user story #13.
 
 ## Scope
 
@@ -19,11 +19,29 @@ Implemented pieces:
 
 | Issue | Status | Evidence |
 | --- | --- | --- |
+| #13 Support optional passkey-enabled account flow | Complete for the local-first foundation scope | The app works without login, Settings exposes a disabled-by-default optional account profile entry, Credential Manager is behind `PasskeyClient`, passkey registration/authentication use challenge-response contracts, unsupported providers return safe unavailable/error states, and this document records the security assumptions. |
 | #83 Add optional account settings entry | Complete | `SettingsScreen` shows an optional account profile row with local-first disabled default messaging. `OptionalAccountSettingsState` derives state from the passkey feature flag and provider availability. |
 | #84 Define passkey API contract | Complete | `core/security/passkey/PasskeyModels.kt` and `PasskeyBackendContract.kt` define challenge-response contracts, client results, backend verification results, and unavailable/failure states. |
 | #85 Implement Credential Manager prototype client | Complete | `AndroidCredentialManagerPasskeyClient` adapts AndroidX Credential Manager to the `PasskeyClient` contract and returns safe result states for cancellation, invalid request, provider failure, and unknown failure. |
 | #86 Add Play Integrity request hook | Complete | `PlayIntegrityRequestHook` defines token request behavior; `AndroidPlayIntegrityRequestHook` adapts Google Play Integrity; `NoOpPlayIntegrityRequestHook` keeps disabled/default behavior explicit. |
 | #82 Define optional passkey backend contract | Complete | The backend contract and no-op backend establish the challenge-response boundary needed before any real account service is introduced. |
+
+## #13 Acceptance Criteria Mapping
+
+| Acceptance criterion | Evidence | Status |
+| --- | --- | --- |
+| App works fully without login. | `DefaultFeatureFlags.PasskeyAccountFlowEnabled` defaults to false, `OptionalAccountSettingsState.LocalOnly` disables account controls, and app graph construction does not require a passkey backend. | Complete. |
+| Optional account flow supports Credential Manager. | `AndroidCredentialManagerPasskeyClient` adapts AndroidX Credential Manager behind the `PasskeyClient` contract. | Complete for prototype/foundation scope. |
+| Passkey flow follows challenge-response architecture. | `PasskeyBackendContract` separates begin/complete registration and authentication from the local Credential Manager client response. | Complete. |
+| Unsupported flows fail gracefully. | `NoOpPasskeyClient`, `NoOpPasskeyBackendContract`, `NoOpPlayIntegrityRequestHook`, and typed unavailable/error result models keep missing providers and disabled features non-fatal. | Complete. |
+| Local-first behavior remains default. | Optional account controls are off by default and do not gate ledger screens. | Complete. |
+
+Authentication UI states are represented by `OptionalAccountAuthenticationUiState`:
+
+- `LocalOnly`: default state; no login required and account controls are disabled.
+- `Ready`: feature flag, passkey client, and Play Integrity request hook are available.
+- `ReadyWithoutIntegrity`: passkey client is available but server-side Play Integrity enforcement is not configured.
+- `ProviderUnavailable`: the build or device cannot start a passkey profile.
 
 ## Architecture Boundary
 
