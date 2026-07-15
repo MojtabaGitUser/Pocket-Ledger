@@ -80,6 +80,7 @@ fun PocketLedgerNavGraph(
                     passkeyClient = appGraph.passkeyClient,
                     playIntegrityRequestHook = appGraph.playIntegrityRequestHook,
                 ),
+                backupReadyProfileManager = appGraph.backupReadyProfileManager,
             )
         }
         if (includeDebugDestinations) {

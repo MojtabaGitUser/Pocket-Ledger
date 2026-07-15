@@ -2,8 +2,8 @@
 <!--
     T-E10-06 (#227): Privacy-safe default backup policy.
 
-    Pocket Ledger does not yet implement the optional backup-ready profile from
-    #81. Until that exists, automatic Android backup must not include local
+    Pocket Ledger implements the local-first #81 backup-ready profile foundation,
+    but not encrypted ledger backup or restore. Automatic Android backup must not include local
     ledger data, encrypted preference files, local-only settings, debug output,
     logs, generated reports, temporary files, or cache-like data.
 

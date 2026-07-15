@@ -34,12 +34,15 @@ import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryReposito
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
 import com.mojtaba.pocketledger.core.database.createPocketLedgerDatabase
+import com.mojtaba.pocketledger.core.featureflags.DefaultFeatureFlags
 import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
 import com.mojtaba.pocketledger.core.featureflags.InMemoryFeatureFlagOverrideStore
 import com.mojtaba.pocketledger.core.featureflags.LocalFeatureFlagProvider
 import com.mojtaba.pocketledger.core.featureflags.OverrideableFeatureFlagProvider
 import com.mojtaba.pocketledger.core.featureflags.SharedPreferencesFeatureFlagOverrideStore
 import com.mojtaba.pocketledger.core.security.applock.AppLockManager
+import com.mojtaba.pocketledger.core.security.backup.BackupReadyProfileManager
+import com.mojtaba.pocketledger.core.security.backup.BackupReadyProfilePrerequisites
 import com.mojtaba.pocketledger.core.security.integrity.PlayIntegrityRequestHook
 import com.mojtaba.pocketledger.core.security.integrity.NoOpPlayIntegrityRequestHook
 import com.mojtaba.pocketledger.core.security.passkey.NoOpPasskeyBackendContract
@@ -49,6 +52,7 @@ import com.mojtaba.pocketledger.core.security.passkey.PasskeyClient
 import com.mojtaba.pocketledger.core.security.logging.AppLogger
 import com.mojtaba.pocketledger.core.security.logging.LoggingPolicy
 import com.mojtaba.pocketledger.core.security.logging.SafeAppLogger
+import com.mojtaba.pocketledger.core.security.preferences.DefaultSensitivePreferenceKeys
 import com.mojtaba.pocketledger.core.security.preferences.EncryptedSensitivePreferences
 import com.mojtaba.pocketledger.core.security.preferences.InMemorySensitivePreferences
 import com.mojtaba.pocketledger.core.security.preferences.SensitivePreferences
@@ -83,6 +87,7 @@ class PocketLedgerAppGraph private constructor(
     val passkeyClient: PasskeyClient,
     val passkeyBackendContract: PasskeyBackendContract,
     val playIntegrityRequestHook: PlayIntegrityRequestHook,
+    val backupReadyProfileManager: BackupReadyProfileManager,
     @Suppress("unused")
     val backgroundTaskScheduler: BackgroundTaskScheduler,
     val backgroundJobSettingsManager: BackgroundJobSettingsManager,
@@ -109,6 +114,7 @@ class PocketLedgerAppGraph private constructor(
             passkeyClient: PasskeyClient = NoOpPasskeyClient(),
             passkeyBackendContract: PasskeyBackendContract = NoOpPasskeyBackendContract(),
             playIntegrityRequestHook: PlayIntegrityRequestHook = NoOpPlayIntegrityRequestHook(),
+            backupReadyProfileManager: BackupReadyProfileManager = BackupReadyProfileManager(sensitivePreferences),
             backgroundTaskScheduler: BackgroundTaskScheduler,
             backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
             appLogger: AppLogger,
@@ -132,6 +138,7 @@ class PocketLedgerAppGraph private constructor(
             passkeyClient = passkeyClient,
             passkeyBackendContract = passkeyBackendContract,
             playIntegrityRequestHook = playIntegrityRequestHook,
+            backupReadyProfileManager = backupReadyProfileManager,
             backgroundTaskScheduler = backgroundTaskScheduler,
             backgroundJobSettingsManager = backgroundJobSettingsManager ?: BackgroundJobSettingsManager(
                 preferences = sensitivePreferences,
@@ -209,6 +216,17 @@ class PocketLedgerAppGraph private constructor(
 
                 val passkeyClient = AndroidCredentialManagerPasskeyClient(context)
                 val playIntegrityRequestHook = AndroidPlayIntegrityRequestHook(context)
+                val backupReadyProfileManager = BackupReadyProfileManager(
+                    preferences = sensitivePreferences,
+                    prerequisitesProvider = { preferences ->
+                        BackupReadyProfilePrerequisites(
+                            passkeyAccountFlowEnabled = featureFlags.isEnabled(DefaultFeatureFlags.PasskeyAccountFlowEnabled),
+                            cloudSyncEnabled = featureFlags.isEnabled(DefaultFeatureFlags.CloudSyncEnabled),
+                            passkeyCredentialStored = !preferences.getString(DefaultSensitivePreferenceKeys.PasskeyCredentialId).isNullOrBlank(),
+                            accountSessionStored = !preferences.getString(DefaultSensitivePreferenceKeys.AccountSessionToken).isNullOrBlank(),
+                        )
+                    },
+                )
 
                 val backgroundTaskScheduler = WorkManagerScheduler(
                     workManager = WorkManager.getInstance(context),
@@ -237,6 +255,7 @@ class PocketLedgerAppGraph private constructor(
                     passkeyClient = passkeyClient,
                     passkeyBackendContract = NoOpPasskeyBackendContract(),
                     playIntegrityRequestHook = playIntegrityRequestHook,
+                    backupReadyProfileManager = backupReadyProfileManager,
                     backgroundTaskScheduler = backgroundTaskScheduler,
                     backgroundJobSettingsManager = BackgroundJobSettingsManager(
                         preferences = sensitivePreferences,

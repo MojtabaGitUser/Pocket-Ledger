@@ -37,6 +37,9 @@ import com.mojtaba.pocketledger.core.security.applock.AppLockManager
 import com.mojtaba.pocketledger.core.security.applock.AppLockState
 import com.mojtaba.pocketledger.core.security.applock.AppLockStatus
 import com.mojtaba.pocketledger.core.security.applock.AppLockUnavailableReason
+import com.mojtaba.pocketledger.core.security.backup.BackupReadyProfileManager
+import com.mojtaba.pocketledger.core.security.backup.BackupReadyProfilePrerequisites
+import com.mojtaba.pocketledger.core.security.backup.BackupReadyProfileState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -44,6 +47,7 @@ fun SettingsScreen(
     appLockManager: AppLockManager,
     modifier: Modifier = Modifier,
     backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
+    backupReadyProfileManager: BackupReadyProfileManager? = null,
     optionalAccountSettingsState: OptionalAccountSettingsState = OptionalAccountSettingsState(
         featureEnabled = false,
         passkeyClientAvailable = false,
@@ -53,8 +57,14 @@ fun SettingsScreen(
     val state by appLockManager.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var backgroundState by remember(backgroundJobSettingsManager) { mutableStateOf(BackgroundJobSettingsState()) }
+    var backupReadyProfileState by remember(backupReadyProfileManager) {
+        mutableStateOf(localOnlyBackupReadyProfileState())
+    }
     LaunchedEffect(backgroundJobSettingsManager) {
         backgroundState = backgroundJobSettingsManager?.state() ?: BackgroundJobSettingsState()
+    }
+    LaunchedEffect(backupReadyProfileManager) {
+        backupReadyProfileState = backupReadyProfileManager?.state() ?: localOnlyBackupReadyProfileState()
     }
 
     val spacing = PocketLedgerThemeDefaults.spacing
@@ -82,6 +92,14 @@ fun SettingsScreen(
                     scope.launch { appLockManager.setAppLockEnabled(enabled) }
                 },
                 optionalAccountSettingsState = optionalAccountSettingsState,
+                backupReadyProfileState = backupReadyProfileState,
+                onBackupReadyProfileOptInChange = { accepted ->
+                    backupReadyProfileManager?.let { manager ->
+                        scope.launch {
+                            backupReadyProfileState = manager.setOptInAccepted(accepted)
+                        }
+                    }
+                },
             )
             backgroundJobSettingsManager?.let { manager ->
                 BackgroundJobsSettingsSection(
@@ -109,6 +127,8 @@ private fun SecuritySettingsSection(
     appLockStateDescription: String,
     onAppLockEnabledChange: (Boolean) -> Unit,
     optionalAccountSettingsState: OptionalAccountSettingsState,
+    backupReadyProfileState: BackupReadyProfileState,
+    onBackupReadyProfileOptInChange: (Boolean) -> Unit,
 ) {
     val spacing = PocketLedgerThemeDefaults.spacing
     Column {
@@ -157,6 +177,27 @@ private fun SecuritySettingsSection(
                         MaterialTheme.colorScheme.primary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            },
+        )
+        ListItem(
+            modifier = Modifier.semantics {
+                contentDescription = "Backup-ready profile"
+                stateDescription = backupReadyProfileState.stateDescription
+                if (!backupReadyProfileState.controlsEnabled) disabled()
+            },
+            headlineContent = { Text(text = "Backup-ready profile") },
+            supportingContent = { Text(text = backupReadyProfileState.supportingText) },
+            trailingContent = {
+                Switch(
+                    checked = backupReadyProfileState.optInAccepted,
+                    onCheckedChange = onBackupReadyProfileOptInChange,
+                    enabled = backupReadyProfileState.controlsEnabled,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Backup-ready profile switch"
+                        stateDescription = backupReadyProfileState.stateDescription
+                        if (!backupReadyProfileState.controlsEnabled) disabled()
                     },
                 )
             },
@@ -251,3 +292,9 @@ private fun AppLockState.appLockStateDescription(
         isEnabled -> "On, disabled"
         else -> "Off, disabled"
     }
+private fun localOnlyBackupReadyProfileState(): BackupReadyProfileState = BackupReadyProfileState.from(
+    optInAccepted = false,
+    acceptedAtMillis = null,
+    policyVersion = null,
+    prerequisites = BackupReadyProfilePrerequisites(),
+)
