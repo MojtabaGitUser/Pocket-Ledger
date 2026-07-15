@@ -1,6 +1,8 @@
 # Release Readiness Checklist
 
 Use this checklist before treating a Pocket Ledger artifact as release-ready.
+For install-specific evidence, use `docs/release/release-ready-install.md` and
+`docs/release/smoke-test.md`.
 PR validation and release-candidate workflows support this process, but they do
 not replace human review for signing, privacy, and Play Store readiness.
 
@@ -53,6 +55,9 @@ promotion:
   candidate.
 - [ ] `POCKET_LEDGER_VERSION_NAME` was reviewed and matches the release train.
 - [ ] Release signing is configured for release-ready APK/AAB builds.
+- [ ] `docs/release/release-ready-install.md` was followed for the chosen
+  artifact class: signed release APK/AAB, Play internal testing AAB, or
+  benchmark release-like APK when signing secrets are intentionally unavailable.
 - [ ] The upload keystore is stored securely outside the repository.
 - [ ] Required GitHub Actions signing secrets are configured in a protected
   repository or environment scope.
@@ -222,11 +227,15 @@ Run connected checks when hardware is available:
     candidate, screenshot/benchmark, and internal distribution workflows.
   - #16 CI/CD automation is closeable after GitHub branch protection requires
     `PR Validation / Android validation` for `dev` and `main`.
-  - #17 stays open until Play Store assets, public privacy URL, app-content
-    declarations, and production submission evidence are complete.
+  - #17 can be closed only after Play Store assets, public privacy URL,
+    app-content declarations, signed/internal install evidence, and production
+    submission evidence are complete.
   - #129 release checklist completed/updated; manual release gates remain.
-  - #131 store listing copy and asset plan prepared; Play Console upload and
-    final binary graphics remain manual unless completed separately.
+  - #131 store listing copy, asset acceptance matrix, and screenshot plan
+    prepared; issue is closed, while Play Console upload and final binary
+    graphics remain manual unless completed separately.
+  - #128 release-ready install runbook added; close after signed release or
+    release-like benchmark install evidence is recorded on a named target.
   - #132 privacy policy updated and ready for hosting/legal review.
   - #7 security criteria mapped to code/docs; remaining non-implemented items
     are explicit.
