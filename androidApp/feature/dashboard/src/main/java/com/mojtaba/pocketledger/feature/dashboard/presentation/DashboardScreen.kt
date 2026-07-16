@@ -3,6 +3,7 @@ package com.mojtaba.pocketledger.feature.dashboard.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,6 +46,11 @@ fun DashboardScreen(
     widthSizeClass: PocketLedgerWindowWidthSizeClass = PocketLedgerWindowWidthSizeClass.Compact,
 ) {
     val fontScale = LocalDensity.current.fontScale
+    val horizontalPadding = when (widthSizeClass) {
+        PocketLedgerWindowWidthSizeClass.Compact -> 16.dp
+        PocketLedgerWindowWidthSizeClass.Medium -> 24.dp
+        PocketLedgerWindowWidthSizeClass.Expanded -> 32.dp
+    }
 
     Scaffold(
         topBar = {
@@ -64,6 +70,7 @@ fun DashboardScreen(
                 .padding(contentPadding)
                 .fillMaxSize(),
             maxWidth = 1180.dp,
+            horizontalPadding = horizontalPadding,
         ) {
             DashboardContent(
                 uiState = uiState,
@@ -120,14 +127,14 @@ private fun DashboardSummaryContent(
         modifier = modifier
             .fillMaxSize()
             .testTag("DashboardContentList"),
-        verticalArrangement = Arrangement.spacedBy(spacing.medium),
+        contentPadding = PaddingValues(vertical = spacing.large),
+        verticalArrangement = Arrangement.spacedBy(spacing.large),
     ) {
         item {
             SectionHeader(
                 title = "Financial overview",
                 subtitle = summary.period.label,
                 modifier = Modifier
-                    .padding(top = spacing.medium)
                     .semantics { heading() },
             )
         }
@@ -150,9 +157,6 @@ private fun DashboardSummaryContent(
                 summary = summary,
                 onSetBudgetClick = onSetBudgetClick,
             )
-        }
-        item {
-            Box(modifier = Modifier.padding(bottom = spacing.medium))
         }
     }
 }
