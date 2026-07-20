@@ -138,11 +138,12 @@ private fun AdaptiveBottomNavigationBar(
                 label = {
                     Text(
                         text = item.label,
+                        style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 },
-                alwaysShowLabel = false,
+                alwaysShowLabel = true,
                 modifier = Modifier.semantics {
                     contentDescription = item.contentDescription
                 }.pocketLedgerSelectedState(item.selected),
@@ -171,11 +172,12 @@ private fun AdaptiveNavigationRail(
                 label = {
                     Text(
                         text = item.label,
+                        style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 },
-                alwaysShowLabel = false,
+                alwaysShowLabel = true,
                 modifier = Modifier.semantics {
                     contentDescription = item.contentDescription
                 }.pocketLedgerSelectedState(item.selected),

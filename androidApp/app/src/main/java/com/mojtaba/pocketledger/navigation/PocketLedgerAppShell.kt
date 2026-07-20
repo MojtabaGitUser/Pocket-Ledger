@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.mojtaba.pocketledger.PocketLedgerAppGraph
+import com.mojtaba.pocketledger.core.designsystem.adaptive.AdaptiveNavigationType
 import com.mojtaba.pocketledger.core.designsystem.adaptive.AdaptiveNavigationState
 import com.mojtaba.pocketledger.feature.dashboard.navigation.DashboardRoutes
 import com.mojtaba.pocketledger.feature.search.navigation.SearchRoutes
@@ -21,7 +22,11 @@ fun PocketLedgerAppShell(
 ) {
     val currentTopLevelDestination = appState.currentTopLevelDestination()
     val title = currentTopLevelDestination?.label ?: "Pocket Ledger"
-    val navigationItems = appState.topLevelDestinations.map { destination ->
+    val visibleDestinations = appState.topLevelDestinations.filter { destination ->
+        adaptiveNavigationState.navigationType != AdaptiveNavigationType.BottomBar ||
+            destination.isPrimaryDestination
+    }
+    val navigationItems = visibleDestinations.map { destination ->
         AdaptiveNavigationItem(
             label = destination.label,
             shortLabel = destination.shortLabel,
@@ -54,6 +59,10 @@ fun PocketLedgerAppShell(
         }
     }
 }
+
+private val TopLevelDestination.isPrimaryDestination: Boolean
+    get() = this != TopLevelDestination.DebugHealth &&
+        this != TopLevelDestination.DebugFeatureFlags
 
 @Composable
 private fun PocketLedgerAppState.shouldShowShellTopBar(): Boolean {
