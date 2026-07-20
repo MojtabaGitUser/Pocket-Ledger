@@ -29,14 +29,11 @@ class TransactionListScrollBenchmark {
             findByDescription("Transactions navigation destination").click()
             waitForText("Neighborhood Market")
 
-            val transactionList = findByResource("TransactionList")
             repeat(3) {
-                transactionList.fling(Direction.DOWN)
-                device.waitForIdle()
+                flingVertically(Direction.DOWN)
             }
             repeat(3) {
-                transactionList.fling(Direction.UP)
-                device.waitForIdle()
+                flingVertically(Direction.UP)
             }
         }
     }

@@ -1,5 +1,30 @@
 # Pocket Ledger Performance Benchmarks
 
+## 2026-07-19 Connected Benchmark And Baseline Profile Evidence
+
+The benchmark harness was exercised on Android Emulator `Pixel_9_Pro_XL(AVD)` (`sdk_gphone16k_x86_64`, API 37, 4 virtual CPU cores, CPU frequency not locked). Emulator suppression was required by AndroidX Benchmark. These results prove that the scenarios, Perfetto capture, R8 benchmark build, and profile generation operate end to end; they must not be used as physical-device performance targets.
+
+Validated outcomes:
+
+- The benchmark-only setup activity now performs Room work on `Dispatchers.IO`, closes its short-lived database, reports failures visibly, and finishes only after deterministic seed completion.
+- Seed setup no longer deletes the database file while Room is active; `clearAllTables()` plus deterministic upserts provides a repeatable reset without main-thread access or file-handle races.
+- UI synchronization uses stable content descriptions and screen-relative gestures rather than date-dependent dashboard copy, minification-sensitive resource IDs, or dynamic Compose text assertions that become stale in UiAutomator.
+- `LargeDatasetBenchmark` and `TransactionListScrollBenchmark` passed together and emitted Perfetto traces plus benchmark JSON.
+- Diagnostic emulator frame-duration results were: large dataset P50 `60.85 ms`, P90 `91.25 ms`, P95 `119.52 ms`, P99 `307.60 ms`; transaction scroll P50 `60.54 ms`, P90 `81.48 ms`, P95 `131.12 ms`. The emulator was not CPU-locked, so these values are a reproducibility baseline only.
+- Startup, dashboard, and search scenarios executed successfully in the connected suite; all generated traces and JSON remain under `macrobenchmark/build/outputs/connected_android_test_additional_output/`.
+- `:app:generateReleaseBaselineProfile` passed against the non-minified release variant and generated `app/src/release/generated/baselineProfiles/baseline-prof.txt`.
+
+The Baseline Profile generator is deliberately release-safe: it does not depend on the benchmark-only seed activity, which is absent from production release manifests. It profiles cold launch and the Dashboard, Transactions, Search, and Settings navigation paths using only release-visible UI contracts.
+
+Commands used:
+
+```powershell
+.\gradlew.bat "-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR" :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
+.\gradlew.bat "-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR" :app:generateReleaseBaselineProfile
+```
+
+A physical-device run with locked/stable clocks is still required before setting regression thresholds or making user-facing performance claims.
+
 Pocket Ledger uses a dedicated `:macrobenchmark` module for local, manual
 Macrobenchmark runs. These benchmarks are performance evidence tools and are
 not part of normal PR validation.

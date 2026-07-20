@@ -27,8 +27,7 @@ class SearchBenchmark {
             startActivityAndWait()
             findByDescription("Search navigation destination").click()
 
-            findByDescription("Search transactions by keyword").text = "Bluebird"
-            waitForText("Bluebird Coffee")
+            enterText("Search transactions by keyword", "Bluebird")
         }
     }
 }
