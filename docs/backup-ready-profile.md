@@ -112,3 +112,18 @@ Run from the repository root:
 ```powershell
 .\androidApp\gradlew.bat --no-daemon :core:security:testDebugUnitTest :app:testDebugUnitTest :app:compileDebugKotlin :app:compileReleaseKotlin --console=plain --stacktrace
 ```
+## 2026-07-20 Closure Validation For #81
+
+The backup-ready profile foundation was re-audited as an opt-in state and policy boundary, not as a claim that ledger backup exists. The manager persists opt-in, timestamp, and policy version through `SensitivePreferences`; derives account and encrypted-pipeline prerequisites; keeps ledger data excluded from Android backup; and exposes local-only, account-required, backup-pending, and backup-ready states to Settings.
+
+Consent evaluation is now explicitly fail-closed. A partial preference write, missing acceptance timestamp, or consent recorded under an outdated policy version resolves to `LocalOnly`, clears consent metadata from the returned state, and cannot prepare an encrypted backup. Tests cover these corrupted and outdated records in addition to opt-in, prerequisite, ready, and opt-out transitions.
+
+Validated commands:
+
+```powershell
+.\gradlew.bat :core:security:testDebugUnitTest --tests '*BackupReady*'
+.\gradlew.bat :app:testDebugUnitTest --tests '*OptionalAccount*'
+.\gradlew.bat :app:assembleDebug :app:assembleRelease lintRelease
+```
+
+#81 is complete only for the local-first backup-ready profile foundation. No encrypted payload format, cloud transport, restore, recovery, retention, or account backend is implemented or implied.
