@@ -9,7 +9,11 @@ sealed interface PasskeyBackendResult<out T> {
 
     data class Failure(
         val safeMessage: String,
-    ) : PasskeyBackendResult<Nothing>
+    ) : PasskeyBackendResult<Nothing> {
+        init {
+            require(safeMessage.isNotBlank()) { "A safe backend failure message must not be blank." }
+        }
+    }
 }
 
 data class PasskeyRegistrationVerification(

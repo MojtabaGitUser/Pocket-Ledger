@@ -93,17 +93,22 @@ data class BackupReadyProfileState(
             policyVersion: String?,
             prerequisites: BackupReadyProfilePrerequisites,
         ): BackupReadyProfileState {
+            // Consent is fail-closed: partial writes and consent captured under
+            // another policy version must never enable a future backup path.
+            val validOptIn = optInAccepted &&
+                acceptedAtMillis != null &&
+                policyVersion == PolicyVersion
             val status = when {
-                !optInAccepted -> BackupReadyProfileStatus.LocalOnly
+                !validOptIn -> BackupReadyProfileStatus.LocalOnly
                 !prerequisites.accountIdentityReady -> BackupReadyProfileStatus.WaitingForAccountIdentity
                 !prerequisites.encryptedBackupPipelineReady -> BackupReadyProfileStatus.WaitingForEncryptedBackupPipeline
                 else -> BackupReadyProfileStatus.ReadyForEncryptedBackupPipeline
             }
             return BackupReadyProfileState(
                 status = status,
-                optInAccepted = optInAccepted,
-                acceptedAtMillis = acceptedAtMillis,
-                policyVersion = policyVersion,
+                optInAccepted = validOptIn,
+                acceptedAtMillis = acceptedAtMillis.takeIf { validOptIn },
+                policyVersion = policyVersion.takeIf { validOptIn },
                 prerequisites = prerequisites,
             )
         }

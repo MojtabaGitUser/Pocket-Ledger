@@ -85,3 +85,18 @@ Run from the repository root:
 ```powershell
 .\androidApp\gradlew.bat --no-daemon :core:security:testDebugUnitTest :app:testDebugUnitTest :app:compileDebugKotlin :app:compileReleaseKotlin --console=plain --stacktrace
 ```
+## 2026-07-20 Closure Validation For #13
+
+The local-first foundation scope was re-audited against every acceptance criterion and task in #13. The app graph remains constructible without an account or backend; the feature flag defaults off; Credential Manager is isolated behind `PasskeyClient`; registration and authentication preserve the begin/complete challenge-response boundary; and unavailable providers, the no-op backend, and missing Play Integrity support return typed safe states.
+
+The contract model now rejects contradictory availability values and blank safe backend failure messages. Tests exercise all four no-op backend operations: begin/complete registration and begin/complete authentication. This prevents future wiring from accidentally treating an unavailable backend as a partial success.
+
+Validated commands:
+
+```powershell
+.\gradlew.bat :core:security:testDebugUnitTest --tests '*Passkey*'
+.\gradlew.bat :app:testDebugUnitTest --tests '*OptionalAccount*'
+.\gradlew.bat :app:assembleDebug :app:assembleRelease lintRelease
+```
+
+#13 is complete only for the documented foundation scope. Production registration, authentication, sessions, recovery, account deletion, and server-side verification remain deliberately excluded and require a separate backend epic.

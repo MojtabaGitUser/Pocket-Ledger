@@ -115,4 +115,35 @@ class BackupReadyProfileManagerTest {
         assertNull(preferences.getLong(DefaultSensitivePreferenceKeys.BackupReadyProfileAcceptedAt))
         assertNull(preferences.getString(DefaultSensitivePreferenceKeys.BackupReadyProfilePolicyVersion))
     }
+
+    @Test
+    fun incompleteOrOutdatedConsentMetadataFailsClosed() {
+        val prerequisites = BackupReadyProfilePrerequisites(
+            passkeyAccountFlowEnabled = true,
+            cloudSyncEnabled = true,
+            passkeyCredentialStored = true,
+            accountSessionStored = true,
+        )
+
+        val missingTimestamp = BackupReadyProfileState.from(
+            optInAccepted = true,
+            acceptedAtMillis = null,
+            policyVersion = BackupReadyProfileState.PolicyVersion,
+            prerequisites = prerequisites,
+        )
+        val outdatedPolicy = BackupReadyProfileState.from(
+            optInAccepted = true,
+            acceptedAtMillis = 42L,
+            policyVersion = "backup-ready-profile-v0",
+            prerequisites = prerequisites,
+        )
+
+        listOf(missingTimestamp, outdatedPolicy).forEach { state ->
+            assertEquals(BackupReadyProfileStatus.LocalOnly, state.status)
+            assertFalse(state.optInAccepted)
+            assertNull(state.acceptedAtMillis)
+            assertNull(state.policyVersion)
+            assertFalse(state.canPrepareEncryptedBackup)
+        }
+    }
 }

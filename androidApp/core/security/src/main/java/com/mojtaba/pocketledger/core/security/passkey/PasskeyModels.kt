@@ -50,7 +50,9 @@ data class PasskeyClientAvailability(
     val reason: PasskeyUnavailableReason? = null,
 ) {
     init {
-        require(available || reason != null) { "Unavailable passkey clients must include a reason." }
+        require(available == (reason == null)) {
+            "Available passkey clients must not include a reason; unavailable clients must include one."
+        }
     }
 
     companion object {
