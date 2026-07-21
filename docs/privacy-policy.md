@@ -60,9 +60,11 @@ default. Pocket Ledger excludes app-private ledger data, the Room database,
 SQLite sidecar files, encrypted sensitive preferences, local-only settings,
 caches, logs, temporary files, debug files, generated reports, and external app
 files from automatic Android cloud backup and Android device-to-device transfer.
-No optional backup-ready profile is implemented in the current app. Future
-account, passkey, cloud sync, or backup-ready profile behavior would require a
-separate implementation, privacy review, and policy update before release.
+The current app includes a local-first optional backup-ready profile foundation
+for explicit opt-in state, but it does not upload, sync, restore, or include
+ledger records in Android backup. Future production account, cloud sync,
+encrypted backup, or restore behavior would require a separate implementation,
+privacy review, and policy update before release.
 
 ## Information Not Collected By Current App Features
 
@@ -205,8 +207,8 @@ private release data in logs or artifacts.
 Ledger records remain on the user's device until the user deletes them in the
 app, clears app storage, or uninstalls the app. Pocket Ledger's Android backup
 and data-extraction rules exclude the local ledger database from automatic
-cloud backup and device-to-device transfer by default because a backup-ready
-profile is not implemented.
+cloud backup and device-to-device transfer by default because encrypted backup
+and restore are not implemented.
 
 Firebase or Google SDK data retention, if collected by enabled SDK behavior, is
 governed by the relevant Firebase/Google service settings and policies.
@@ -236,10 +238,10 @@ sensitive preferences, app-private files, shared preferences, external app
 files, device-protected storage, caches, logs, temporary files, debug artifacts,
 and generated reports.
 
-This is a conservative default for #227 because the app does not currently
-implement the optional backup-ready profile tracked by #81. It supports the
-local-data security goals related to #7, but it does not complete #7 or #81 by
-itself.
+This is a conservative default for #227. The #81 local-first backup-ready
+profile foundation stores explicit opt-in state, but it does not include
+ledger data in automatic backup or provide encrypted restore. It supports the
+local-data security goals related to #7 without weakening local-only storage.
 
 ## Security
 

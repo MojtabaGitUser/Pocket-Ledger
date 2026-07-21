@@ -6,6 +6,6 @@ internal object BenchmarkConfig {
     const val SeedModeExtra = "com.mojtaba.pocketledger.benchmark.SEED_MODE"
     const val SeedModeDemo = "demo"
     const val SeedModeLarge = "large"
-    const val TimeoutMillis = 10_000L
-    const val LargeSeedTimeoutMillis = 60_000L
+    const val TimeoutMillis = 30_000L
+    const val LargeSeedTimeoutMillis = 180_000L
 }

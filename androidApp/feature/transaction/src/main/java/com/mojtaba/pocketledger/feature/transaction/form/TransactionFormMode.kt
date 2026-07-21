@@ -1,6 +1,3 @@
 package com.mojtaba.pocketledger.feature.transaction.form
 
-enum class TransactionFormMode {
-    CREATE,
-    EDIT,
-}
+typealias TransactionFormMode = com.mojtaba.pocketledger.shared.domain.transaction.TransactionFormMode

@@ -4,17 +4,33 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import com.mojtaba.pocketledger.BuildConfig
 import com.mojtaba.pocketledger.core.analytics.ProductAnalyticsProviderState
+import com.mojtaba.pocketledger.core.background.BackgroundTaskScheduler
+import com.mojtaba.pocketledger.core.background.TaskStatus
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationTask
 import com.mojtaba.pocketledger.core.database.DatabaseMigrations
 import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
 import com.mojtaba.pocketledger.core.featureflags.BooleanFeatureFlag
 import com.mojtaba.pocketledger.core.featureflags.DefaultFeatureFlags
 import com.mojtaba.pocketledger.core.featureflags.FeatureFlagEvaluator
+import com.mojtaba.pocketledger.observability.CrashReportingStatus
+import com.mojtaba.pocketledger.observability.StartupFailureStatus
 
 class DebugHealthReportFactory(
     private val buildInfo: DebugHealthBuildInfo,
     private val featureFlagStates: List<DebugHealthStatus>,
+    private val backgroundTaskScheduler: BackgroundTaskScheduler? = null,
+    private val backgroundJobsEnabled: Boolean = false,
+    private val crashReportingStatus: CrashReportingStatus = CrashReportingStatus(
+        provider = "Firebase Crashlytics",
+        configured = false,
+        collectionEnabled = false,
+    ),
+    private val startupFailureStatus: StartupFailureStatus = StartupFailureStatus(
+        trackerEnabled = false,
+        lastFailure = null,
+    ),
 ) {
-    fun create(): DebugHealthReport =
+    suspend fun create(): DebugHealthReport =
         DebugHealthReport(
             sections = listOf(
                 buildSection(),
@@ -24,6 +40,7 @@ class DebugHealthReportFactory(
                 observabilitySection(),
                 databaseSection(),
                 featureFlagSection(),
+                backgroundJobsSection(),
                 releaseSafetySection(),
             ),
         )
@@ -135,14 +152,20 @@ class DebugHealthReportFactory(
                 status(
                     "Analytics dependency",
                     "Configured",
-                    "Firebase Analytics is included through the Firebase BoM, but product event logging is not wired.",
+                    "Firebase Analytics is included through the Firebase BoM, but product event logging remains privacy-gated.",
                     DebugHealthSeverity.Ready,
                 ),
                 status(
                     "Crash reporting",
-                    "Not configured",
-                    "Crashlytics runtime dependency is not present in the app module.",
-                    DebugHealthSeverity.Warning,
+                    crashReportingStatus.displayValue(),
+                    "${crashReportingStatus.provider} is wired through the app crash reporter abstraction.",
+                    crashReportingStatus.severity(),
+                ),
+                status(
+                    "Crash collection gate",
+                    enabledValue(buildInfo.crashReportingEnabled),
+                    "Crash collection is enabled only for release builds through BuildConfig.CRASH_REPORTING_ENABLED.",
+                    if (buildInfo.crashReportingEnabled) DebugHealthSeverity.Ready else DebugHealthSeverity.Neutral,
                 ),
                 status(
                     "App Distribution",
@@ -164,9 +187,16 @@ class DebugHealthReportFactory(
                     if (buildInfo.loggingEnabled) DebugHealthSeverity.Ready else DebugHealthSeverity.Neutral,
                 ),
                 status(
-                    "Startup health",
-                    "No critical startup failure recorded",
-                    "No dedicated startup failure tracker exists yet; this screen reports the safe default only.",
+                    "Startup failure tracker",
+                    if (startupFailureStatus.trackerEnabled) "Enabled" else "Disabled",
+                    "Critical startup failures are captured through StartupFailureReporter before being sent to crash reporting.",
+                    if (startupFailureStatus.trackerEnabled) DebugHealthSeverity.Ready else DebugHealthSeverity.Warning,
+                ),
+                status(
+                    "Last critical startup failure",
+                    startupFailureStatus.lastFailure?.displayValue() ?: "None recorded",
+                    "Only sanitized failure stage, class name, timestamp, and reporting state are retained.",
+                    if (startupFailureStatus.lastFailure == null) DebugHealthSeverity.Ready else DebugHealthSeverity.Warning,
                 ),
                 status(
                     "Sensitive data redaction",
@@ -183,7 +213,7 @@ class DebugHealthReportFactory(
                 status(
                     "Analytics provider",
                     buildInfo.analyticsProviderState,
-                    "Runtime analytics uses debug sink or no-op behavior; Firebase Analytics event logging is not wired.",
+                    "Runtime analytics uses debug sink or no-op behavior; Firebase Analytics event logging is not wired for product events.",
                 ),
             ),
         )
@@ -192,11 +222,7 @@ class DebugHealthReportFactory(
         DebugHealthSection(
             title = "Database",
             statuses = listOf(
-                status(
-                    "Database",
-                    PocketLedgerDatabase.DATABASE_NAME,
-                    "Local Room database name.",
-                ),
+                status("Database", PocketLedgerDatabase.DATABASE_NAME, "Local Room database name."),
                 status(
                     "Schema version",
                     DatabaseMigrations.CURRENT_VERSION.toString(),
@@ -216,15 +242,32 @@ class DebugHealthReportFactory(
         DebugHealthSection(
             title = "Feature Flags",
             statuses = featureFlagStates.ifEmpty {
-                listOf(
-                    status(
-                        "Feature flags",
-                        "Not configured",
-                        "No safe feature flag summary is available.",
-                    ),
-                )
+                listOf(status("Feature flags", "Not configured", "No safe feature flag summary is available."))
             },
         )
+
+    private suspend fun backgroundJobsSection(): DebugHealthSection {
+        val status = runCatching {
+            backgroundTaskScheduler?.status(MonthlySummaryPreparationTask.Id) ?: TaskStatus.Unknown
+        }.getOrDefault(TaskStatus.Unknown)
+        return DebugHealthSection(
+            title = "Background Jobs",
+            statuses = listOf(
+                status(
+                    "Global background jobs",
+                    enabledValue(backgroundJobsEnabled),
+                    "Global feature flag gate for active WorkManager scheduling.",
+                    if (backgroundJobsEnabled) DebugHealthSeverity.Ready else DebugHealthSeverity.Neutral,
+                ),
+                status(
+                    "Monthly summary preparation",
+                    status.displayValue(),
+                    "Status is read through BackgroundTaskScheduler for the monthly summary unique work.",
+                    status.severity(),
+                ),
+            ),
+        )
+    }
 
     private fun releaseSafetySection(): DebugHealthSection =
         DebugHealthSection(
@@ -264,11 +307,58 @@ class DebugHealthReportFactory(
             severity = severity,
         )
 
+    private fun CrashReportingStatus.displayValue(): String =
+        when {
+            !configured -> "Not configured"
+            collectionEnabled -> "Configured and enabled"
+            else -> "Configured but disabled"
+        }
+
+    private fun CrashReportingStatus.severity(): DebugHealthSeverity =
+        when {
+            !configured -> DebugHealthSeverity.Warning
+            collectionEnabled -> DebugHealthSeverity.Ready
+            else -> DebugHealthSeverity.Neutral
+        }
+
+    private fun com.mojtaba.pocketledger.observability.StartupFailureSnapshot.displayValue(): String =
+        "${throwableClassName.substringAfterLast('.')} at $stage reported=${reportedToCrashReporter}"
+
+    private fun TaskStatus.displayValue(): String =
+        when (this) {
+            TaskStatus.NotScheduled -> "Not scheduled"
+            TaskStatus.Enqueued -> "Enqueued"
+            TaskStatus.Running -> "Running"
+            TaskStatus.Succeeded -> "Succeeded"
+            TaskStatus.Failed -> "Failed"
+            TaskStatus.Cancelled -> "Cancelled"
+            TaskStatus.Blocked -> "Blocked"
+            TaskStatus.Unknown -> "Unknown"
+        }
+
+    private fun TaskStatus.severity(): DebugHealthSeverity =
+        when (this) {
+            TaskStatus.Enqueued,
+            TaskStatus.Running,
+            TaskStatus.Succeeded,
+            -> DebugHealthSeverity.Ready
+            TaskStatus.Failed,
+            TaskStatus.Blocked,
+            TaskStatus.Unknown,
+            -> DebugHealthSeverity.Warning
+            TaskStatus.NotScheduled,
+            TaskStatus.Cancelled,
+            -> DebugHealthSeverity.Neutral
+        }
+
     companion object {
         fun from(
             context: Context,
             featureFlags: FeatureFlagEvaluator,
             analyticsProviderState: ProductAnalyticsProviderState,
+            backgroundTaskScheduler: BackgroundTaskScheduler? = null,
+            crashReportingStatus: CrashReportingStatus,
+            startupFailureStatus: StartupFailureStatus,
         ): DebugHealthReportFactory =
             DebugHealthReportFactory(
                 buildInfo = DebugHealthBuildInfo(
@@ -282,6 +372,7 @@ class DebugHealthReportFactory(
                     debuggable = context.applicationInfo.isDebuggable(),
                     internalBuild = BuildConfig.IS_INTERNAL_BUILD,
                     loggingEnabled = BuildConfig.LOGGING_ENABLED,
+                    crashReportingEnabled = BuildConfig.CRASH_REPORTING_ENABLED,
                     ci = System.getenv("CI").equals("true", ignoreCase = true),
                     firebaseConfigured = context.resources.getIdentifier(
                         "google_app_id",
@@ -301,6 +392,10 @@ class DebugHealthReportFactory(
                             severity = DebugHealthSeverity.Neutral,
                         )
                     },
+                backgroundTaskScheduler = backgroundTaskScheduler,
+                backgroundJobsEnabled = featureFlags.isEnabled(DefaultFeatureFlags.BackgroundJobsEnabled),
+                crashReportingStatus = crashReportingStatus,
+                startupFailureStatus = startupFailureStatus,
             )
 
         private fun ApplicationInfo.isDebuggable(): Boolean =

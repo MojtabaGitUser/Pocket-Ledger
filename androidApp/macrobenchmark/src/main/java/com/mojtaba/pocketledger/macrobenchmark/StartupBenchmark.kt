@@ -24,7 +24,7 @@ class StartupBenchmark {
             },
         ) {
             startActivityAndWait()
-            waitForText("No dashboard data yet")
+            waitForDescription("Dashboard navigation destination")
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿# Pocket Ledger
+# Pocket Ledger
 
 Pocket Ledger is an Android-first Kotlin project with a modular foundation and a selectively Kotlin Multiplatform shared module.
 
@@ -50,20 +50,31 @@ Performance-sensitive or Baseline Profile changes:
 Connected benchmark and Baseline Profile commands require an attached emulator
 or device and are intentionally not part of default PR validation.
 
+## Portfolio Review Path
+
+For a fast portfolio review, start with [Portfolio documentation](docs/portfolio/README.md), then use the [portfolio demo script](docs/portfolio/demo-script.md), [architecture diagram](docs/portfolio/architecture-diagram.md), [testing and performance summary](docs/portfolio/testing-performance-summary.md), and [portfolio traceability](docs/portfolio/traceability.md).
+
 ## Documentation
 
+- [Portfolio documentation](docs/portfolio/README.md): reviewer path, architecture diagram, testing/performance summary, demo script, and E-20 traceability.
 - [Architecture](docs/architecture.md): module responsibilities, dependency rules, ownership boundaries, and architectural rationale.
 - [Desktop demo](docs/desktop-demo.md): Compose Multiplatform desktop run command, Search/Insights access, Room KMP local persistence behavior, and current limitations.
+- [KMP shared business logic](docs/kmp-shared-business-logic.md): E-07 shared transaction validation, dashboard aggregation, search ranking, dependency boundaries, and issue traceability for #12/#62/#63/#64.
 - [Future product growth](docs/future-growth.md): E-21 future extension plan for cloud sync, OCR/import, export/accountant workflows, and monetization without implementing those features.
 - [Future extension contracts](docs/future/extension-contracts.md): issue-traceable future contract index for #142-#146.
 - [ADR 0001: Modular Architecture and KMP-Ready Structure](docs/adr/0001-modular-architecture.md): decision record for the modular architecture direction.
 - [Android testing report](androidApp/docs/testing-report.md): current test suite inventory, validation results, performance checks, release/R8 coverage, and known gaps.
+- [Accessibility QA pass](androidApp/docs/accessibility-qa.md): #14 TalkBack, keyboard/D-pad, 200% font-scale, and contrast QA gates for UI changes and release candidates.
 - [Android performance benchmarks](androidApp/docs/performance-report.md): Macrobenchmark and Baseline Profile generation setup, local device requirements, and update commands.
 - [Android security model](androidApp/docs/security-model.md): current local data storage, app lock, AI privacy, logging, threat model, and known limitations.
+- [Optional account and passkey foundation](docs/optional-account-passkey-foundation.md): local-first optional account entry, passkey contracts, Credential Manager prototype, Play Integrity hook, and #82-#86 traceability.
 - [CI/CD strategy](docs/ci-cd.md): PR validation, controlled screenshot and benchmark workflows, artifacts, and release-safety boundaries.
 - [Release signing and versioning](docs/release/signing-versioning.md): secure signing inputs, version policy, local release-ready commands, and CI release candidate behavior.
+- [Release candidate workflow](docs/release/release-candidate.md): release workflow triggers, version inputs, signing behavior, retained artifacts, and Play Store handoff boundaries.
+- [Release-ready install runbook](docs/release/release-ready-install.md): signed release, benchmark release-like, Play internal testing, and device smoke-test evidence for #128.
 - [Release readiness checklist](docs/release/release-checklist.md): signing, versioning, artifact, accessibility, privacy, and rollout review items.
 - [Play Store readiness and app content checklist](docs/play-store-readiness.md): Play Console declarations for privacy policy, Data Safety, permissions, backup/device transfer, ads, financial features, and target audience.
 - [Privacy policy](docs/privacy-policy.md): Play Store-ready privacy policy draft based on current app behavior, Firebase setup, permissions, and diagnostics.
 - [Product event taxonomy](docs/product-event-taxonomy.md): privacy-safe product events, approved parameters, and analytics provider boundaries.
+- [Play Feature Delivery strategy](docs/play-feature-delivery-strategy.md): typed feature flag rollout, debug overrides, and future dynamic delivery gates.
 - [Internal distribution](docs/internal-distribution.md): Firebase App Distribution tester flow, required secrets, artifacts, and release notes.

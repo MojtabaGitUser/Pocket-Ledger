@@ -146,6 +146,8 @@ Checklist:
 - Screenshot coverage is verified with `.\gradlew.bat verifyAdaptiveScreenshots`
   after intentional 200% font-scale layout changes.
 
+Detailed #117 validation evidence, commands, coverage, and known limits are recorded in [accessibility-200-font-scale.md](accessibility-200-font-scale.md).
+
 ## Empty, Loading, And Error States
 
 Loading states should use polite live regions and describe what is loading.
@@ -156,6 +158,10 @@ Examples:
 - `Loading transactions`
 - `No matching transactions. Clear filters or try a different keyword.`
 - `Could not load dashboard. Retry`
+
+## TalkBack, Keyboard, And QA Pass
+
+Manual TalkBack, keyboard/D-pad traversal, 200% font-scale, and contrast review gates are recorded in [accessibility-qa.md](accessibility-qa.md). Use that pass for #14 closure, UI-heavy PRs, and release candidates.
 
 ## Tests
 

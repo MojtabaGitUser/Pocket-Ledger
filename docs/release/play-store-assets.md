@@ -1,7 +1,8 @@
 # Play Store Asset Plan
 
-This document tracks repository-ready Play Store listing assets for #131. It
-does not claim that assets were uploaded to Play Console. Final dimensions,
+This document tracks repository-ready Play Store listing assets for #131 and
+feeds the parent #17 Play Store release story. It does not claim that assets
+were uploaded to Play Console. Final dimensions,
 format rules, and policy checks must still be verified in Play Console before
 submission.
 
@@ -14,6 +15,18 @@ submission.
 | Privacy policy copy | `docs/privacy-policy.md`. | Must be hosted at a public HTTPS URL before Play Store submission. |
 | Play Store readiness checklist | `docs/play-store-readiness.md`. | Use it for app content, data safety, permissions, and limitations review. |
 | Release checklist | `docs/release/release-checklist.md`. | Final release gate for signing, privacy, store listing, smoke tests, and manual review. |
+
+
+## #131 Acceptance Matrix
+
+| Requirement | Repository evidence | Status |
+| --- | --- | --- |
+| Listing copy exists. | Store title, short description, full description draft, and release notes template are maintained in this file. | Complete. |
+| App icon source exists. | Launcher adaptive icon XML and foreground/background resources exist under `androidApp/app/src/main/res/`. | Complete for source; high-res PNG export remains manual. |
+| Screenshots are planned from real app screens. | Screenshot capture plan covers dashboard, transactions, search, insights, and settings/app lock. | Complete for plan; binary captures remain manual. |
+| Feature graphic direction exists. | Required graphic assets table defines a feature graphic using actual app value and sample-safe data. | Complete for direction; final binary graphic remains manual. |
+| Store claims avoid unsupported behavior. | Listing copy says local-first, no bank connection, no financial advice, no required account, and no Pocket Ledger server sync. | Complete. |
+| Play Console handoff remains explicit. | Manual Play Console steps list hosted privacy URL, Data Safety, app-content forms, and signed AAB upload. | Complete. |
 
 ## Store Listing Copy
 
@@ -43,8 +56,9 @@ server.
 
 Pocket Ledger is designed for users who want a simple private ledger they
 control. Ledger records stay in app-private storage on the device. Android
-backup and device-transfer rules exclude the ledger database by default until
-a future opt-in backup-ready profile is implemented.
+backup and device-transfer rules exclude the ledger database by default. A
+local-first backup-ready profile foundation exists, but encrypted backup and
+restore are not implemented.
 ```
 
 Release notes template:
@@ -95,7 +109,13 @@ secrets, Firebase IDs, or Play Console credentials.
 
 ## Traceability
 
-- #131: repository listing copy and asset plan are prepared; binary store
-  graphics and Play Console upload remain manual.
+- #131: repository listing copy, asset acceptance matrix, screenshot plan, and
+  manual Play Console handoff steps are prepared; binary graphics and Play
+  Console upload remain manual.
+- #128: release-ready install evidence is tracked in
+  `docs/release/release-ready-install.md` and `docs/release/smoke-test.md`.
 - #129: final release gate references this asset plan.
 - #132: privacy policy copy is maintained separately in `docs/privacy-policy.md`.
+- #17: parent Play Store release story depends on this file plus signing,
+  release-ready install evidence, hosted privacy policy, app-content forms,
+  and final release checklist review.

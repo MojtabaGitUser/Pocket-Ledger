@@ -28,7 +28,7 @@
 Use `N/A - <brief reason>` for items that do not apply, for example
 `N/A - backend-only change` or `N/A - test-only refactor`. UI changes should
 complete the relevant checks before merge. See
-[`androidApp/docs/accessibility.md`](../androidApp/docs/accessibility.md).
+[`androidApp/docs/accessibility.md`](../androidApp/docs/accessibility.md) and [`androidApp/docs/accessibility-qa.md`](../androidApp/docs/accessibility-qa.md).
 
 - [ ] Icon-only buttons and meaningful interactive elements have semantic
   labels.
@@ -40,7 +40,7 @@ complete the relevant checks before merge. See
   scaling.
 - [ ] Important text is not clipped, overlapped, or hidden at large font sizes,
   and primary actions remain reachable.
-- [ ] TalkBack/screen-reader navigation order is logical for changed UI.
+- [ ] TalkBack/screen-reader navigation order is logical for changed UI, or the #14 QA pass is marked N/A with a reason.
 - [ ] Forms, validation errors, empty states, loading states, and error states
   remain understandable.
 - [ ] Color is not the only way important information is communicated, and text

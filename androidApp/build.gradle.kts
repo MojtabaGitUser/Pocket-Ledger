@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.paparazzi) apply false
     // Add the dependency for the Google services Gradle plugin
     alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.google.crashlytics) apply false
 
 }
 

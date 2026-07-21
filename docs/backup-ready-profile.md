@@ -1,77 +1,129 @@
-# Optional Backup-Ready Profile Design
+# Optional Backup-Ready Profile Foundation
 
-Pocket Ledger does not currently implement an account, passkey sign-in, cloud
-sync, or backup-ready profile flow. This document records the repository-ready
-design constraints for #81 and explains why #227 keeps Android backup and
-device-to-device transfer denied by default for ledger data.
+Pocket Ledger now implements the local-first foundation for #81. The feature is
+intentionally conservative: users can see and eventually opt in to a
+backup-ready profile state, but ledger data remains excluded from Android cloud
+backup and device-to-device transfer until a reviewed encrypted backup and
+restore pipeline exists.
 
-## Current Status
+## Implemented Scope
 
-- No user account or server-backed profile exists.
-- `PasskeyAccountFlowEnabled` and `CloudSyncEnabled` feature flags default to
-  disabled.
-- Sensitive preference keys for future passkey/session state are defined, but
-  no current flow writes production account credentials or sessions.
-- Android Auto Backup and Android 12+ data extraction rules exclude
-  `pocket-ledger.db`, SQLite sidecars, encrypted sensitive preferences,
-  app-private files, logs, caches, temp files, debug artifacts, generated
-  reports, and external app files.
-- Ledger records are app-private Room data, but the Room database is not
-  encrypted by Pocket Ledger.
+Implemented pieces:
 
-The current status is planned/partial for #81. It is not a completed
-backup-ready profile implementation.
+- `BackupReadyProfileManager` in `:core:security` owns the backup-ready profile
+  state machine.
+- `BackupReadyProfileState` exposes local-only, account-required,
+  backup-pending, and backup-ready states.
+- Explicit opt-in state is stored through `SensitivePreferences` using typed
+  keys in `DefaultSensitivePreferenceKeys`.
+- Settings shows a `Backup-ready profile` row under Security and keeps the
+  switch disabled until account/passkey prerequisites are ready.
+- App graph wiring derives prerequisites from feature flags and sensitive
+  passkey/session state.
+- Unit tests cover default local-only behavior, opt-in persistence, prerequisite
+  gating, ready-state calculation, and opt-out cleanup.
+- Android backup and data extraction XML rules remain deny-by-default for ledger
+  data and sensitive preferences.
 
-## Requirements Before Enabling Ledger Backup
+## State Machine
 
-A future backup-ready profile must define and implement all of the following
-before ledger data can be included in automatic backup, device transfer, cloud
-sync, or restore behavior:
+| State | Meaning | User-facing behavior |
+| --- | --- | --- |
+| `LocalOnly` | No backup-ready opt-in is stored. | Ledger data stays local and excluded from Android backup. |
+| `WaitingForAccountIdentity` | User opted in but passkey/account prerequisites are missing. | Settings explains that a passkey account profile is required. |
+| `WaitingForEncryptedBackupPipeline` | Account identity is present but cloud/encrypted backup is not enabled. | Opt-in is remembered, but no ledger backup or restore path runs. |
+| `ReadyForEncryptedBackupPipeline` | Account identity and cloud-sync feature gate are present. | The profile is ready for a separately reviewed encrypted backup pipeline. |
 
-- Explicit opt-in from the user before any ledger backup or restore path is
-  enabled.
-- A documented encryption strategy for ledger backup payloads, including key
-  ownership, key rotation, restore-device behavior, and failure recovery.
-- A clear account/passkey/backend contract if backup depends on a
-  server-backed profile.
-- A recovery model for lost devices, lost passkeys, deleted accounts, and
-  incompatible app versions.
-- A threat model covering compromised devices, transferred device state,
-  account takeover, backup replay, and local database extraction.
-- Device-to-device transfer behavior that does not silently move local-only
-  security state or mislead users about account-backed recovery.
-- Android Auto Backup policy updates that name exactly which files are included
-  and why they are safe to include.
-- Privacy policy, Play Store Data Safety, security model, and release checklist
-  updates before public release.
-- Tests proving disabled-by-default behavior, opt-in gating, restore handling,
-  and failure paths.
+`androidBackupIncludesLedgerData` is always false in the current
+implementation. This makes the #227 backup policy explicit in code, not only in
+XML comments.
 
-## Relationship To #227
+## Prerequisites
 
-#227 intentionally denies app-private ledger backup and transfer until #81 is
-implemented. That policy is correct for the current product because ledger
-records contain personal finance data and the app does not yet provide a
-user-facing encrypted backup, account recovery, or restore contract.
+A backup-ready profile requires all of these signals before it can move beyond
+local-only behavior:
 
-When #81 is implemented, `backup_rules.xml` and `data_extraction_rules.xml`
-must be re-reviewed. Any inclusion rule must be narrow, documented, tested, and
-traceable to the implemented backup-ready profile behavior.
+- User opt-in stored in `BackupReadyProfileOptInAccepted`.
+- Policy version stored in `BackupReadyProfilePolicyVersion`.
+- Passkey account flow feature flag enabled.
+- Stored passkey credential id.
+- Stored account session token.
+- Cloud sync feature flag enabled before an encrypted backup pipeline can be
+  considered ready.
 
-## Non-Goals For Current Release Readiness
+The current production defaults keep `PasskeyAccountFlowEnabled` and
+`CloudSyncEnabled` disabled. That means normal app builds remain local-first.
 
-- No cloud sync.
-- No passkey account flow.
-- No backend account service.
-- No Play Integrity enforcement.
-- No import/export backup file.
-- No production ledger database encryption claim.
-- No automatic restore of local ledger records.
+## Relationship To Android Backup And #227
 
-## Traceability
+#81 does not loosen Android backup or device-transfer rules. The XML policy from
+#227 remains correct:
 
-- #81: profile design documented; implementation remains future work.
-- #227: deny-by-default backup and transfer policy remains active.
-- #7: sensitive local data security is supported by encrypted preferences,
-  app-private storage, app lock, safe logging, and explicit backup exclusions.
-- #129: release review must confirm backup/profile claims before release.
+- `androidApp/app/src/main/res/xml/backup_rules.xml` denies pre-Android 12 Auto
+  Backup for app-private data.
+- `androidApp/app/src/main/res/xml/data_extraction_rules.xml` denies Android 12+
+  cloud backup and device-transfer extraction for app-private data.
+- `pocket-ledger.db`, SQLite sidecars, encrypted preferences, logs, caches,
+  temp files, debug files, generated reports, and external app files remain
+  excluded.
+
+Any future change that includes ledger data in automatic backup must be narrow,
+reviewed, tested, and tied to a real encrypted payload and restore contract.
+
+## Security Rules
+
+- Do not store backup profile state outside `SensitivePreferences`.
+- Do not log account identifiers, credential ids, session tokens, backup policy
+  payloads, restore payloads, or encryption material.
+- Do not treat Android Auto Backup as cloud sync.
+- Do not include ledger data in `backup_rules.xml` or
+  `data_extraction_rules.xml` until encryption, recovery, and restore behavior
+  are implemented and release-reviewed.
+- Keep the app fully usable without an account or backup profile.
+- Keep failure states user-safe: missing passkey, missing session, disabled
+  cloud sync, and unavailable backend must leave the app local-only.
+
+## Explicit Non-Goals
+
+Not implemented by #81:
+
+- Production cloud sync.
+- Server-backed account service.
+- Passkey account recovery or deletion support workflow.
+- Encrypted ledger backup payload format.
+- Restore flow.
+- Server-side Play Integrity verdict verification.
+- Inclusion of ledger data in Android backup or device transfer.
+- Full Room database encryption.
+
+## Issue Traceability
+
+| Issue | Status | Evidence |
+| --- | --- | --- |
+| #81 Create an optional backup-ready profile | Complete for the local-first foundation scope | `BackupReadyProfileManager`, Settings entry, sensitive opt-in keys, prerequisite state model, tests, and this document are implemented. Ledger backup remains excluded until future encrypted backup/restore work. |
+| #227 Deny-by-default backup policy | Still active | Backup XML and data extraction XML continue to exclude app-private ledger data and sensitive preferences. |
+| #7 Secure sensitive local data | Supported | Backup-ready profile state uses encrypted sensitive preferences and does not weaken local-only storage. |
+| #13 Optional passkey account flow | Dependency | #81 consumes passkey/account readiness signals but does not create a production backend. |
+
+## Validation
+
+Run from the repository root:
+
+```powershell
+.\androidApp\gradlew.bat --no-daemon :core:security:testDebugUnitTest :app:testDebugUnitTest :app:compileDebugKotlin :app:compileReleaseKotlin --console=plain --stacktrace
+```
+## 2026-07-20 Closure Validation For #81
+
+The backup-ready profile foundation was re-audited as an opt-in state and policy boundary, not as a claim that ledger backup exists. The manager persists opt-in, timestamp, and policy version through `SensitivePreferences`; derives account and encrypted-pipeline prerequisites; keeps ledger data excluded from Android backup; and exposes local-only, account-required, backup-pending, and backup-ready states to Settings.
+
+Consent evaluation is now explicitly fail-closed. A partial preference write, missing acceptance timestamp, or consent recorded under an outdated policy version resolves to `LocalOnly`, clears consent metadata from the returned state, and cannot prepare an encrypted backup. Tests cover these corrupted and outdated records in addition to opt-in, prerequisite, ready, and opt-out transitions.
+
+Validated commands:
+
+```powershell
+.\gradlew.bat :core:security:testDebugUnitTest --tests '*BackupReady*'
+.\gradlew.bat :app:testDebugUnitTest --tests '*OptionalAccount*'
+.\gradlew.bat :app:assembleDebug :app:assembleRelease lintRelease
+```
+
+#81 is complete only for the local-first backup-ready profile foundation. No encrypted payload format, cloud transport, restore, recovery, retention, or account backend is implemented or implied.

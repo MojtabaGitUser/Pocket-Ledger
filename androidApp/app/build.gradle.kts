@@ -7,6 +7,7 @@ plugins {
 
     // Add the Google services Gradle plugin
     alias(libs.plugins.google.services)
+    alias(libs.plugins.google.crashlytics)
 
 }
 
@@ -100,6 +101,8 @@ android {
             buildConfigField("String", "APP_ENV", "\"debug\"")
             buildConfigField("Boolean", "IS_INTERNAL_BUILD", "true")
             buildConfigField("Boolean", "LOGGING_ENABLED", "true")
+            buildConfigField("Boolean", "CRASH_REPORTING_ENABLED", "false")
+            manifestPlaceholders["firebaseCrashlyticsCollectionEnabled"] = "false"
         }
 
         release {
@@ -109,6 +112,8 @@ android {
             buildConfigField("String", "APP_ENV", "\"release\"")
             buildConfigField("Boolean", "IS_INTERNAL_BUILD", "false")
             buildConfigField("Boolean", "LOGGING_ENABLED", "false")
+            buildConfigField("Boolean", "CRASH_REPORTING_ENABLED", "true")
+            manifestPlaceholders["firebaseCrashlyticsCollectionEnabled"] = "true"
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -127,6 +132,8 @@ android {
             buildConfigField("String", "APP_ENV", "\"benchmark\"")
             buildConfigField("Boolean", "IS_INTERNAL_BUILD", "true")
             buildConfigField("Boolean", "LOGGING_ENABLED", "false")
+            buildConfigField("Boolean", "CRASH_REPORTING_ENABLED", "false")
+            manifestPlaceholders["firebaseCrashlyticsCollectionEnabled"] = "false"
         }
     }
     buildFeatures {
@@ -167,12 +174,15 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material3.adaptive)
     implementation(libs.androidx.compose.material3.adaptive.navigation)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.profileinstaller)
+    implementation(libs.google.play.integrity)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.window)
     implementation(libs.androidx.work.runtime.ktx)
@@ -182,6 +192,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.work.testing)
+    testImplementation(project(":core:testing"))
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -195,11 +206,8 @@ dependencies {
     // Import the Firebase BoM
     implementation(platform(libs.firebase.bom))
 
-    // TODO: Add the dependencies for Firebase products you want to use
-    // When using the BoM, don't specify versions in Firebase dependencies
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
 
-    // Add the dependencies for any other desired Firebase products
-    // https://firebase.google.com/docs/android/setup#available-libraries
 }

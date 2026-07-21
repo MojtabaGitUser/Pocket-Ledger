@@ -1,5 +1,12 @@
 package com.mojtaba.pocketledger.debughealth
 
+import com.mojtaba.pocketledger.core.background.TaskStatus
+import com.mojtaba.pocketledger.core.background.tasks.MonthlySummaryPreparationTask
+import com.mojtaba.pocketledger.core.testing.scheduler.FakeScheduler
+import com.mojtaba.pocketledger.observability.CrashReportingStatus
+import com.mojtaba.pocketledger.observability.StartupFailureSnapshot
+import com.mojtaba.pocketledger.observability.StartupFailureStatus
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -7,7 +14,7 @@ import org.junit.Test
 
 class DebugHealthReportFactoryTest {
     @Test
-    fun reportIncludesExpectedSafeSectionsAndStatuses() {
+    fun reportIncludesExpectedSafeSectionsAndStatuses() = runTest {
         val report = factory().create()
 
         assertEquals(
@@ -19,6 +26,7 @@ class DebugHealthReportFactoryTest {
                 "Observability",
                 "Database",
                 "Feature Flags",
+                "Background Jobs",
                 "Release Safety",
             ),
             report.sections.map { it.title },
@@ -26,13 +34,61 @@ class DebugHealthReportFactoryTest {
         assertStatus(report, "Build type", "debug")
         assertStatus(report, "PR validation", "Configured via CI")
         assertStatus(report, "App Distribution", "Configured via CI")
+        assertStatus(report, "Crash reporting", "Configured but disabled")
+        assertStatus(report, "Crash collection gate", "Disabled")
+        assertStatus(report, "Startup failure tracker", "Enabled")
+        assertStatus(report, "Last critical startup failure", "None recorded")
         assertStatus(report, "Product event taxonomy", "Configured")
         assertStatus(report, "Analytics provider", "Debug sink")
+        assertStatus(report, "Monthly summary preparation", "Not scheduled")
         assertStatus(report, "Release diagnostics privacy", "Release hidden")
     }
 
     @Test
-    fun reportDoesNotExposeSensitiveDiagnosticFields() {
+    fun reportIncludesActiveCrashReportingStatus() = runTest {
+        val report = factory(
+            crashReportingStatus = CrashReportingStatus(
+                provider = "Firebase Crashlytics",
+                configured = true,
+                collectionEnabled = true,
+            ),
+            crashReportingEnabled = true,
+        ).create()
+
+        assertStatus(report, "Crash reporting", "Configured and enabled")
+        assertStatus(report, "Crash collection gate", "Enabled")
+    }
+
+    @Test
+    fun reportIncludesStartupFailureSnapshotWithoutRawThrowableMessage() = runTest {
+        val report = factory(
+            startupFailureStatus = StartupFailureStatus(
+                trackerEnabled = true,
+                lastFailure = StartupFailureSnapshot(
+                    stage = "app_graph_create",
+                    throwableClassName = IllegalStateException::class.java.name,
+                    occurredAtMillis = 1_234L,
+                    reportedToCrashReporter = true,
+                ),
+            ),
+        ).create()
+
+        assertStatus(report, "Last critical startup failure", "IllegalStateException at app_graph_create reported=true")
+    }
+
+    @Test
+    fun reportIncludesBackgroundWorkerStatus() = runTest {
+        val scheduler = FakeScheduler().apply {
+            setStatus(MonthlySummaryPreparationTask.Id, TaskStatus.Running)
+        }
+        val report = factory(scheduler = scheduler, backgroundJobsEnabled = true).create()
+
+        assertStatus(report, "Global background jobs", "Enabled")
+        assertStatus(report, "Monthly summary preparation", "Running")
+    }
+
+    @Test
+    fun reportDoesNotExposeSensitiveDiagnosticFields() = runTest {
         val renderedText = factory().create().allStatuses.joinToString(separator = "\n") {
             "${it.label} ${it.value} ${it.description}"
         }.lowercase()
@@ -60,7 +116,20 @@ class DebugHealthReportFactoryTest {
         assertEquals("Logging mode: Debug logging sanitized", status.accessibilityState)
     }
 
-    private fun factory(): DebugHealthReportFactory =
+    private fun factory(
+        scheduler: FakeScheduler = FakeScheduler(),
+        backgroundJobsEnabled: Boolean = false,
+        crashReportingStatus: CrashReportingStatus = CrashReportingStatus(
+            provider = "Firebase Crashlytics",
+            configured = true,
+            collectionEnabled = false,
+        ),
+        crashReportingEnabled: Boolean = false,
+        startupFailureStatus: StartupFailureStatus = StartupFailureStatus(
+            trackerEnabled = true,
+            lastFailure = null,
+        ),
+    ): DebugHealthReportFactory =
         DebugHealthReportFactory(
             buildInfo = DebugHealthBuildInfo(
                 appName = "Pocket Ledger",
@@ -73,6 +142,7 @@ class DebugHealthReportFactoryTest {
                 debuggable = true,
                 internalBuild = true,
                 loggingEnabled = true,
+                crashReportingEnabled = crashReportingEnabled,
                 ci = false,
                 firebaseConfigured = true,
                 analyticsProviderState = "Debug sink",
@@ -84,6 +154,10 @@ class DebugHealthReportFactoryTest {
                     description = "Safe flag summary.",
                 ),
             ),
+            backgroundTaskScheduler = scheduler,
+            backgroundJobsEnabled = backgroundJobsEnabled,
+            crashReportingStatus = crashReportingStatus,
+            startupFailureStatus = startupFailureStatus,
         )
 
     private fun assertStatus(

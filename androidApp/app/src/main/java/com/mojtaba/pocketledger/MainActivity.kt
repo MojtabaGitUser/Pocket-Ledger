@@ -21,12 +21,22 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            PocketLedgerTheme {
-                PocketLedgerApp(appGraph = appGraph)
+        appGraph.startupFailureReporter.markStartupStarted("main_activity_on_create")
+        try {
+            super.onCreate(savedInstanceState)
+            enableEdgeToEdge()
+            setContent {
+                PocketLedgerTheme {
+                    PocketLedgerApp(appGraph = appGraph)
+                }
             }
+            appGraph.startupFailureReporter.markStartupCompleted()
+        } catch (throwable: Throwable) {
+            appGraph.startupFailureReporter.recordCriticalFailure(
+                throwable = throwable,
+                stage = "main_activity_on_create",
+            )
+            throw throwable
         }
     }
 

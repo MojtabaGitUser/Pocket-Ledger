@@ -1,9 +1,13 @@
 package com.mojtaba.pocketledger.benchmark
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,44 +18,52 @@ import com.mojtaba.pocketledger.core.data.repository.local.LocalBudgetRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalCategoryRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTagRepository
 import com.mojtaba.pocketledger.core.data.repository.local.LocalTransactionRepository
-import com.mojtaba.pocketledger.core.database.PocketLedgerDatabase
 import com.mojtaba.pocketledger.core.database.createPocketLedgerDatabase
 import com.mojtaba.pocketledger.core.designsystem.theme.PocketLedgerTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class BenchmarkSetupActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val seedMode = intent.getStringExtra(EXTRA_SEED_MODE) ?: SEED_MODE_DEMO
-        applicationContext.deleteDatabase(PocketLedgerDatabase.DATABASE_NAME)
         setContent {
-            var ready by remember { mutableStateOf(false) }
+            var failureMessage by remember { mutableStateOf<String?>(null) }
 
             LaunchedEffect(seedMode) {
-                seedBenchmarkData(seedMode)
-                ready = true
+                try {
+                    seedBenchmarkData(seedMode)
+                    finish()
+                } catch (error: Exception) {
+                    Log.e(LOG_TAG, "Failed to seed benchmark data", error)
+                    failureMessage = "Benchmark setup failed: ${error.javaClass.simpleName}"
+                }
             }
 
             PocketLedgerTheme(dynamicColor = false) {
                 Text(
-                    text = if (ready) {
-                        seedMode.readyText()
-                    } else {
-                        seedMode.preparingText()
+                    text = failureMessage ?: seedMode.preparingText(),
+                    modifier = Modifier.semantics {
+                        contentDescription = SETUP_CONTENT_DESCRIPTION
                     },
                 )
             }
         }
     }
 
-    private suspend fun seedBenchmarkData(seedMode: String) {
+    private suspend fun seedBenchmarkData(seedMode: String) = withContext(Dispatchers.IO) {
+        Log.i(LOG_TAG, "Opening benchmark database for seed mode: $seedMode")
         val database = createPocketLedgerDatabase(applicationContext)
         try {
+            Log.i(LOG_TAG, "Clearing benchmark database")
             database.clearAllTables()
+            Log.i(LOG_TAG, "Benchmark database cleared")
             val categoryRepository = LocalCategoryRepository(database.categoryDao())
             val transactionRepository = LocalTransactionRepository(database.transactionDao())
             val budgetRepository = LocalBudgetRepository(database.budgetDao())
             val tagRepository = LocalTagRepository(database.tagDao())
+            Log.i(LOG_TAG, "Seeding benchmark data")
             when (seedMode) {
                 SEED_MODE_LARGE -> LargeBenchmarkDataSeeder(
                     categoryRepository = categoryRepository,
@@ -66,16 +78,12 @@ class BenchmarkSetupActivity : ComponentActivity() {
                     tagRepository = tagRepository,
                 ).seedDemoData()
             }
+            Log.i(LOG_TAG, "Benchmark data seeded")
         } finally {
             database.close()
+            Log.i(LOG_TAG, "Benchmark database closed")
         }
     }
-
-    private fun String.readyText(): String =
-        when (this) {
-            SEED_MODE_LARGE -> LARGE_READY_TEXT
-            else -> DEMO_READY_TEXT
-        }
 
     private fun String.preparingText(): String =
         when (this) {
@@ -84,10 +92,10 @@ class BenchmarkSetupActivity : ComponentActivity() {
         }
 
     companion object {
+        private const val LOG_TAG = "BenchmarkSetup"
+        private const val SETUP_CONTENT_DESCRIPTION = "Benchmark data setup"
         const val EXTRA_SEED_MODE = "com.mojtaba.pocketledger.benchmark.SEED_MODE"
         const val SEED_MODE_DEMO = "demo"
         const val SEED_MODE_LARGE = "large"
-        const val DEMO_READY_TEXT = "Benchmark data ready"
-        const val LARGE_READY_TEXT = "Large benchmark data ready"
     }
 }

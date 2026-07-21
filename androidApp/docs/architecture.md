@@ -242,12 +242,12 @@ logged. Detailed developer guidance lives in `docs/logging-policy.md`.
 
 ### `:feature:dashboard`
 
-The dashboard feature module owns dashboard-facing summary models, deterministic derivation logic, and dashboard-specific Compose UI for budget overview and non-AI insights.
+The dashboard feature module owns dashboard-facing summary models, Android mapping, and dashboard-specific Compose UI for budget overview and non-AI insights. Stable aggregation, budget progress, recent transaction, and deterministic insight rules live in `:shared`.
 
 Current scope:
 - Pure dashboard summary data models.
-- `DashboardSummaryCalculator`, a side-effect-free calculator that accepts in-memory core data models.
-- Deterministic insight generation such as cash-flow status, concentrated category spending, and budget progress signals.
+- `DashboardSummaryCalculator`, a side-effect-free Android adapter that maps in-memory core data models to `:shared` dashboard aggregation rules.
+- Deterministic insight generation through `:shared`, including cash-flow status, concentrated category spending, and budget progress signals.
 - Material 3 dashboard rendering components for cash flow, category spend, budget progress, recent transactions, and deterministic insights.
 - Simple offline-first budget setup UI and state for local monthly budgets.
 
@@ -293,7 +293,7 @@ Out of scope:
 - OCR search.
 - Cloud search.
 - Remote sync.
-- Advanced ranking beyond the shared search and deterministic sort rules.
+- Advanced ranking beyond the shared local search ranker and deterministic sort rules.
 
 Indexed local search execution is provided by `:core:data` over
 `:core:database`. `:feature:search` depends on `:core:data` and

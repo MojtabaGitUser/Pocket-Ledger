@@ -1,5 +1,7 @@
 package com.mojtaba.pocketledger.core.ai
 
+import com.mojtaba.pocketledger.shared.domain.search.SharedSearchDocument
+import com.mojtaba.pocketledger.shared.domain.search.SharedSearchRanker
 import java.util.Locale
 import kotlin.math.abs
 
@@ -88,27 +90,24 @@ object RuleBasedAiProvider : AiProvider {
     }
 
     override suspend fun semanticSearch(request: SemanticSearchRequest): AiInferenceResult<SemanticSearchResult> {
-        val queryTokens = request.query.tokens()
-        val filteredDocuments = request.documents.filter { document ->
-            (request.filters.categoryIds.isEmpty() || document.categoryId in request.filters.categoryIds) &&
-                (request.filters.accountIds.isEmpty() || document.accountId in request.filters.accountIds)
-        }
-        val matches = if (queryTokens.isEmpty()) {
-            filteredDocuments.take(request.maxResults.coerceAtLeast(0)).mapIndexed { index, document ->
-                SemanticSearchMatch(document.id, relevanceScore = filteredDocuments.size - index, reason = "Local order match")
-            }
-        } else {
-            filteredDocuments
-                .mapNotNull { document -> document.match(queryTokens) }
-                .sortedWith(compareByDescending<SemanticSearchMatch> { it.relevanceScore }.thenBy { it.id })
-                .take(request.maxResults.coerceAtLeast(0))
+        val matches = SharedSearchRanker.rank(
+            query = request.query,
+            documents = request.documents.map { it.toSharedSearchDocument() },
+            maxResults = request.maxResults,
+            categoryIds = request.filters.categoryIds,
+            accountIds = request.filters.accountIds,
+        ).map { match ->
+            SemanticSearchMatch(
+                id = match.id,
+                relevanceScore = match.relevanceScore,
+                reason = match.reason,
+            )
         }
         return AiInferenceResult.Success(
             value = SemanticSearchResult(rankedIds = matches.map { it.id }, matches = matches),
             providerType = type,
         )
     }
-
     override suspend fun smartAutofill(request: SmartAutofillRequest): AiInferenceResult<SmartAutofillResult> {
         val tokens = request.partialInput.description.tokens() + request.partialInput.note.tokens()
         if (tokens.isEmpty() || request.history.isEmpty()) {
@@ -152,23 +151,14 @@ object RuleBasedAiProvider : AiProvider {
         )
     }
 
-    private fun SemanticSearchDocument.match(queryTokens: Set<String>): SemanticSearchMatch? {
-        val titleTokens = title.tokens()
-        val bodyTokens = body.tokens()
-        val metadataTokens = metadata.values.joinToString(" ").tokens()
-        val score = queryTokens.sumOf { token ->
-            when {
-                title.lowercase(Locale.US) == token -> 8
-                token in titleTokens -> 6
-                titleTokens.any { it.startsWith(token) } -> 4
-                token in bodyTokens -> 3
-                bodyTokens.any { it.startsWith(token) } -> 2
-                token in metadataTokens -> 2
-                else -> 0
-            }
-        }
-        return if (score > 0) SemanticSearchMatch(id, score, "Matched local transaction text") else null
-    }
+    private fun SemanticSearchDocument.toSharedSearchDocument(): SharedSearchDocument = SharedSearchDocument(
+        id = id,
+        title = title,
+        body = body,
+        metadata = metadata,
+        categoryId = categoryId,
+        accountId = accountId,
+    )
 
     private fun SmartAutofillHistoryItem.score(queryTokens: Set<String>): Int {
         val textTokens = listOfNotNull(description, note).joinToString(" ").tokens()

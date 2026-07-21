@@ -3,6 +3,7 @@ agp = "9.2.1"
 activityCompose = "1.10.1"
 composeBom = "2025.01.00"
 coreKtx = "1.10.1"
+credentials = "1.5.0"
 errorProneAnnotations = "2.23.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -25,6 +26,7 @@ benchmark = "1.5.0-alpha06"
 lifecycle = "2.9.4"
 material3Adaptive = "1.2.0"
 paparazzi = "2.0.0-alpha05"
+playIntegrity = "1.4.0"
 profileinstaller = "1.4.1"
 securityCrypto = "1.1.0"
 uiautomator = "2.3.0"
@@ -32,6 +34,7 @@ window = "1.4.0"
 work = "2.11.2"
 firebaseBom = "34.15.0"
 googleServices = "4.4.3"
+crashlyticsGradle = "3.0.6"
 composeMultiplatform = "1.9.0"
 
 [libraries]
@@ -48,7 +51,10 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
 google-errorprone-annotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProneAnnotations" }
+google-play-integrity = { group = "com.google.android.play", name = "integrity", version.ref = "playIntegrity" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
 leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
@@ -84,6 +90,7 @@ androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx"
 androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 
 
 [plugins]
@@ -98,5 +105,6 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlyticsGradle" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

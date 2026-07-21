@@ -7,6 +7,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(project(":core:featureflags"))
     implementation(libs.kotlinx.coroutines.core)
 

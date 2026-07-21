@@ -1,6 +1,34 @@
 # Release Candidate Smoke Test
 
-This record supports `T-E19-05 - Run release candidate smoke test` under
+## 2026-07-19 Connected Release-Like Validation (Supersedes Earlier Device Blockers)
+
+| Field | Result |
+| --- | --- |
+| Branch / commit | `dev` / `adc51e4` plus the uncommitted #10 + #128 implementation under validation |
+| Target | Android Emulator `Pixel_9_Pro_XL(AVD)`, model `sdk_gphone16k_x86_64`, API 37 |
+| Installed artifact | `androidApp/app/build/outputs/apk/benchmark/app-benchmark.apk` |
+| Install | Passed with `adb install -r`; package `com.mojtaba.pocketledger` |
+| Launch | Passed; cold launch reached Dashboard without a fatal exception |
+| Build behavior | Non-debuggable, minified, resource-shrunk, profileable, release-like, debug-signed |
+| Signed production release | Still blocked because local release-signing inputs are intentionally unavailable |
+
+Connected smoke results:
+
+- Dashboard launched and rendered its empty state.
+- Deterministic benchmark data was prepared successfully; Transactions rendered `Neighborhood Market`.
+- Keyword search for `Bluebird` rendered `Bluebird Coffee`.
+- Settings opened and rendered the Security section.
+- Debug-only destinations were absent from the benchmark navigation.
+- No fatal application exception was observed in the clean post-fix launch/navigation logcat pass.
+- Macrobenchmark startup/dashboard/search scenarios ran, and the large-dataset and transaction-scroll classes passed on the emulator with emulator-error suppression. Emulator numbers are diagnostic only and are not physical-device performance targets.
+- `:app:generateReleaseBaselineProfile` passed and copied the generated release profile into `app/src/release/generated/baselineProfiles/baseline-prof.txt`.
+
+Artifacts were rebuilt successfully with `:app:assembleRelease`, `:app:bundleRelease`, `:app:assembleBenchmark`, lint, JVM tests, shared tests, and the macrobenchmark module assembly. The unsigned release APK/AAB remain validation artifacts; the benchmark APK is the installable release-like candidate used for #128 evidence.
+
+Remaining release blockers are limited to production signing credentials, a real Play internal-testing upload/install, physical-device coverage (including lower-end hardware), and runtime backup/device-transfer validation. Earlier statements below that say no emulator/device was attached are retained as historical run evidence and are superseded by this section.
+
+This record supports `T-E19-05 - Run release candidate smoke test` and #128
+`US-E19-01 - Install a release-ready Pocket Ledger build` under
 `E-19 - Play Store Readiness`. It records the release-candidate validation that
 was possible from the local repository state and clearly separates verified
 results from device-dependent blockers.
@@ -9,13 +37,13 @@ results from device-dependent blockers.
 
 | Field | Result |
 | --- | --- |
-| Date | 2026-07-02 America/Vancouver |
+| Date | 2026-07-15 America/Vancouver |
 | Repository | `D:\PocketLedger` |
 | App module | `:app` at `androidApp/app` |
 | Production application ID | `com.mojtaba.pocketledger` |
 | Version tested | `versionName=1.0.0`, `versionCode=1` |
-| Release build tested | `release` unsigned validation APK/AAB |
-| Closest installable release-like build | `benchmark` APK |
+| Release build tested | `release` unsigned validation APK/AAB rebuilt with `assembleRelease` and `bundleRelease` |
+| Closest installable release-like build | `benchmark` APK rebuilt with `assembleBenchmark`; see `docs/release/release-ready-install.md` |
 | Install target | Blocked: `adb devices -l` returned no attached devices or emulators |
 | Manual launch/core-flow smoke | Blocked until a physical device or emulator is attached |
 
@@ -30,9 +58,25 @@ results from device-dependent blockers.
 | `.\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble --console=plain` | Passed |
 | `.\androidApp\gradlew.bat lintRelease --console=plain` | Passed |
 | `.\androidApp\gradlew.bat testDebugUnitTest :shared:allTests --console=plain` | Passed |
-| `adb devices -l` | Passed command execution; no devices listed |
+| `adb devices -l` | Passed command execution; no devices listed after adb daemon startup |
 | `adb install -r androidApp\app\build\outputs\apk\benchmark\app-benchmark.apk` | Blocked: `adb.exe: no devices/emulators found` |
 | `aapt dump badging` on release and benchmark APKs | Passed |
+
+## Latest Batch 3 Validation
+
+During the #131 + #128 + #17 readiness batch, the following repository checks
+were re-run from `D:\PocketLedger`:
+
+- `:app:assembleRelease`: passed.
+- `:app:bundleRelease`: passed.
+- `:app:assembleBenchmark`: passed.
+- `:app:validateReleaseSigning`: failed as expected because release signing
+  secrets are not configured.
+- `adb devices -l`: passed command execution and listed no attached targets.
+
+This is enough to verify repository release-path artifacts, but not enough to
+close #128 because no named device/emulator install or Play internal testing
+install evidence exists yet.
 
 ## Generated Artifacts
 
@@ -72,6 +116,14 @@ minification/resource shrinking, is not debuggable, and uses debug signing.
 | Benchmark version | Passed | APK metadata and generated `BuildConfig` show `1.0.0` / `1` |
 | Benchmark debuggability | Passed | Benchmark `BuildConfig.DEBUG=false`; merged manifest has no `android:debuggable` flag |
 | Benchmark minified build path | Passed | `:app:assembleBenchmark` ran R8 and generated benchmark mapping outputs |
+
+## #128 Release-Ready Install Evidence
+
+The repository now keeps the install runbook in
+`docs/release/release-ready-install.md`. This smoke record remains the place to
+record actual device/emulator evidence. At the time of this repository pass,
+install and launch evidence is still blocked until a named device or emulator
+is attached.
 
 ## Install And Runtime Smoke
 
@@ -141,14 +193,14 @@ credentials, stack traces, or private CI metadata were exposed during this task.
 | Check | Status | Result |
 | --- | --- | --- |
 | Manifest backup config | Passed by static review | `allowBackup=true`, `dataExtractionRules`, and `fullBackupContent` are configured. |
-| `backup_rules.xml` | Release blocker | File remains template-style with no active include/exclude rules. |
-| `data_extraction_rules.xml` | Release blocker | File contains cloud-backup TODO comments and no active device-transfer policy. |
-| Runtime backup/device-transfer validation | Blocked | Concrete policy is unresolved, so there is nothing safe to validate as final behavior. |
+| `backup_rules.xml` | Passed by static review | Active deny-by-default rules exclude app-private ledger data, encrypted preferences, app-private files, caches, logs, temp/debug/generated files, and external app files. |
+| `data_extraction_rules.xml` | Passed by static review | Android 12+ cloud-backup and device-transfer sections both use active deny-by-default rules for ledger data and local-only state. |
+| Runtime backup/device-transfer validation | Blocked | Device/emulator validation is still required; static XML policy is no longer unresolved. |
 
-Backup/device-transfer remains a release blocker. Do not claim ledger data,
-encrypted preferences, or app settings are excluded from cloud backup or device
-transfer until final rules are implemented and the privacy policy and Play Store
-readiness checklist are updated.
+Backup/device-transfer XML is no longer a release blocker by source review.
+Runtime backup/device-transfer behavior still needs device or release-candidate
+validation before public Play Store submission. Do not claim encrypted ledger
+backup or restore; #81 is only a local-first foundation.
 
 ## Known Blockers
 
@@ -156,8 +208,8 @@ readiness checklist are updated.
   APK/AAB generation was not possible.
 - No physical device or emulator was attached, so install, launch, logcat, and
   manual core-flow smoke testing could not be completed.
-- Backup and device-transfer rules are unresolved and remain a pre-release
-  blocker.
+- Runtime backup/device-transfer behavior still needs device or release-candidate
+  validation; source XML policy is deny-by-default and documented.
 - Privacy policy still needs a public HTTPS hosting URL and real public support
   contact before Play Store submission.
 
@@ -171,4 +223,5 @@ readiness checklist are updated.
    item to Passed or Failed with evidence.
 4. Run a signed release candidate build with `POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true`
    after release signing inputs are available.
-5. Finalize backup/device-transfer rules before public Play Store submission.
+5. Re-run backup/device-transfer review before public Play Store submission and
+   keep ledger data excluded unless encrypted backup/restore is implemented.

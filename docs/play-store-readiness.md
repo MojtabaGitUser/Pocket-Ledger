@@ -28,8 +28,8 @@ checklist. If app behavior changes, update this document and
 - Runtime analytics boundary:
   `androidApp/app/src/main/java/com/mojtaba/pocketledger/AppGraph.kt` and
   `androidApp/core/analytics`.
-- Privacy, release, CI/CD, security, logging, accessibility, signing, and
-  internal distribution docs under `docs/` and `androidApp/docs/`.
+- Privacy, release, CI/CD, security, logging, accessibility, signing, install,
+  and internal distribution docs under `docs/` and `androidApp/docs/`.
 
 No `Pocket_Ledger_Complete_Backlog.docx` file is present in the repository.
 Backlog context that is present lives in `docs/github-issue-import-report.md`.
@@ -52,7 +52,7 @@ Backlog context that is present lives in `docs/github-issue-import-report.md`.
 | Encryption and security | Room database is app-private but not encrypted by Pocket Ledger. Sensitive preferences use AndroidX Security Crypto. Optional app lock uses Android system authentication. No network transport claim should be made for ledger sync because sync is not implemented. | Do not claim full database encryption or cloud transport protection for ledger data. |
 | App category | Personal finance, budgeting, or finance utility. | Final category should match store listing copy and screenshots. |
 | Internal testing readiness | Release candidate workflow creates release APK/AAB artifacts for Play Console internal testing. Firebase App Distribution distributes debug APKs only and remains separate from Play Store artifacts. | Use release AAB for Play Console internal testing. |
-| Backup/device-transfer behavior | `allowBackup=true`; `dataExtractionRules` and `fullBackupContent` are configured with explicit deny-by-default rules from #227. Ledger database files, encrypted preferences, app-private files, caches, logs, temp/debug/generated files, and external app files are excluded from cloud backup and device transfer. | Review before release; do not claim optional backup-ready profile support until #81 is implemented. |
+| Backup/device-transfer behavior | `allowBackup=true`; `dataExtractionRules` and `fullBackupContent` are configured with explicit deny-by-default rules from #227. Ledger database files, encrypted preferences, app-private files, caches, logs, temp/debug/generated files, and external app files are excluded from cloud backup and device transfer. | Review before release; claim only local-first backup-ready profile foundation unless encrypted backup and restore are separately implemented. |
 | Release diagnostics/privacy safety | Debug Health exists only in debug navigation with a release source-set stub. CI/CD and Debug Health docs prohibit secrets, tester emails, stack traces, IDs, and sensitive ledger values in diagnostics. | Keep release diagnostics hidden and recheck before submission. |
 
 ## Release Permissions
@@ -152,8 +152,9 @@ Android cloud backup or device-to-device transfer. Ledger database files,
 SQLite sidecars, encrypted sensitive preferences, local-only settings, caches,
 logs, temp files, debug artifacts, generated reports, device-protected storage,
 and external app files are excluded. This is the safe default for #227 because
-#81 optional backup-ready profile behavior is not implemented. Re-review this
-section before public release and after any future backup/profile work.
+#81 implements only the local-first backup-ready profile foundation, not
+encrypted ledger backup or restore. Re-review this section before public
+release and after any future backup/profile work.
 
 ## Required Pre-Release Actions
 
@@ -175,8 +176,8 @@ section before public release and after any future backup/profile work.
 ## Store Listing And Assets
 
 Repository-ready listing copy, release notes, screenshot sources, asset file
-names, expected dimensions to verify, and manual Play Console steps are tracked
-in `docs/release/play-store-assets.md`.
+names, expected dimensions to verify, acceptance matrix, and manual Play
+Console steps are tracked in `docs/release/play-store-assets.md`.
 
 Current #131 status:
 
@@ -191,13 +192,33 @@ Current #131 status:
 Do not claim final Play Store graphic upload or Play Console approval from this
 repository state alone.
 
+
+## Release-Ready Install Evidence
+
+#128 is tracked by `docs/release/release-ready-install.md` and
+`docs/release/smoke-test.md`.
+
+Current #128 status:
+
+- Repository runbook defines signed release APK/AAB, Play internal testing AAB,
+  benchmark release-like APK, and debug APK boundaries.
+- Release signing validation is documented and must pass for true signed release
+  artifacts.
+- Benchmark APK remains the closest local release-like installer when signing
+  secrets are unavailable.
+- Actual install, launch, logcat, and core-flow smoke evidence still requires a
+  named physical device or emulator.
+
+Do not claim #128 complete until install evidence is recorded in the smoke-test
+record.
 ## Optional Backup-Ready Profile
 
-The future #81 backup-ready profile design is documented in
-`docs/backup-ready-profile.md`. The current app does not implement account
+The #81 backup-ready profile foundation is documented in
+`docs/backup-ready-profile.md`. The current app exposes only a local-first
+opt-in state and prerequisite model. It does not implement production account
 login, passkey recovery, cloud sync, encrypted ledger backup payloads, or a
 restore contract. The #227 deny-by-default Android backup policy remains the
-correct Play Store disclosure basis until that implementation exists.
+correct Play Store disclosure basis.
 
 ## Issue Traceability
 
@@ -205,12 +226,17 @@ correct Play Store disclosure basis until that implementation exists.
   `docs/release/release-checklist.md`; signed release, Play Console upload,
   public hosting, legal review, and hardware performance checks remain manual
   release gates.
-- #131: store listing copy and asset plan are repository-ready; final graphics
-  and Play Console upload remain manual.
+- #131: store listing copy, asset acceptance matrix, and screenshot plan are
+  repository-ready; final graphics and Play Console upload remain manual.
 - #132: privacy policy is maintained in `docs/privacy-policy.md` and must be
   hosted before public release.
 - #7: local data security criteria are mapped in
   `androidApp/docs/security-model.md`; do not claim full database encryption or
   Play Integrity enforcement.
-- #81: optional backup-ready profile is planned and documented, not implemented.
+- #81: optional backup-ready profile foundation is implemented and documented.
   Ledger data remains excluded from Android backup and device transfer.
+- #128: release-ready install runbook is repository-ready; actual close
+  evidence requires a named device/emulator or Play internal testing install.
+- #17: parent Play Store release story remains open until release signing,
+  install evidence, hosted privacy URL, app-content declarations, final assets,
+  and release checklist review are complete.

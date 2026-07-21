@@ -13,6 +13,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,16 +32,29 @@ fun DebugHealthScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current.applicationContext
-    val report = remember(context, appGraph.featureFlags, appGraph.productAnalyticsProviderState) {
+    val factory = remember(
+        context,
+        appGraph.featureFlags,
+        appGraph.productAnalyticsProviderState,
+        appGraph.backgroundTaskScheduler,
+        appGraph.crashReporter.status,
+        appGraph.startupFailureReporter.status,
+    ) {
         DebugHealthReportFactory.from(
             context = context,
             featureFlags = appGraph.featureFlags,
             analyticsProviderState = appGraph.productAnalyticsProviderState,
-        ).create()
+            backgroundTaskScheduler = appGraph.backgroundTaskScheduler,
+            crashReportingStatus = appGraph.crashReporter.status,
+            startupFailureStatus = appGraph.startupFailureReporter.status,
+        )
     }
+    val report = produceState<DebugHealthReport?>(initialValue = null, factory) {
+        value = factory.create()
+    }.value
 
     DebugHealthContent(
-        report = report,
+        report = report ?: DebugHealthReport(emptyList()),
         modifier = modifier,
     )
 }

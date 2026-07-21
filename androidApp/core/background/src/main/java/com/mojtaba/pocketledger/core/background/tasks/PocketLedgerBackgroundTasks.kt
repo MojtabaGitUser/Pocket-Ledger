@@ -8,6 +8,7 @@ object PocketLedgerBackgroundTasks {
             SyncTask.Definition,
             CleanupTask.Definition,
             BudgetRefreshTask.Definition,
+            MonthlySummaryPreparationTask.Definition,
         ),
     )
 }

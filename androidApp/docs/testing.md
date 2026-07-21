@@ -72,6 +72,8 @@ Prefer accessibility semantics over arbitrary test tags when the same signal is
 useful to users and tests. Add test tags only for stable containers or controls
 that cannot be addressed reliably by text/content description.
 
+Manual TalkBack, keyboard/D-pad, 200% font-scale, and contrast QA for #14 lives in [accessibility-qa.md](accessibility-qa.md). UI PRs should run that pass for changed primary screens or document why it is N/A.
+
 When no emulator or device is attached, assemble Android test APKs for changed
 modules. Run connected Android tests when a device is available.
 
@@ -164,7 +166,8 @@ transaction list, detail, missing, error, and adaptive list/detail states;
 search initial, populated, empty-ledger, no-results, error, and filter-visible
 states; adaptive navigation chrome; key large-font variants at 1.3 and 1.5
 font scale; and focused 200% font-scale coverage for dashboard, transactions,
-search, budget setup, settings, and app lock. `ThemeScreenshotMatrixTest` adds
+search, budget setup, settings, and app lock. The #117 validation record is
+kept in [accessibility-200-font-scale.md](accessibility-200-font-scale.md). `ThemeScreenshotMatrixTest` adds
 an explicit light/dark matrix over
 compact phone and expanded tablet layouts for dashboard content, transaction
 adaptive content, populated search, settings app-lock availability states, and

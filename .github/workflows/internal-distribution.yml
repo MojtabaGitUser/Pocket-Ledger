@@ -45,6 +45,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Set up Node for Firebase CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
@@ -59,6 +64,15 @@ jobs:
           version_code="$(grep -E '^POCKET_LEDGER_VERSION_CODE=' gradle.properties | head -n 1 | cut -d= -f2-)"
           notes_file="$RUNNER_TEMP/pocket-ledger-internal-release-notes.txt"
 
+          if [[ ! "$version_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][A-Za-z0-9]+)*$ ]]; then
+            echo "::error::POCKET_LEDGER_VERSION_NAME must look like 1.0.0 or 1.0.0-beta.1."
+            exit 1
+          fi
+          if [[ ! "$version_code" =~ ^[1-9][0-9]{0,8}$ ]]; then
+            echo "::error::POCKET_LEDGER_VERSION_CODE must be a positive integer with at most 9 digits."
+            exit 1
+          fi
+
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && -n "${RELEASE_NOTES_INPUT}" ]]; then
             printf '%s\n' "${RELEASE_NOTES_INPUT}" > "$notes_file"
           else
@@ -67,6 +81,8 @@ jobs:
 
           echo "artifact_suffix=${version_name}-${version_code}-${ref_name}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           echo "release_notes_file=${notes_file}" >> "$GITHUB_OUTPUT"
+          echo "version_name=${version_name}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${version_code}" >> "$GITHUB_OUTPUT"
 
       - name: List Gradle projects
         run: ./gradlew projects
@@ -94,6 +110,9 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           FIREBASE_TESTER_GROUPS: ${{ secrets.FIREBASE_TESTER_GROUPS }}
         run: |
+          echo "::add-mask::$FIREBASE_APP_ID"
+          echo "::add-mask::$FIREBASE_TESTER_GROUPS"
+
           missing=0
           for name in FIREBASE_APP_ID FIREBASE_SERVICE_ACCOUNT_JSON FIREBASE_TESTER_GROUPS; do
             if [[ -z "${!name}" ]]; then
@@ -110,6 +129,7 @@ jobs:
         run: |
           credentials_file="$RUNNER_TEMP/firebase-service-account.json"
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$credentials_file"
+          chmod 600 "$credentials_file"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$credentials_file" >> "$GITHUB_ENV"
 
       - name: Install Firebase CLI
@@ -132,3 +152,26 @@ jobs:
             --app "$FIREBASE_APP_ID" \
             --groups "$FIREBASE_TESTER_GROUPS" \
             --release-notes-file "${{ steps.metadata.outputs.release_notes_file }}"
+
+      - name: Write distribution summary
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          {
+            echo "## Internal distribution"
+            echo ""
+            echo "- Ref: \`${GITHUB_REF_NAME}\`"
+            echo "- Version: \`${{ steps.metadata.outputs.version_name }}\` (\`${{ steps.metadata.outputs.version_code }}\`)"
+            echo "- APK artifact: \`pocket-ledger-internal-apk-${{ steps.metadata.outputs.artifact_suffix }}\`"
+            echo "- Firebase upload step result: \`${{ job.status }}\`"
+            echo ""
+            echo "Secrets, tester groups, service-account JSON, and release notes content are intentionally omitted from this summary."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean Firebase credentials
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" && -f "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then
+            rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
+          fi
