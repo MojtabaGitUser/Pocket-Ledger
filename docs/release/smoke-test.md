@@ -1,5 +1,32 @@
 # Release Candidate Smoke Test
 
+## 2026-07-19 Connected Release-Like Validation (Supersedes Earlier Device Blockers)
+
+| Field | Result |
+| --- | --- |
+| Branch / commit | `dev` / `adc51e4` plus the uncommitted #10 + #128 implementation under validation |
+| Target | Android Emulator `Pixel_9_Pro_XL(AVD)`, model `sdk_gphone16k_x86_64`, API 37 |
+| Installed artifact | `androidApp/app/build/outputs/apk/benchmark/app-benchmark.apk` |
+| Install | Passed with `adb install -r`; package `com.mojtaba.pocketledger` |
+| Launch | Passed; cold launch reached Dashboard without a fatal exception |
+| Build behavior | Non-debuggable, minified, resource-shrunk, profileable, release-like, debug-signed |
+| Signed production release | Still blocked because local release-signing inputs are intentionally unavailable |
+
+Connected smoke results:
+
+- Dashboard launched and rendered its empty state.
+- Deterministic benchmark data was prepared successfully; Transactions rendered `Neighborhood Market`.
+- Keyword search for `Bluebird` rendered `Bluebird Coffee`.
+- Settings opened and rendered the Security section.
+- Debug-only destinations were absent from the benchmark navigation.
+- No fatal application exception was observed in the clean post-fix launch/navigation logcat pass.
+- Macrobenchmark startup/dashboard/search scenarios ran, and the large-dataset and transaction-scroll classes passed on the emulator with emulator-error suppression. Emulator numbers are diagnostic only and are not physical-device performance targets.
+- `:app:generateReleaseBaselineProfile` passed and copied the generated release profile into `app/src/release/generated/baselineProfiles/baseline-prof.txt`.
+
+Artifacts were rebuilt successfully with `:app:assembleRelease`, `:app:bundleRelease`, `:app:assembleBenchmark`, lint, JVM tests, shared tests, and the macrobenchmark module assembly. The unsigned release APK/AAB remain validation artifacts; the benchmark APK is the installable release-like candidate used for #128 evidence.
+
+Remaining release blockers are limited to production signing credentials, a real Play internal-testing upload/install, physical-device coverage (including lower-end hardware), and runtime backup/device-transfer validation. Earlier statements below that say no emulator/device was attached are retained as historical run evidence and are superseded by this section.
+
 This record supports `T-E19-05 - Run release candidate smoke test` and #128
 `US-E19-01 - Install a release-ready Pocket Ledger build` under
 `E-19 - Play Store Readiness`. It records the release-candidate validation that

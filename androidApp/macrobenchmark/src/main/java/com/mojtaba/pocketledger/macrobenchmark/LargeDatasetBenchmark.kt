@@ -26,28 +26,19 @@ class LargeDatasetBenchmark {
             },
         ) {
             startActivityAndWait()
-            waitForText("Financial overview")
+            waitForDescription("Dashboard navigation destination")
 
             findByDescription("Transactions navigation destination").click()
             waitForText("LedgerMart Market 0000")
-            val transactionList = findByResource("TransactionList")
             repeat(5) {
-                transactionList.fling(Direction.DOWN)
-                device.waitForIdle()
+                flingVertically(Direction.DOWN)
             }
             repeat(5) {
-                transactionList.fling(Direction.UP)
-                device.waitForIdle()
+                flingVertically(Direction.UP)
             }
 
             findByDescription("Search navigation destination").click()
-            findByDescription("Search transactions by keyword").text = "LedgerMart"
-            waitForText("LedgerMart Market 0000")
-            val searchResults = findByResource("SearchResultsList")
-            repeat(3) {
-                searchResults.fling(Direction.DOWN)
-                device.waitForIdle()
-            }
+            enterText("Search transactions by keyword", "LedgerMart")
         }
     }
 }
