@@ -28,7 +28,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PocketLedger"
+rootProject.name = "Folentra"
 
 include(":app")
 include(":core:background")

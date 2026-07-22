@@ -1,6 +1,6 @@
-﻿# AI Privacy And Safety Checklist
+# AI Privacy And Safety Checklist
 
-Pocket Ledger E-12 implements private AI feature contracts with local-only provider selection. This checklist must be reviewed before every release that changes Insights, semantic search, smart autofill, provider selection, analytics, logging, or Play Store declarations.
+Folentra E-12 implements private AI feature contracts with local-only provider selection. This checklist must be reviewed before every release that changes Insights, semantic search, smart autofill, provider selection, analytics, logging, or Play Store declarations.
 
 ## Required Guarantees
 

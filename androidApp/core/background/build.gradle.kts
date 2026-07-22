@@ -1,9 +1,9 @@
 plugins {
-    id("pocketledger.android.library")
+    id("folentra.android.library")
 }
 
 android {
-    namespace = "com.mojtaba.pocketledger.core.background"
+    namespace = "com.mojtaba.folentra.core.background"
 }
 
 dependencies {

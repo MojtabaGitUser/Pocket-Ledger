@@ -15,7 +15,7 @@ Use Android Studio or Gradle to run the Android app on an emulator/device. The d
 
 ## Opening Pitch - 45 Seconds
 
-"Pocket Ledger is an Android-first personal finance app sample. I built it to show production-style mobile engineering: modular architecture, offline-first Room persistence, selective KMP reuse, privacy-aware local behavior, accessibility and screenshot validation, release/R8 hardening, and traceable documentation. It is intentionally honest about what is implemented and what remains future work."
+"Folentra is an Android-first personal finance app sample. I built it to show production-style mobile engineering: modular architecture, offline-first Room persistence, selective KMP reuse, privacy-aware local behavior, accessibility and screenshot validation, release/R8 hardening, and traceable documentation. It is intentionally honest about what is implemented and what remains future work."
 
 ## Walkthrough 1 - Product Surface - 3 Minutes
 

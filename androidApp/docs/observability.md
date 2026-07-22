@@ -1,6 +1,6 @@
 # Observability And Crash Reporting
 
-Pocket Ledger uses privacy-safe observability for production issue detection.
+Folentra uses privacy-safe observability for production issue detection.
 The runtime surface is intentionally small: sanitized app logging, Firebase
 Crashlytics for release crash reporting, a startup failure reporter, and the
 Debug Health screen for debug-only inspection.

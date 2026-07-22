@@ -1,8 +1,8 @@
-﻿# Pocket Ledger Testing Report
+# Folentra Testing Report
 
 ## Executive Summary
 
-Pocket Ledger currently has a layered Android test strategy that gives solid
+Folentra currently has a layered Android test strategy that gives solid
 MVP confidence for local-first ledger behavior, feature ViewModels and pure
 logic, adaptive UI rendering, release assembly, and R8 compatibility.
 
@@ -125,7 +125,7 @@ WorkManager, network, sleeps, random IDs, and wall-clock timing.
 
 ## Room And Repository Integration Coverage
 
-Room KMP tests live in `:core:database` under `src/commonTest`, `src/desktopTest`, and Android device-test source sets. Desktop tests validate file-backed persistence across database instances; Android tests construct isolated in-memory `PocketLedgerDatabase` instances for DAO behavior when an SDK and device are available.
+Room KMP tests live in `:core:database` under `src/commonTest`, `src/desktopTest`, and Android device-test source sets. Desktop tests validate file-backed persistence across database instances; Android tests construct isolated in-memory `FolentraDatabase` instances for DAO behavior when an SDK and device are available.
 Migration coverage uses Room `MigrationTestHelper` with committed schema JSON
 assets under `core/database/schemas`.
 
@@ -175,7 +175,7 @@ Adaptive screenshot coverage uses Paparazzi 2.0.0-alpha05 in `:app`.
 Screenshot tests live under:
 
 ```text
-app/src/test/java/com/mojtaba/pocketledger/screenshot
+app/src/test/java/com/mojtaba/folentra/screenshot
 ```
 
 Committed PNG baselines live under:
@@ -638,7 +638,7 @@ Focused large dataset benchmark execution with an attached representative
 device or emulator:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.folentra.macrobenchmark.LargeDatasetBenchmark
 ```
 
 Baseline Profile generation with an attached representative device or emulator:
@@ -741,7 +741,7 @@ Commands not run because no device or emulator was attached:
 .\gradlew.bat :app:connectedDebugAndroidTest
 .\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 .\gradlew.bat :macrobenchmark:connectedCheck
-.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.folentra.macrobenchmark.LargeDatasetBenchmark
 .\gradlew.bat :app:generateReleaseBaselineProfile
 .\gradlew.bat :macrobenchmark:collectNonMinifiedReleaseBaselineProfile
 .\gradlew.bat :macrobenchmark:collectNonMinifiedBenchmarkBaselineProfile

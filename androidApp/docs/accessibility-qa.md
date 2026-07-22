@@ -34,7 +34,7 @@ Review these primary screens for #14 and release candidates:
 Use a debug or release-like build with deterministic sample data only. Do not run this pass with personal financial data.
 
 1. Enable TalkBack on the device or emulator.
-2. Open Pocket Ledger and start from the first visible destination.
+2. Open Folentra and start from the first visible destination.
 3. Swipe forward through the whole screen.
 4. Swipe backward through the same screen.
 5. Activate every primary action with double tap.
@@ -90,7 +90,7 @@ Pass criteria:
 Focused validation command:
 
 ```powershell
-.\androidApp\gradlew.bat :app:verifyPaparazziDebug --tests "com.mojtaba.pocketledger.screenshot.TwoHundredPercentFontScaleScreenshotTest" --console=plain
+.\androidApp\gradlew.bat :app:verifyPaparazziDebug --tests "com.mojtaba.folentra.screenshot.TwoHundredPercentFontScaleScreenshotTest" --console=plain
 ```
 
 Full screenshot validation command:

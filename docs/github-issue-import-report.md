@@ -190,7 +190,7 @@ These were treated as already created or unsafe to recreate because the same ID 
 95. `[Task] T-E18-02 - Add release candidate workflow`
 96. `[Task] T-E18-03 - Add screenshot/benchmark workflow strategy`
 97. `[Task] T-E18-04 - Publish CI badges and commands`
-98. `[Story] US-E19-01 - Install a release-ready Pocket Ledger build`
+98. `[Story] US-E19-01 - Install a release-ready Folentra build`
 99. `[Technical Story] TS-E19-01 - Create release hardening checklist`
 100. `[Task] T-E19-01 - Create release signing and versioning plan`
 101. `[Task] T-E19-02 - Prepare Play Store assets`

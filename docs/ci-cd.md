@@ -1,6 +1,6 @@
 # CI/CD Strategy
 
-Pocket Ledger uses GitHub Actions to keep normal pull-request validation fast
+Folentra uses GitHub Actions to keep normal pull-request validation fast
 and to keep screenshot and benchmark work controlled. The Android Gradle wrapper
 lives in `androidApp/`, and workflow commands run from that directory.
 
@@ -126,7 +126,7 @@ Local connected benchmark commands:
 
 ```bash
 ./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
-./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.folentra.macrobenchmark.LargeDatasetBenchmark
 ./gradlew :app:generateReleaseBaselineProfile
 ```
 
@@ -177,13 +177,13 @@ paths, and `docs/release/release-checklist.md` for the release checklist.
 
 Release signing and versioning are documented in
 `docs/release/signing-versioning.md`. The app module is `androidApp/app`, the
-production application ID is `com.mojtaba.pocketledger`, and version defaults
-come from `POCKET_LEDGER_VERSION_CODE` / `POCKET_LEDGER_VERSION_NAME` in Gradle
+production application ID is `com.mojtaba.folentra`, and version defaults
+come from `FOLENTRA_VERSION_CODE` / `FOLENTRA_VERSION_NAME` in Gradle
 properties.
 
 Normal PR validation assembles release/R8 artifacts without signing secrets.
-True release-ready signed builds must provide all `POCKET_LEDGER_RELEASE_*`
-values and set `POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true`; `:app:validateReleaseSigning`
+True release-ready signed builds must provide all `FOLENTRA_RELEASE_*`
+values and set `FOLENTRA_REQUIRE_RELEASE_SIGNING=true`; `:app:validateReleaseSigning`
 then fails clearly if signing is incomplete. Keystores, passwords, aliases,
 service-account JSON, Play Store credentials, Firebase credentials, private
 tester lists, and private release data must never be committed or uploaded as

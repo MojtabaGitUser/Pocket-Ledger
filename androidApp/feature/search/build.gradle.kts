@@ -1,10 +1,10 @@
 plugins {
-    id("pocketledger.android.library")
-    id("pocketledger.android.compose")
+    id("folentra.android.library")
+    id("folentra.android.compose")
 }
 
 android {
-    namespace = "com.mojtaba.pocketledger.feature.search"
+    namespace = "com.mojtaba.folentra.feature.search"
 }
 
 dependencies {

@@ -1,6 +1,6 @@
-# Pocket Ledger Portfolio README
+# Folentra Portfolio README
 
-Pocket Ledger is an Android-first personal finance sample built to demonstrate production-style mobile engineering in a compact portfolio project. It is intentionally local-first, modular, privacy-aware, and release-hardened rather than a throwaway demo screen.
+Folentra is an Android-first personal finance sample built to demonstrate production-style mobile engineering in a compact portfolio project. It is intentionally local-first, modular, privacy-aware, and release-hardened rather than a throwaway demo screen.
 
 ## Reviewer Snapshot
 
@@ -69,4 +69,4 @@ Connected benchmark and Baseline Profile commands require an attached device or 
 
 ## Honest Boundaries
 
-Pocket Ledger does not claim production bank integration, cloud sync, OCR import, real remote AI inference, Play Store publication, or device-lab benchmark numbers. Those areas are documented as future extensions or manual release steps. The portfolio value is in the architecture, local-first implementation, privacy posture, validation strategy, and traceable release readiness work.
+Folentra does not claim production bank integration, cloud sync, OCR import, real remote AI inference, Play Store publication, or device-lab benchmark numbers. Those areas are documented as future extensions or manual release steps. The portfolio value is in the architecture, local-first implementation, privacy posture, validation strategy, and traceable release readiness work.

@@ -1,6 +1,6 @@
-# Pocket Ledger Accessibility Semantics
+# Folentra Accessibility Semantics
 
-Pocket Ledger screens must expose a clear semantic structure for TalkBack,
+Folentra screens must expose a clear semantic structure for TalkBack,
 accessibility services, and Compose UI tests. Accessibility work should improve
 the existing UI structure without changing feature behavior or adding hidden
 data that is not already visible.
@@ -16,7 +16,7 @@ Use the design-system helper when possible:
 ```kotlin
 Text(
     text = "Transactions",
-    modifier = Modifier.pocketLedgerHeading(),
+    modifier = Modifier.folentraHeading(),
 )
 ```
 
@@ -88,7 +88,7 @@ Checklist:
 
 - Icon-only and compact actions have meaningful labels, for example
   `Edit transaction`, `Delete transaction`, `Clear search filters`, or
-  `Unlock Pocket Ledger`.
+  `Unlock Folentra`.
 - Decorative navigation glyphs and display-only tag/status chips do not expose
   fake actions or noisy duplicate labels.
 - Interactive controls expose their role through the platform component or an
@@ -121,7 +121,7 @@ Keep the visible progress text and spoken progress text consistent.
 
 ## 200% Font Scaling
 
-Pocket Ledger must remain usable when Android font size is set to 200%.
+Folentra must remain usable when Android font size is set to 200%.
 Prefer reflowing content into fewer columns or stacked rows over clipping text,
 shrinking text, or hiding critical actions.
 

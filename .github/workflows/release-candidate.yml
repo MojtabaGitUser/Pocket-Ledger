@@ -69,8 +69,8 @@ jobs:
           VERSION_CODE_INPUT: ${{ github.event.inputs.version_code || '' }}
         run: |
           ref_name="${GITHUB_REF_NAME//\//-}"
-          base_version_name="$(grep -E '^POCKET_LEDGER_VERSION_NAME=' gradle.properties | head -n 1 | cut -d= -f2-)"
-          base_version_code="$(grep -E '^POCKET_LEDGER_VERSION_CODE=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          base_version_name="$(grep -E '^FOLENTRA_VERSION_NAME=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          base_version_code="$(grep -E '^FOLENTRA_VERSION_CODE=' gradle.properties | head -n 1 | cut -d= -f2-)"
           version_name="${VERSION_NAME_INPUT:-$base_version_name}"
           version_code="${VERSION_CODE_INPUT:-$base_version_code}"
 
@@ -83,8 +83,8 @@ jobs:
             exit 1
           fi
 
-          echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
-          echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_PROJECT_FOLENTRA_VERSION_NAME=$version_name" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_PROJECT_FOLENTRA_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
           echo "artifact_suffix=${version_name}-${version_code}-${ref_name}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           echo "version_name=${version_name}" >> "$GITHUB_OUTPUT"
           echo "version_code=${version_code}" >> "$GITHUB_OUTPUT"
@@ -93,27 +93,27 @@ jobs:
         id: signing
         shell: bash
         env:
-          RELEASE_STORE_BASE64: ${{ secrets.POCKET_LEDGER_RELEASE_STORE_BASE64 }}
-          RELEASE_STORE_PASSWORD: ${{ secrets.POCKET_LEDGER_RELEASE_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.POCKET_LEDGER_RELEASE_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.POCKET_LEDGER_RELEASE_KEY_PASSWORD }}
+          RELEASE_STORE_BASE64: ${{ secrets.FOLENTRA_RELEASE_STORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.FOLENTRA_RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.FOLENTRA_RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.FOLENTRA_RELEASE_KEY_PASSWORD }}
           REQUIRE_RELEASE_SIGNING: ${{ github.event.inputs.require_release_signing || 'false' }}
         run: |
           if [[ -n "$RELEASE_STORE_BASE64" && -n "$RELEASE_STORE_PASSWORD" && -n "$RELEASE_KEY_ALIAS" && -n "$RELEASE_KEY_PASSWORD" ]]; then
-            signing_dir="$RUNNER_TEMP/pocket-ledger-signing"
+            signing_dir="$RUNNER_TEMP/folentra-signing"
             signing_store="$signing_dir/release.keystore"
             mkdir -p "$signing_dir"
             printf '%s' "$RELEASE_STORE_BASE64" | base64 --decode > "$signing_store"
             {
-              echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_STORE_FILE=$signing_store"
-              echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD"
-              echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS"
-              echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD"
+              echo "ORG_GRADLE_PROJECT_FOLENTRA_RELEASE_STORE_FILE=$signing_store"
+              echo "ORG_GRADLE_PROJECT_FOLENTRA_RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD"
+              echo "ORG_GRADLE_PROJECT_FOLENTRA_RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS"
+              echo "ORG_GRADLE_PROJECT_FOLENTRA_RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD"
             } >> "$GITHUB_ENV"
-            echo "ORG_GRADLE_PROJECT_POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
+            echo "ORG_GRADLE_PROJECT_FOLENTRA_REQUIRE_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
             echo "signing_configured=true" >> "$GITHUB_OUTPUT"
           elif [[ "$REQUIRE_RELEASE_SIGNING" == "true" ]]; then
-            echo "::error::Signed release candidate requested, but one or more POCKET_LEDGER_RELEASE_* secrets are missing."
+            echo "::error::Signed release candidate requested, but one or more FOLENTRA_RELEASE_* secrets are missing."
             exit 1
           else
             echo "Release signing secrets were not all provided; building unsigned validation artifacts."
@@ -145,21 +145,21 @@ jobs:
       - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: pocket-ledger-rc-apk-${{ steps.metadata.outputs.artifact_suffix }}
+          name: folentra-rc-apk-${{ steps.metadata.outputs.artifact_suffix }}
           path: androidApp/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
       - name: Upload release app bundle
         uses: actions/upload-artifact@v4
         with:
-          name: pocket-ledger-rc-aab-${{ steps.metadata.outputs.artifact_suffix }}
+          name: folentra-rc-aab-${{ steps.metadata.outputs.artifact_suffix }}
           path: androidApp/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
 
       - name: Upload release mapping
         uses: actions/upload-artifact@v4
         with:
-          name: pocket-ledger-rc-mapping-${{ steps.metadata.outputs.artifact_suffix }}
+          name: folentra-rc-mapping-${{ steps.metadata.outputs.artifact_suffix }}
           path: androidApp/app/build/outputs/mapping/release/
           if-no-files-found: error
 
@@ -167,7 +167,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: pocket-ledger-rc-reports-${{ steps.metadata.outputs.artifact_suffix }}
+          name: folentra-rc-reports-${{ steps.metadata.outputs.artifact_suffix }}
           path: |
             androidApp/**/build/reports/lint-results-release.*
             androidApp/**/build/reports/tests/

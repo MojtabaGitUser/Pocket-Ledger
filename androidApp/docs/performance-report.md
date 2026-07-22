@@ -1,4 +1,4 @@
-# Pocket Ledger Performance Benchmarks
+# Folentra Performance Benchmarks
 
 ## 2026-07-19 Connected Benchmark And Baseline Profile Evidence
 
@@ -25,7 +25,7 @@ Commands used:
 
 A physical-device run with locked/stable clocks is still required before setting regression thresholds or making user-facing performance claims.
 
-Pocket Ledger uses a dedicated `:macrobenchmark` module for local, manual
+Folentra uses a dedicated `:macrobenchmark` module for local, manual
 Macrobenchmark runs. These benchmarks are performance evidence tools and are
 not part of normal PR validation.
 
@@ -54,7 +54,7 @@ Large dataset benchmarks use a separate benchmark-only setup mode backed by
 the pure generator in:
 
 ```text
-core/testing/src/main/java/com/mojtaba/pocketledger/core/testing/performance/LargeBenchmarkDataset.kt
+core/testing/src/main/java/com/mojtaba/folentra/core/testing/performance/LargeBenchmarkDataset.kt
 ```
 
 The app benchmark source set consumes that generator through
@@ -72,7 +72,7 @@ minified, resource-shrunk, and with privacy-safe logging disabled. It avoids
 requiring release signing secrets while keeping benchmarked code close to
 release behavior.
 
-The Macrobenchmark module targets package `com.mojtaba.pocketledger` and the
+The Macrobenchmark module targets package `com.mojtaba.folentra` and the
 `:app` project. It declares a matching `benchmark` build type so connected runs
 install and measure the app `benchmark` variant. Benchmark results are generated
 under:
@@ -110,7 +110,7 @@ financial-data examples.
 The large benchmark lives in:
 
 ```text
-macrobenchmark/src/main/java/com/mojtaba/pocketledger/macrobenchmark/LargeDatasetBenchmark.kt
+macrobenchmark/src/main/java/com/mojtaba/folentra/macrobenchmark/LargeDatasetBenchmark.kt
 ```
 
 `scrollAndSearchLargeDataset` seeds the large dataset, cold-launches the app,
@@ -124,8 +124,8 @@ UIAutomator text/content-description/resource selectors.
 This pass reviewed the implemented Compose surfaces that matter most for
 startup, scroll, and frame timing:
 
-- App entry and shell: `MainActivity`, `PocketLedgerApp`,
-  `PocketLedgerAppShell`, adaptive navigation, app lock gate, and settings.
+- App entry and shell: `MainActivity`, `FolentraApp`,
+  `FolentraAppShell`, adaptive navigation, app lock gate, and settings.
 - Dashboard: route/ViewModel, adaptive dashboard content, recent transactions,
   budget progress, top spending, insights, and metric cards.
 - Transactions: list route/ViewModel, list screen, list item rows, adaptive
@@ -194,7 +194,7 @@ Remaining gaps:
 Baseline Profile generation lives in:
 
 ```text
-macrobenchmark/src/main/java/com/mojtaba/pocketledger/macrobenchmark/BaselineProfileGenerator.kt
+macrobenchmark/src/main/java/com/mojtaba/folentra/macrobenchmark/BaselineProfileGenerator.kt
 ```
 
 The generator reuses the benchmark-only demo-data setup activity, launches the
@@ -273,7 +273,7 @@ Run connected benchmarks when a device or emulator is attached:
 Run only the large dataset benchmark class on a connected device or emulator:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.folentra.macrobenchmark.LargeDatasetBenchmark
 ```
 
 The aggregate connected check task is also available:

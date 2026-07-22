@@ -1,6 +1,6 @@
 # Future Product Growth Plan
 
-E-21 plans future Pocket Ledger product growth without implementing future
+E-21 plans future Folentra product growth without implementing future
 features. The current product remains a local-first Android MVP with private
 local ledger storage, explicit deny-by-default Android backup/data extraction
 rules, local or rule-based AI behavior, and no account, cloud sync, OCR, export,

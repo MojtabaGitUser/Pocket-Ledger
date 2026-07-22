@@ -1,14 +1,27 @@
 plugins {
-    id("pocketledger.android.application")
-    id("pocketledger.android.compose")
+    id("folentra.android.application")
+    id("folentra.android.compose")
     alias(libs.plugins.paparazzi)
 
     id("com.android.application")
 
-    // Add the Google services Gradle plugin
-    alias(libs.plugins.google.services)
-    alias(libs.plugins.google.crashlytics)
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.google.crashlytics) apply false
 
+}
+
+val googleServicesFile = layout.projectDirectory.file("google-services.json").asFile
+val firebaseConfiguredForFolentra = googleServicesFile.isFile &&
+    googleServicesFile.readText().contains("\"package_name\": \"com.mojtaba.folentra\"") &&
+    googleServicesFile.readText().contains("\"package_name\": \"com.mojtaba.folentra.debug\"")
+if (firebaseConfiguredForFolentra) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+} else {
+    logger.warn(
+        "Firebase is disabled: download a google-services.json containing both " +
+            "com.mojtaba.folentra and com.mojtaba.folentra.debug clients."
+    )
 }
 
 tasks.withType<Test>().configureEach {
@@ -24,24 +37,24 @@ tasks.withType<Test>().configureEach {
 
 fun releaseProperty(name: String) = providers.gradleProperty(name).orElse(providers.environmentVariable(name))
 
-val pocketLedgerVersionCode = releaseProperty("POCKET_LEDGER_VERSION_CODE").map { rawValue ->
+val folentraVersionCode = releaseProperty("FOLENTRA_VERSION_CODE").map { rawValue ->
     require(rawValue.matches(Regex("[1-9][0-9]{0,8}"))) {
-        "POCKET_LEDGER_VERSION_CODE must be a positive integer with at most 9 digits."
+        "FOLENTRA_VERSION_CODE must be a positive integer with at most 9 digits."
     }
     rawValue.toInt()
 }
-val pocketLedgerVersionName = releaseProperty("POCKET_LEDGER_VERSION_NAME").map { rawValue ->
+val folentraVersionName = releaseProperty("FOLENTRA_VERSION_NAME").map { rawValue ->
     require(rawValue.matches(Regex("""[0-9]+\.[0-9]+\.[0-9]+([-.][A-Za-z0-9]+)*"""))) {
-        "POCKET_LEDGER_VERSION_NAME must use semantic format such as 1.0.0 or 1.0.0-rc.1."
+        "FOLENTRA_VERSION_NAME must use semantic format such as 1.0.0 or 1.0.0-rc.1."
     }
-    require(rawValue.length <= 32) { "POCKET_LEDGER_VERSION_NAME must be 32 characters or fewer." }
+    require(rawValue.length <= 32) { "FOLENTRA_VERSION_NAME must be 32 characters or fewer." }
     rawValue
 }
 
-val releaseStoreFile = releaseProperty("POCKET_LEDGER_RELEASE_STORE_FILE")
-val releaseStorePassword = releaseProperty("POCKET_LEDGER_RELEASE_STORE_PASSWORD")
-val releaseKeyAlias = releaseProperty("POCKET_LEDGER_RELEASE_KEY_ALIAS")
-val releaseKeyPassword = releaseProperty("POCKET_LEDGER_RELEASE_KEY_PASSWORD")
+val releaseStoreFile = releaseProperty("FOLENTRA_RELEASE_STORE_FILE")
+val releaseStorePassword = releaseProperty("FOLENTRA_RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = releaseProperty("FOLENTRA_RELEASE_KEY_ALIAS")
+val releaseKeyPassword = releaseProperty("FOLENTRA_RELEASE_KEY_PASSWORD")
 val releaseSigningValues = listOf(
     releaseStoreFile,
     releaseStorePassword,
@@ -50,32 +63,32 @@ val releaseSigningValues = listOf(
 )
 val releaseSigningValueCount = releaseSigningValues.count { it.isPresent }
 val hasReleaseSigningConfig = releaseSigningValueCount == releaseSigningValues.size
-val requireReleaseSigning = releaseProperty("POCKET_LEDGER_REQUIRE_RELEASE_SIGNING")
+val requireReleaseSigning = releaseProperty("FOLENTRA_REQUIRE_RELEASE_SIGNING")
     .map { it.equals("true", ignoreCase = true) }
     .getOrElse(false)
 
 if (releaseSigningValueCount in 1 until releaseSigningValues.size) {
     throw GradleException(
-        "Release signing is partially configured. Provide all POCKET_LEDGER_RELEASE_* values " +
+        "Release signing is partially configured. Provide all FOLENTRA_RELEASE_* values " +
             "or remove them for unsigned validation builds."
     )
 }
 if (requireReleaseSigning && !hasReleaseSigningConfig) {
     throw GradleException(
-        "POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true requires POCKET_LEDGER_RELEASE_STORE_FILE, " +
-            "POCKET_LEDGER_RELEASE_STORE_PASSWORD, POCKET_LEDGER_RELEASE_KEY_ALIAS, and " +
-            "POCKET_LEDGER_RELEASE_KEY_PASSWORD."
+        "FOLENTRA_REQUIRE_RELEASE_SIGNING=true requires FOLENTRA_RELEASE_STORE_FILE, " +
+            "FOLENTRA_RELEASE_STORE_PASSWORD, FOLENTRA_RELEASE_KEY_ALIAS, and " +
+            "FOLENTRA_RELEASE_KEY_PASSWORD."
     )
 }
 
 android {
-    namespace = "com.mojtaba.pocketledger"
+    namespace = "com.mojtaba.folentra"
 
     defaultConfig {
-        applicationId = "com.mojtaba.pocketledger"
+        applicationId = "com.mojtaba.folentra"
         targetSdk = 36
-        versionCode = pocketLedgerVersionCode.get()
-        versionName = pocketLedgerVersionName.get()
+        versionCode = folentraVersionCode.get()
+        versionName = folentraVersionName.get()
     }
 
     signingConfigs {
@@ -112,8 +125,8 @@ android {
             buildConfigField("String", "APP_ENV", "\"release\"")
             buildConfigField("Boolean", "IS_INTERNAL_BUILD", "false")
             buildConfigField("Boolean", "LOGGING_ENABLED", "false")
-            buildConfigField("Boolean", "CRASH_REPORTING_ENABLED", "true")
-            manifestPlaceholders["firebaseCrashlyticsCollectionEnabled"] = "true"
+            buildConfigField("Boolean", "CRASH_REPORTING_ENABLED", firebaseConfiguredForFolentra.toString())
+            manifestPlaceholders["firebaseCrashlyticsCollectionEnabled"] = firebaseConfiguredForFolentra.toString()
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -147,14 +160,46 @@ tasks.register("validateReleaseSigning") {
     doLast {
         if (!hasReleaseSigningConfig) {
             throw GradleException(
-                "Release signing is not configured. Set POCKET_LEDGER_RELEASE_STORE_FILE, " +
-                    "POCKET_LEDGER_RELEASE_STORE_PASSWORD, POCKET_LEDGER_RELEASE_KEY_ALIAS, and " +
-                    "POCKET_LEDGER_RELEASE_KEY_PASSWORD."
+                "Release signing is not configured. Set FOLENTRA_RELEASE_STORE_FILE, " +
+                    "FOLENTRA_RELEASE_STORE_PASSWORD, FOLENTRA_RELEASE_KEY_ALIAS, and " +
+                    "FOLENTRA_RELEASE_KEY_PASSWORD."
             )
         }
     }
 }
 
+val validateBackupAndDeviceTransferRules by tasks.registering {
+    group = "verification"
+    description = "Validates the deny-by-default Android backup and device-transfer contract."
+    val manifest = layout.projectDirectory.file("src/main/AndroidManifest.xml")
+    val legacyRules = layout.projectDirectory.file("src/main/res/xml/backup_rules.xml")
+    val extractionRules = layout.projectDirectory.file("src/main/res/xml/data_extraction_rules.xml")
+    inputs.files(manifest, legacyRules, extractionRules)
+    doLast {
+        val manifestText = manifest.asFile.readText()
+        require("android:allowBackup=\"true\"" in manifestText)
+        require("android:fullBackupContent=\"@xml/backup_rules\"" in manifestText)
+        require("android:dataExtractionRules=\"@xml/data_extraction_rules\"" in manifestText)
+        val protectedDomains = listOf("root", "file", "database", "sharedpref", "external")
+        fun String.requireDenyByDefault(scope: String) {
+            protectedDomains.forEach { domain ->
+                require(Regex("""<exclude\s+domain=\"$domain\"\s+path=\"\.\"\s*/>""").containsMatchIn(this)) {
+                    "$scope must exclude the complete '$domain' domain."
+                }
+            }
+            require("folentra.db" in this) { "$scope must identify the ledger database." }
+            require("folentra_sensitive_prefs.xml" in this) { "$scope must identify encrypted sensitive preferences." }
+        }
+        legacyRules.asFile.readText().requireDenyByDefault("Pre-Android 12 backup rules")
+        val extractionText = extractionRules.asFile.readText()
+        fun section(name: String): String = Regex("<$name>([\\s\\S]*?)</$name>")
+            .find(extractionText)?.groupValues?.get(1) ?: error("Missing <$name> in data extraction rules.")
+        section("cloud-backup").requireDenyByDefault("Android 12+ cloud backup rules")
+        section("device-transfer").requireDenyByDefault("Android 12+ device-transfer rules")
+    }
+}
+
+tasks.named("check").configure { dependsOn(validateBackupAndDeviceTransferRules) }
 apply(plugin = "androidx.baselineprofile")
 
 dependencies {

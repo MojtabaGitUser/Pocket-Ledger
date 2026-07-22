@@ -60,16 +60,16 @@ jobs:
           RELEASE_NOTES_INPUT: ${{ github.event.inputs.release_notes || '' }}
         run: |
           ref_name="${GITHUB_REF_NAME//\//-}"
-          version_name="$(grep -E '^POCKET_LEDGER_VERSION_NAME=' gradle.properties | head -n 1 | cut -d= -f2-)"
-          version_code="$(grep -E '^POCKET_LEDGER_VERSION_CODE=' gradle.properties | head -n 1 | cut -d= -f2-)"
-          notes_file="$RUNNER_TEMP/pocket-ledger-internal-release-notes.txt"
+          version_name="$(grep -E '^FOLENTRA_VERSION_NAME=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          version_code="$(grep -E '^FOLENTRA_VERSION_CODE=' gradle.properties | head -n 1 | cut -d= -f2-)"
+          notes_file="$RUNNER_TEMP/folentra-internal-release-notes.txt"
 
           if [[ ! "$version_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][A-Za-z0-9]+)*$ ]]; then
-            echo "::error::POCKET_LEDGER_VERSION_NAME must look like 1.0.0 or 1.0.0-beta.1."
+            echo "::error::FOLENTRA_VERSION_NAME must look like 1.0.0 or 1.0.0-beta.1."
             exit 1
           fi
           if [[ ! "$version_code" =~ ^[1-9][0-9]{0,8}$ ]]; then
-            echo "::error::POCKET_LEDGER_VERSION_CODE must be a positive integer with at most 9 digits."
+            echo "::error::FOLENTRA_VERSION_CODE must be a positive integer with at most 9 digits."
             exit 1
           fi
 
@@ -99,7 +99,7 @@ jobs:
       - name: Upload internal APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pocket-ledger-internal-apk-${{ steps.metadata.outputs.artifact_suffix }}
+          name: folentra-internal-apk-${{ steps.metadata.outputs.artifact_suffix }}
           path: androidApp/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
@@ -120,6 +120,11 @@ jobs:
               missing=1
             fi
           done
+          if ! grep -q '"package_name": "com.mojtaba.folentra"' androidApp/app/google-services.json ||
+             ! grep -q '"package_name": "com.mojtaba.folentra.debug"' androidApp/app/google-services.json; then
+            echo "::error::google-services.json must contain Folentra release and debug Firebase clients."
+            missing=1
+          fi
           exit "$missing"
 
       - name: Configure Firebase credentials
@@ -162,7 +167,7 @@ jobs:
             echo ""
             echo "- Ref: \`${GITHUB_REF_NAME}\`"
             echo "- Version: \`${{ steps.metadata.outputs.version_name }}\` (\`${{ steps.metadata.outputs.version_code }}\`)"
-            echo "- APK artifact: \`pocket-ledger-internal-apk-${{ steps.metadata.outputs.artifact_suffix }}\`"
+            echo "- APK artifact: \`folentra-internal-apk-${{ steps.metadata.outputs.artifact_suffix }}\`"
             echo "- Firebase upload step result: \`${{ job.status }}\`"
             echo ""
             echo "Secrets, tester groups, service-account JSON, and release notes content are intentionally omitted from this summary."

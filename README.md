@@ -1,6 +1,6 @@
-# Pocket Ledger
+# Folentra
 
-Pocket Ledger is an Android-first Kotlin project with a modular foundation and a selectively Kotlin Multiplatform shared module.
+Folentra is an Android-first Kotlin project with a modular foundation and a selectively Kotlin Multiplatform shared module.
 
 [![PR Validation](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/pr-validation.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/pr-validation.yml)
 [![Screenshot And Benchmark Validation](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/screenshot-benchmark.yml/badge.svg?branch=dev)](https://github.com/MojtabaGitUser/Pocket-Ledger/actions/workflows/screenshot-benchmark.yml)
@@ -75,6 +75,8 @@ For a fast portfolio review, start with [Portfolio documentation](docs/portfolio
 - [Release readiness checklist](docs/release/release-checklist.md): signing, versioning, artifact, accessibility, privacy, and rollout review items.
 - [Play Store readiness and app content checklist](docs/play-store-readiness.md): Play Console declarations for privacy policy, Data Safety, permissions, backup/device transfer, ads, financial features, and target audience.
 - [Privacy policy](docs/privacy-policy.md): Play Store-ready privacy policy draft based on current app behavior, Firebase setup, permissions, and diagnostics.
+- [Privacy publication handoff](docs/release/privacy-publication-handoff.md): hosted HTML, support-contact, Play Console, and backup/device-transfer release steps.
+- [Folentra brand/package migration](docs/release/brand-package-migration.md): application IDs, Firebase handoff, deep links, and renamed release secrets.
 - [Product event taxonomy](docs/product-event-taxonomy.md): privacy-safe product events, approved parameters, and analytics provider boundaries.
 - [Play Feature Delivery strategy](docs/play-feature-delivery-strategy.md): typed feature flag rollout, debug overrides, and future dynamic delivery gates.
 - [Internal distribution](docs/internal-distribution.md): Firebase App Distribution tester flow, required secrets, artifacts, and release notes.

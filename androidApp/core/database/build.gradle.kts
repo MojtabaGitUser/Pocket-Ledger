@@ -1,12 +1,12 @@
 plugins {
-    id("pocketledger.kotlin.multiplatform")
+    id("folentra.kotlin.multiplatform")
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.ksp)
 }
 
 kotlin {
     android {
-        namespace = "com.mojtaba.pocketledger.core.database"
+        namespace = "com.mojtaba.folentra.core.database"
     }
 
     sourceSets {

@@ -10,7 +10,7 @@ submission.
 
 | Asset | Repository status | Release note |
 | --- | --- | --- |
-| App name | `@string/app_name` is `PocketLedger`. | Store title should use `Pocket Ledger` for readability unless product naming changes. |
+| App name | `@string/app_name` is `Folentra`. | Store title should use `Folentra` for readability unless product naming changes. |
 | Launcher icon | Adaptive and round launcher resources exist under `androidApp/app/src/main/res/mipmap-*` and foreground/background drawables exist under `res/drawable`. | Review final brand artwork before public release; current resources compile. |
 | Privacy policy copy | `docs/privacy-policy.md`. | Must be hosted at a public HTTPS URL before Play Store submission. |
 | Play Store readiness checklist | `docs/play-store-readiness.md`. | Use it for app content, data safety, permissions, and limitations review. |
@@ -25,7 +25,7 @@ submission.
 | App icon source exists. | Launcher adaptive icon XML and foreground/background resources exist under `androidApp/app/src/main/res/`. | Complete for source; high-res PNG export remains manual. |
 | Screenshots are planned from real app screens. | Screenshot capture plan covers dashboard, transactions, search, insights, and settings/app lock. | Complete for plan; binary captures remain manual. |
 | Feature graphic direction exists. | Required graphic assets table defines a feature graphic using actual app value and sample-safe data. | Complete for direction; final binary graphic remains manual. |
-| Store claims avoid unsupported behavior. | Listing copy says local-first, no bank connection, no financial advice, no required account, and no Pocket Ledger server sync. | Complete. |
+| Store claims avoid unsupported behavior. | Listing copy says local-first, no bank connection, no financial advice, no required account, and no Folentra server sync. | Complete. |
 | Play Console handoff remains explicit. | Manual Play Console steps list hosted privacy URL, Data Safety, app-content forms, and signed AAB upload. | Complete. |
 
 ## Store Listing Copy
@@ -33,7 +33,7 @@ submission.
 Store title:
 
 ```text
-Pocket Ledger
+Folentra
 ```
 
 Short description:
@@ -45,16 +45,16 @@ Track spending, budgets, search, and local insights in a private ledger.
 Full description draft:
 
 ```text
-Pocket Ledger is a local-first personal finance ledger for tracking
+Folentra is a local-first personal finance ledger for tracking
 transactions, budgets, categories, tags, and monthly summaries.
 
 Record income and expenses, review recent activity, search your ledger, and
 see private spending insights generated on device or through deterministic
 local fallback logic. The current app does not connect to banks, provide
-financial advice, require an account, or sync ledger records to a Pocket Ledger
+financial advice, require an account, or sync ledger records to a Folentra
 server.
 
-Pocket Ledger is designed for users who want a simple private ledger they
+Folentra is designed for users who want a simple private ledger they
 control. Ledger records stay in app-private storage on the device. Android
 backup and device-transfer rules exclude the ledger database by default. A
 local-first backup-ready profile foundation exists, but encrypted backup and
