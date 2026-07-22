@@ -1,6 +1,6 @@
 # Release Candidate Workflow
 
-Pocket Ledger uses `.github/workflows/release-candidate.yml` to prepare and
+Folentra uses `.github/workflows/release-candidate.yml` to prepare and
 validate Android release candidates before Play Store internal testing.
 
 ## Triggers
@@ -65,13 +65,13 @@ manual because they require device infrastructure or publishing credentials.
 Each run uploads artifacts named with the app version, version code, sanitized
 ref name, and GitHub run number:
 
-- `pocket-ledger-rc-apk-*`: release APK from
+- `folentra-rc-apk-*`: release APK from
   `androidApp/app/build/outputs/apk/release/`.
-- `pocket-ledger-rc-aab-*`: release app bundle from
+- `folentra-rc-aab-*`: release app bundle from
   `androidApp/app/build/outputs/bundle/release/`.
-- `pocket-ledger-rc-mapping-*`: R8 mapping outputs from
+- `folentra-rc-mapping-*`: R8 mapping outputs from
   `androidApp/app/build/outputs/mapping/release/`.
-- `pocket-ledger-rc-reports-*`: release lint and JVM test reports.
+- `folentra-rc-reports-*`: release lint and JVM test reports.
 
 The AAB is the candidate artifact for Play Store internal testing. The APK is
 kept for local smoke testing and review. Mapping files are uploaded separately
@@ -90,22 +90,22 @@ To enable signed release candidate artifacts, configure all of these GitHub
 Actions secrets:
 
 ```text
-POCKET_LEDGER_RELEASE_STORE_BASE64
-POCKET_LEDGER_RELEASE_STORE_PASSWORD
-POCKET_LEDGER_RELEASE_KEY_ALIAS
-POCKET_LEDGER_RELEASE_KEY_PASSWORD
+FOLENTRA_RELEASE_STORE_BASE64
+FOLENTRA_RELEASE_STORE_PASSWORD
+FOLENTRA_RELEASE_KEY_ALIAS
+FOLENTRA_RELEASE_KEY_PASSWORD
 ```
 
-`POCKET_LEDGER_RELEASE_STORE_BASE64` must contain the base64-encoded keystore
+`FOLENTRA_RELEASE_STORE_BASE64` must contain the base64-encoded keystore
 file. The workflow decodes it into the runner's temporary directory and exposes
 the existing Gradle properties through `ORG_GRADLE_PROJECT_*` environment
 variables:
 
 ```text
-POCKET_LEDGER_RELEASE_STORE_FILE
-POCKET_LEDGER_RELEASE_STORE_PASSWORD
-POCKET_LEDGER_RELEASE_KEY_ALIAS
-POCKET_LEDGER_RELEASE_KEY_PASSWORD
+FOLENTRA_RELEASE_STORE_FILE
+FOLENTRA_RELEASE_STORE_PASSWORD
+FOLENTRA_RELEASE_KEY_ALIAS
+FOLENTRA_RELEASE_KEY_PASSWORD
 ```
 
 If any signing secret is missing and `require_release_signing` is false, the
@@ -118,8 +118,8 @@ Gradle builds artifacts.
 Default version values live in `androidApp/gradle.properties`:
 
 ```text
-POCKET_LEDGER_VERSION_CODE=1
-POCKET_LEDGER_VERSION_NAME=1.0.0
+FOLENTRA_VERSION_CODE=1
+FOLENTRA_VERSION_NAME=1.0.0
 ```
 
 `versionCode` must increase monotonically for every Play Store upload candidate.

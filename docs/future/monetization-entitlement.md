@@ -8,7 +8,7 @@ paywalls, entitlement checks, or production billing UI.
 
 Monetization changes product trust. It can affect privacy disclosures, Play
 Console setup, refund behavior, offline access, support obligations, and user
-expectations. Pocket Ledger should not add billing until paid surfaces have
+expectations. Folentra should not add billing until paid surfaces have
 clear user value and the free local-first MVP remains useful.
 
 ## Product Principles

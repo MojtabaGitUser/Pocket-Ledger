@@ -1,6 +1,6 @@
 # Play Feature Delivery Strategy
 
-Pocket Ledger does not currently ship Android Play Feature Delivery dynamic
+Folentra does not currently ship Android Play Feature Delivery dynamic
 feature modules. The current product is small enough that release safety is
 better served by static Gradle modules, typed feature flags, and clear module
 boundaries. This document records the strategy for `T-E13-04 - Document Play

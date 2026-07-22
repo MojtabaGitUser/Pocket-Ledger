@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.mojtaba.pocketledger.macrobenchmark"
+    namespace = "com.mojtaba.folentra.macrobenchmark"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1

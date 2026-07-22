@@ -1,11 +1,11 @@
-# Pocket Ledger Testing
+# Folentra Testing
 
 The current full testing and performance validation inventory is maintained in
 [`testing-report.md`](testing-report.md).
 
 ## `:core:testing`
 
-`:core:testing` centralizes shared test-only utilities for Pocket Ledger modules.
+`:core:testing` centralizes shared test-only utilities for Folentra modules.
 It is an Android library so JVM unit tests and Android instrumented tests can
 depend on the same fixtures and fakes through Gradle test configurations.
 
@@ -21,15 +21,15 @@ Disallowed usage:
 
 Current contents:
 - Deterministic ledger model fixtures in
-  `com.mojtaba.pocketledger.core.testing.fixture`.
+  `com.mojtaba.folentra.core.testing.fixture`.
 - Deterministic large benchmark dataset generation in
-  `com.mojtaba.pocketledger.core.testing.performance`.
+  `com.mojtaba.folentra.core.testing.performance`.
 - In-memory fake repositories in
-  `com.mojtaba.pocketledger.core.testing.repository`.
+  `com.mojtaba.folentra.core.testing.repository`.
 - `FakeFeatureFlagProvider` in
-  `com.mojtaba.pocketledger.core.testing.featureflags`.
+  `com.mojtaba.folentra.core.testing.featureflags`.
 - `MainDispatcherRule` in
-  `com.mojtaba.pocketledger.core.testing.coroutine`.
+  `com.mojtaba.folentra.core.testing.coroutine`.
 
 Fixtures use stable IDs, stable timestamps, USD currency, and minor-unit money
 values. Prefer overriding fixture parameters in individual tests instead of
@@ -52,7 +52,7 @@ depending on `BuildConfig`, Android framework APIs, or remote configuration.
 ## Compose UI Tests
 
 Prefer focused feature-module Compose tests over broad end-to-end flows. Screen
-tests should render the composable under `PocketLedgerTheme`, drive user actions
+tests should render the composable under `FolentraTheme`, drive user actions
 through Compose UI APIs, and assert stable text, accessibility semantics, or
 test tags that describe user-visible behavior.
 
@@ -88,7 +88,7 @@ migration path.
 
 Local repository integration tests live in `:core:data` under
 `core/data/src/androidTest`. They construct the real local repositories over a
-real in-memory `PocketLedgerDatabase`, not fake repositories, and verify
+real in-memory `FolentraDatabase`, not fake repositories, and verify
 local-source-first reads/writes, update/delete behavior, Flow emissions, search
 filters, and category/tag/budget relationship behavior.
 
@@ -142,7 +142,7 @@ links for benchmark use only. Run the focused large dataset benchmark with an
 attached device or emulator:
 
 ```bash
-./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+./gradlew :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.folentra.macrobenchmark.LargeDatasetBenchmark
 ```
 
 ## Adaptive Screenshot Tests
@@ -150,7 +150,7 @@ attached device or emulator:
 Adaptive screenshot coverage uses Paparazzi in `:app` so one JVM-based test
 suite can render the app shell and the dashboard, transaction, and search
 feature screens without an emulator. The matrix lives under
-`app/src/test/java/com/mojtaba/pocketledger/screenshot` and uses centralized
+`app/src/test/java/com/mojtaba/folentra/screenshot` and uses centralized
 fixtures and device definitions:
 
 - compact phone: Pixel 5 portrait

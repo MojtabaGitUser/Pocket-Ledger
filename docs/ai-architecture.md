@@ -1,6 +1,6 @@
-﻿# AI Architecture
+# AI Architecture
 
-Pocket Ledger E-12 uses a local-only AI provider abstraction in `:core:ai`.
+Folentra E-12 uses a local-only AI provider abstraction in `:core:ai`.
 
 ## Provider Contracts
 

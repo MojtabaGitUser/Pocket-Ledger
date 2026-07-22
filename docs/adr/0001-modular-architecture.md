@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-Pocket Ledger is an Android/Kotlin project that is intended to grow beyond a single application module. The current project contains:
+Folentra is an Android/Kotlin project that is intended to grow beyond a single application module. The current project contains:
 
 - `:app`
 - `:core:designsystem`
@@ -27,7 +27,7 @@ Without explicit architecture rules, feature code, data access, design tokens, a
 
 ## Decision
 
-Pocket Ledger will use a modular architecture with clear dependency direction and ownership:
+Folentra will use a modular architecture with clear dependency direction and ownership:
 
 - `:app` remains a thin Android shell for bootstrap, manifest configuration, top-level Compose hosting, and navigation wiring.
 - `:core:designsystem` owns shared UI foundations such as theme, color, typography, shape, spacing, and reusable product-wide UI primitives.
@@ -39,7 +39,7 @@ Pocket Ledger will use a modular architecture with clear dependency direction an
 
 Dependencies must point from outer modules toward stable inner modules. Feature modules must never depend on `:app`. Domain and shared logic must not depend on UI, Android framework APIs, database implementations, or network DTOs.
 
-All production package names must use `com.mojtaba.pocketledger` as the root package.
+All production package names must use `com.mojtaba.folentra` as the root package.
 
 ## Consequences
 
@@ -58,7 +58,7 @@ Tradeoffs:
 - Some simple changes may require a mapper or interface to preserve boundaries.
 - Contributors must think about ownership before adding dependencies.
 
-These tradeoffs are acceptable because Pocket Ledger is intended to be a maintainable portfolio-quality modular project, not a single-screen prototype.
+These tradeoffs are acceptable because Folentra is intended to be a maintainable portfolio-quality modular project, not a single-screen prototype.
 
 ## Examples
 

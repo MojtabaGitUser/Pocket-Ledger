@@ -1,6 +1,6 @@
 # Optional Backup-Ready Profile Foundation
 
-Pocket Ledger now implements the local-first foundation for #81. The feature is
+Folentra now implements the local-first foundation for #81. The feature is
 intentionally conservative: users can see and eventually opt in to a
 backup-ready profile state, but ledger data remains excluded from Android cloud
 backup and device-to-device transfer until a reviewed encrypted backup and
@@ -63,7 +63,7 @@ The current production defaults keep `PasskeyAccountFlowEnabled` and
   Backup for app-private data.
 - `androidApp/app/src/main/res/xml/data_extraction_rules.xml` denies Android 12+
   cloud backup and device-transfer extraction for app-private data.
-- `pocket-ledger.db`, SQLite sidecars, encrypted preferences, logs, caches,
+- `folentra.db`, SQLite sidecars, encrypted preferences, logs, caches,
   temp files, debug files, generated reports, and external app files remain
   excluded.
 

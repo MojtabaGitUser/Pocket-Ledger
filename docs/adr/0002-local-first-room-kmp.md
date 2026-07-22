@@ -6,13 +6,13 @@ Accepted
 
 ## Context
 
-Pocket Ledger needs realistic local persistence for Android while also demonstrating a credible Kotlin Multiplatform boundary. A portfolio project can easily over-abstract by moving every layer into KMP, or under-deliver by keeping all persistence Android-only.
+Folentra needs realistic local persistence for Android while also demonstrating a credible Kotlin Multiplatform boundary. A portfolio project can easily over-abstract by moving every layer into KMP, or under-deliver by keeping all persistence Android-only.
 
 The project has Android production flows and a focused Compose Desktop demo. Both need stable local data behavior, but they do not need identical UI or repository composition.
 
 ## Decision
 
-Pocket Ledger uses `:core:database` as the Room KMP persistence boundary.
+Folentra uses `:core:database` as the Room KMP persistence boundary.
 
 - Room entities, DAOs, database class, schema versioning, and migration registration live in common source.
 - Android and desktop source sets own platform-specific database construction only.

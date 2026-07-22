@@ -1,4 +1,4 @@
-# Pocket Ledger Security Model And Limitations
+# Folentra Security Model And Limitations
 
 This document describes the security and privacy behavior implemented in the
 current Android app. It is intended for developers and reviewers. It does not
@@ -7,7 +7,7 @@ that are not present in code.
 
 ## Overview
 
-Pocket Ledger is a local-first personal finance app. The current security and
+Folentra is a local-first personal finance app. The current security and
 privacy model is built around these goals:
 
 - Keep ledger data local to the Android app unless a future feature explicitly
@@ -29,13 +29,13 @@ opt-in work.
 ## Data Storage Model
 
 Ledger data is stored locally in the app-private Room database
-`pocket-ledger.db`, created by `PocketLedgerDatabase` in `:core:database` and
+`folentra.db`, created by `FolentraDatabase` in `:core:database` and
 opened from `AppGraph` in `:app`.
 
 The database stores normal ledger records such as transactions, budgets,
 categories, tags, and transaction-tag links. These records are protected by the
 Android app sandbox and normal Android filesystem permissions, but they are not
-encrypted at rest by Pocket Ledger. The project does not currently use SQLCipher
+encrypted at rest by Folentra. The project does not currently use SQLCipher
 or an equivalent encrypted database implementation.
 
 Sensitive app preferences use a separate encrypted preferences file rather than
@@ -50,11 +50,11 @@ sidecar files, encrypted sensitive preferences, app-private files, shared
 preferences, external app files, device-protected storage, caches, logs, temp
 folders, debug folders, and generated report folders.
 
-No app-private Pocket Ledger data is intentionally included in automatic cloud
+No app-private Folentra data is intentionally included in automatic cloud
 backup or device-to-device transfer. This is a privacy-safe default because #81
 implements only the local-first backup-ready profile foundation; encrypted
 ledger backup, restore, and recovery are not implemented, and the ledger
-database is not encrypted by Pocket Ledger. This hardening supports related
+database is not encrypted by Folentra. This hardening supports related
 security story #7 and release-hardening story #129, but it does not complete
 those parent stories by itself.
 
@@ -70,7 +70,7 @@ Security Crypto:
 - `MasterKey` uses `AES256_GCM`.
 - Preference keys use `AES256_SIV`.
 - Preference values use `AES256_GCM`.
-- Values are stored in the app-private file `pocket_ledger_sensitive_prefs`.
+- Values are stored in the app-private file `folentra_sensitive_prefs`.
 - Read/write work runs on an IO dispatcher.
 - Error messages avoid including preference keys or stored values.
 
@@ -107,7 +107,7 @@ The app-lock implementation is split by responsibility:
   state models.
 - `:app` owns `AndroidBiometricAppLockAuthenticator`, which adapts AndroidX
   Biometric APIs.
-- `AppLockGate` wraps protected app content in `PocketLedgerAdaptiveApp`.
+- `AppLockGate` wraps protected app content in `FolentraAdaptiveApp`.
 - Settings UI calls `AppLockManager.setAppLockEnabled`.
 
 When app lock is enabled, Android system authentication is required before
@@ -157,22 +157,22 @@ is explicit, but both configured rule files deny app-private data by default:
 - `androidApp/app/src/main/res/xml/data_extraction_rules.xml` is used by
   Android 12+ for both `cloud-backup` and `device-transfer` behavior.
 
-Backed up or transferred by Pocket Ledger rules:
+Backed up or transferred by Folentra rules:
 
-- No app-private Pocket Ledger files are intentionally included.
+- No app-private Folentra files are intentionally included.
 
 Excluded by both cloud backup and device-to-device transfer rules:
 
-- `pocket-ledger.db` and SQLite sidecars: `pocket-ledger.db-shm`,
-  `pocket-ledger.db-wal`, and `pocket-ledger.db-journal`.
-- `pocket_ledger_sensitive_prefs.xml` encrypted sensitive preferences.
+- `folentra.db` and SQLite sidecars: `folentra.db-shm`,
+  `folentra.db-wal`, and `folentra.db-journal`.
+- `folentra_sensitive_prefs.xml` encrypted sensitive preferences.
 - App-private files, databases, shared preferences, external app files, and
   device-protected storage domains.
 - Cache, code-cache, no-backup, logs, temp, debug, generated, and report
   folders when such folders exist under app-controlled domains.
 
 The ledger database contains personal finance data and is not encrypted by
-Pocket Ledger, so it is excluded from automatic cloud backup and device transfer
+Folentra, so it is excluded from automatic cloud backup and device transfer
 because #81 intentionally keeps automatic ledger backup disabled until
 encrypted backup and restore behavior exist.
 Encrypted preferences are also excluded because their security depends on
@@ -330,7 +330,7 @@ Out of scope and known limitations:
 - User screenshots or screen recording. The app does not currently set a secure
   window flag.
 - Full database encryption. The Room database is not currently encrypted by
-  Pocket Ledger.
+  Folentra.
 - Weak, shared, or compromised device credentials.
 - Cloud backup or device-transfer of ledger data. Android backup rules are
   explicitly restricted by #227, but runtime restore/transfer behavior still
@@ -374,7 +374,7 @@ missing runtime dependency before adding rules.
 
 | Acceptance criterion | Current evidence | Status |
 | --- | --- | --- |
-| Sensitive preferences use encrypted storage. | `EncryptedSensitivePreferences` stores sensitive keys in `pocket_ledger_sensitive_prefs` using AndroidX Security Crypto. `AppGraph` uses it for normal app builds; benchmark builds use in-memory storage to avoid blocking measurement. | Implemented for sensitive preferences. The Room ledger database is app-private but not encrypted by Pocket Ledger. |
+| Sensitive preferences use encrypted storage. | `EncryptedSensitivePreferences` stores sensitive keys in `folentra_sensitive_prefs` using AndroidX Security Crypto. `AppGraph` uses it for normal app builds; benchmark builds use in-memory storage to avoid blocking measurement. | Implemented for sensitive preferences. The Room ledger database is app-private but not encrypted by Folentra. |
 | Secrets are stored in Android Keystore. | `EncryptedSensitivePreferences` builds a `MasterKey` with `AES256_GCM`; AndroidX Security Crypto stores the backing key through Android Keystore. | Implemented for sensitive preference encryption keys. No production account/passkey secrets are currently written by app flows. |
 | Debug-only diagnostics are hidden from release builds. | `BuildConfig.IS_INTERNAL_BUILD` and `LOGGING_ENABLED` are false for release. Debug Health has a debug source-set implementation and release source-set stub, and navigation registers it only when debug destinations are enabled. | Implemented for current Debug Health diagnostics. |
 | App follows local-first privacy principles. | Ledger data is stored in app-private Room, current app code has no bank connection, no account login, no cloud sync, no remote AI, and #227 excludes app-private ledger data from Android backup and device transfer. | Implemented for current MVP behavior. Firebase Analytics dependency and Android permissions still require conservative Play Console disclosure. |
@@ -431,7 +431,7 @@ Before adding or changing security/privacy behavior:
 
 ## User-Facing Limitations
 
-Pocket Ledger currently stores ledger data locally on the device. The optional
+Folentra currently stores ledger data locally on the device. The optional
 app lock helps prevent casual access to app screens by requiring Android system
 authentication, but it does not encrypt the ledger database and does not replace
 the security of the device lock screen.

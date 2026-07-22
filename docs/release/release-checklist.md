@@ -1,6 +1,6 @@
 # Release Readiness Checklist
 
-Use this checklist before treating a Pocket Ledger artifact as release-ready.
+Use this checklist before treating a Folentra artifact as release-ready.
 For install-specific evidence, use `docs/release/release-ready-install.md` and
 `docs/release/smoke-test.md`.
 PR validation and release-candidate workflows support this process, but they do
@@ -51,9 +51,9 @@ promotion:
 - [ ] Build variants were reviewed: `debug` is for local/internal diagnostics,
   `benchmark` is non-debuggable/profileable and debug-signed for measurement,
   and `release` is the Play Store candidate path.
-- [ ] `POCKET_LEDGER_VERSION_CODE` was incremented for this Play Store upload
+- [ ] `FOLENTRA_VERSION_CODE` was incremented for this Play Store upload
   candidate.
-- [ ] `POCKET_LEDGER_VERSION_NAME` was reviewed and matches the release train.
+- [ ] `FOLENTRA_VERSION_NAME` was reviewed and matches the release train.
 - [ ] Release signing is configured for release-ready APK/AAB builds.
 - [ ] `docs/release/release-ready-install.md` was followed for the chosen
   artifact class: signed release APK/AAB, Play internal testing AAB, or
@@ -69,7 +69,7 @@ promotion:
 ## Candidate Build
 
 - [ ] Final validation used the Android app module at `androidApp/app` and the
-  production application ID `com.mojtaba.pocketledger`.
+  production application ID `com.mojtaba.folentra`.
 - [ ] Release candidate workflow completed successfully.
 - [ ] Release APK and AAB artifacts were generated.
 - [ ] R8 mapping artifacts were retained with the candidate record.
@@ -138,11 +138,11 @@ Run connected checks when hardware is available:
   publication.
 - [ ] Local-first privacy claims match current behavior: no account login, no
   bank connection, no cloud sync, no remote AI path, no ads, and no sale of
-  personal data by Pocket Ledger app code.
+  personal data by Folentra app code.
 - [ ] `docs/play-store-readiness.md` was reviewed against the final release
   merged manifest and Play Console app content forms.
 - [ ] Play Console Data Safety answers account for Firebase Analytics being
-  present in the release app, even though Pocket Ledger product events are no-op
+  present in the release app, even though Folentra product events are no-op
   in release and not wired to Firebase Analytics.
 - [ ] Play Console permissions declarations use release merged-manifest
   permissions only and exclude debug/test-only permissions.

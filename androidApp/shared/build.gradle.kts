@@ -1,10 +1,10 @@
 plugins {
-    id("pocketledger.kotlin.multiplatform")
+    id("folentra.kotlin.multiplatform")
 }
 
 kotlin {
     android {
-        namespace = "com.mojtaba.pocketledger.shared"
+        namespace = "com.mojtaba.folentra.shared"
     }
 
     sourceSets {

@@ -2,7 +2,7 @@
 <!--
     T-E10-06 (#227): Privacy-safe default backup policy.
 
-    Pocket Ledger implements the local-first #81 backup-ready profile foundation,
+    Folentra implements the local-first #81 backup-ready profile foundation,
     but not encrypted ledger backup or restore. Automatic Android backup must not include local
     ledger data, encrypted preference files, local-only settings, debug output,
     logs, generated reports, temporary files, or cache-like data.
@@ -25,13 +25,13 @@
     <exclude domain="device_sharedpref" path="." />
 
     <!-- Ledger Room database and SQLite sidecar files contain personal finance data. -->
-    <exclude domain="database" path="pocket-ledger.db" />
-    <exclude domain="database" path="pocket-ledger.db-shm" />
-    <exclude domain="database" path="pocket-ledger.db-wal" />
-    <exclude domain="database" path="pocket-ledger.db-journal" />
+    <exclude domain="database" path="folentra.db" />
+    <exclude domain="database" path="folentra.db-shm" />
+    <exclude domain="database" path="folentra.db-wal" />
+    <exclude domain="database" path="folentra.db-journal" />
 
     <!-- Encrypted preferences depend on Android Keystore state and stay local-only. -->
-    <exclude domain="sharedpref" path="pocket_ledger_sensitive_prefs.xml" />
+    <exclude domain="sharedpref" path="folentra_sensitive_prefs.xml" />
 
     <!-- Explicit review markers for cache, log, temp, debug, and generated artifacts. -->
     <exclude domain="root" path="cache/" />

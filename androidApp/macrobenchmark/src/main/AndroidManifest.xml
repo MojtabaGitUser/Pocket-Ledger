@@ -5,5 +5,5 @@
 
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="com.mojtaba.pocketledger" />
+        android:targetPackage="com.mojtaba.folentra" />
 </manifest>

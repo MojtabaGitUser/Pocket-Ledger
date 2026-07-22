@@ -1,6 +1,6 @@
 # Desktop Demo
 
-Pocket Ledger includes a Compose Multiplatform desktop demo in `:desktopApp`.
+Folentra includes a Compose Multiplatform desktop demo in `:desktopApp`.
 It is a JVM desktop target for E-08 and remains a focused demo, not a full
 product-grade desktop app. The demo now uses the shared Room KMP database from
 `:core:database` for its local Search and Insights data snapshot.
@@ -18,12 +18,12 @@ Related GitHub scope:
 
 | Issue | Status | Evidence |
 | --- | --- | --- |
-| #67 Add desktop demo module | Complete | `:desktopApp` is registered in `androidApp/settings.gradle.kts`, has its own JVM Compose Desktop Gradle module, and declares `com.mojtaba.pocketledger.desktop.MainKt` as the desktop entry point. |
+| #67 Add desktop demo module | Complete | `:desktopApp` is registered in `androidApp/settings.gradle.kts`, has its own JVM Compose Desktop Gradle module, and declares `com.mojtaba.folentra.desktop.MainKt` as the desktop entry point. |
 | #68 Implement desktop Search screen | Complete | `DesktopSearchScreen` provides keyword input, keyword/local semantic modes, income and expense filters, Room-backed demo records, result list states, and selected result preview. `DesktopSearchMapperTest` covers mapper behavior. |
 | #69 Implement desktop Insights screen | Complete | `DesktopInsightsScreen` renders aggregate data loaded from the desktop Room database through local rule-based state mapping, provider status, metric cards, top spending groups, insight cards, and empty/error/loading models. `DesktopInsightsStateMapperTest` covers mapper behavior. |
 | #70 Document desktop demo limitations | Complete | This document lists run/build/test commands, supported screens, Room-backed local demo persistence, unsupported account/sync/passkey/AI/OCR/export behavior, Android parity limits, and future work boundaries. |
 | #66 Create desktop target consuming shared logic | Complete for E-08 demo scope only | The desktop target exists and consumes the shared Room KMP database while keeping desktop UI mappers local to the demo. Shared transaction validation, dashboard aggregation, and local search ranking now live in `:shared`; full production repository, account, sync, and desktop feature parity remain outside the E-08 demo scope. |
-| #232 Implement Room KMP shared database target and desktop persistence | Complete | `:core:database` is KMP-compatible with Android and desktop/JVM targets. Desktop creates and reopens a real local Room database at `~/.pocket-ledger/pocket-ledger.db`, and `PocketLedgerDesktopDatabaseTest` verifies persistence across database instances. |
+| #232 Implement Room KMP shared database target and desktop persistence | Complete | `:core:database` is KMP-compatible with Android and desktop/JVM targets. Desktop creates and reopens a real local Room database at `~/.folentra/folentra.db`, and `FolentraDesktopDatabaseTest` verifies persistence across database instances. |
 
 ## Run
 
@@ -99,7 +99,7 @@ Desktop persistence is local-only and file-backed through Room KMP:
 - Shared schema, entities, DAOs, database class, and migrations:
   `androidApp/core/database/src/commonMain`.
 - Desktop builder: `androidApp/core/database/src/desktopMain`.
-- Desktop database path: `~/.pocket-ledger/pocket-ledger.db`.
+- Desktop database path: `~/.folentra/folentra.db`.
 - Desktop smoke test: `androidApp/core/database/src/desktopTest`.
 
 The desktop app currently persists the local demo ledger used by Search and
