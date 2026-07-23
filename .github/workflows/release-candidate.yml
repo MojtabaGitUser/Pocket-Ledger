@@ -46,6 +46,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Validate Play Store assets
+        working-directory: .
+        run: python scripts/validate_play_store_assets.py
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
