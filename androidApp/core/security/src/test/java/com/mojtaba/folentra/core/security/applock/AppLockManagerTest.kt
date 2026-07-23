@@ -2,6 +2,9 @@ package com.mojtaba.folentra.core.security.applock
 
 import com.mojtaba.folentra.core.security.preferences.DefaultSensitivePreferenceKeys
 import com.mojtaba.folentra.core.security.preferences.InMemorySensitivePreferences
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -131,6 +134,59 @@ class AppLockManagerTest {
         assertEquals(AppLockStatus.Unlocked, manager.state.value.status)
     }
 
+    @Test
+    fun enablingAuthenticationKeepsSettingsContentVisible() = runTest {
+        val authenticationStarted = CompletableDeferred<Unit>()
+        val authenticationResult = CompletableDeferred<AppLockAuthenticationResult>()
+        val manager = AppLockManager(
+            preferences = InMemorySensitivePreferences(),
+            authenticator = object : AppLockAuthenticator {
+                override fun availability(): AppLockAvailability = AppLockAvailability.Available
+
+                override suspend fun authenticate(): AppLockAuthenticationResult {
+                    authenticationStarted.complete(Unit)
+                    return authenticationResult.await()
+                }
+            },
+        )
+        manager.initialize()
+
+        val enabling = async { manager.setAppLockEnabled(true) }
+        authenticationStarted.await()
+
+        assertEquals(AppLockStatus.Authenticating, manager.state.value.status)
+        assertFalse(manager.state.value.isEnabled)
+        assertTrue(manager.state.value.isContentVisible)
+
+        authenticationResult.complete(AppLockAuthenticationResult.Success)
+        assertTrue(enabling.await())
+    }
+
+    @Test
+    fun cancelledEnableAuthenticationDoesNotLeaveSpinnerActive() = runTest {
+        val authenticationStarted = CompletableDeferred<Unit>()
+        val manager = AppLockManager(
+            preferences = InMemorySensitivePreferences(),
+            authenticator = object : AppLockAuthenticator {
+                override fun availability(): AppLockAvailability = AppLockAvailability.Available
+
+                override suspend fun authenticate(): AppLockAuthenticationResult {
+                    authenticationStarted.complete(Unit)
+                    CompletableDeferred<Unit>().await()
+                    error("Authentication should have been cancelled")
+                }
+            },
+        )
+        manager.initialize()
+
+        val enabling = async { manager.setAppLockEnabled(true) }
+        authenticationStarted.await()
+        enabling.cancelAndJoin()
+        assertEquals(AppLockStatus.Unlocked, manager.state.value.status)
+        assertFalse(manager.state.value.isEnabled)
+        assertTrue(manager.state.value.isContentVisible)
+        assertEquals(AppLockMessage.AuthenticationCancelled, manager.state.value.message)
+    }
     @Test
     fun lockedStateDoesNotExposeProtectedContent() = runTest {
         val preferences = InMemorySensitivePreferences()

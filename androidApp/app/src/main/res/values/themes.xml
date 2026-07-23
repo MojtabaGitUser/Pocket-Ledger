@@ -6,4 +6,7 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
+    <style name="Theme.Folentra.Starting" parent="Theme.Folentra">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+    </style>
 </resources>

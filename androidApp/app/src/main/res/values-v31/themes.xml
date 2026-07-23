@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Folentra.Starting" parent="Theme.Folentra">
+        <item name="android:windowSplashScreenBackground">@color/folentra_splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/folentra_splash_background</item>
+    </style>
+</resources>
+
