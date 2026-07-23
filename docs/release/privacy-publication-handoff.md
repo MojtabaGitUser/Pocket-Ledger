@@ -26,3 +26,16 @@ This handoff separates repository-complete work from the owner-controlled values
 Before each release, inspect the merged release manifest and test a device migration. The expected result is a fresh empty ledger; transactions, budgets, tags, settings, App Lock, account-foundation state, and backup opt-in state must not migrate automatically.
 
 Any future encrypted backup or restore must change the XML rules, validator, privacy policy, Data Safety answers, and restore documentation together.
+
+## GitHub Pages publication
+
+The `.github/workflows/privacy-policy-pages.yml` workflow publishes
+`docs/privacy-policy.html` to:
+
+```text
+https://mojtabagituser.github.io/Pocket-Ledger/
+```
+
+Enable GitHub Pages with GitHub Actions as the source, run the workflow, verify
+the deployed URL, and use that exact URL in Play Console. The workflow also
+records the deployment URL on the protected `github-pages` environment.

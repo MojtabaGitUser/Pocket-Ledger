@@ -188,9 +188,9 @@ Current #131 status:
 - App name and launcher icon resources compile from the Android app resources.
 - A screenshot/feature-graphic capture plan exists for deterministic sample-safe
   data.
-- Final binary screenshots, high-res icon export, feature graphic creation, and
-  Play Console upload remain manual release work unless completed in a future
-  asset commit.
+- Final phone/tablet screenshots, opaque high-res icon, and feature graphic are
+  committed under `docs/release/assets/play-store/` and validated in release CI.
+- Play Console upload and final policy review remain release-owner work.
 
 Do not claim final Play Store graphic upload or Play Console approval from this
 repository state alone.
@@ -229,8 +229,8 @@ correct Play Store disclosure basis.
   `docs/release/release-checklist.md`; signed release, Play Console upload,
   public hosting, legal review, and hardware performance checks remain manual
   release gates.
-- #131: store listing copy, asset acceptance matrix, and screenshot plan are
-  repository-ready; final graphics and Play Console upload remain manual.
+- #131: store listing copy, validation, icon, feature graphic, and phone/tablet
+  screenshots are repository-ready; Play Console upload remains manual.
 - #132: privacy policy is maintained in `docs/privacy-policy.md` and must be
   hosted before public release.
 - #7: local data security criteria are mapped in
