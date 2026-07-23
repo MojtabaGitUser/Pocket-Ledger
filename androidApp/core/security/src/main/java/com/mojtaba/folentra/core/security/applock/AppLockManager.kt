@@ -2,6 +2,9 @@ package com.mojtaba.folentra.core.security.applock
 
 import com.mojtaba.folentra.core.security.preferences.DefaultSensitivePreferenceKeys
 import com.mojtaba.folentra.core.security.preferences.SensitivePreferences
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,7 +94,24 @@ class AppLockManager(
 
         if (!shouldAuthenticate) return false
 
-        return when (val result = authenticator.authenticate()) {
+        val result = try {
+            authenticator.authenticate()
+        } catch (cancellation: CancellationException) {
+            withContext(NonCancellable) {
+                mutex.withLock {
+                    preferences.putBoolean(DefaultSensitivePreferenceKeys.BiometricUnlockEnabled, false)
+                    mutableState.value = mutableState.value.copy(
+                        status = AppLockStatus.Unlocked,
+                        isEnabled = false,
+                        availability = authenticator.availability(),
+                        message = AppLockMessage.AuthenticationCancelled,
+                    )
+                }
+            }
+            throw cancellation
+        }
+
+        return when (result) {
             AppLockAuthenticationResult.Success -> {
                 mutex.withLock {
                     preferences.putBoolean(DefaultSensitivePreferenceKeys.BiometricUnlockEnabled, true)

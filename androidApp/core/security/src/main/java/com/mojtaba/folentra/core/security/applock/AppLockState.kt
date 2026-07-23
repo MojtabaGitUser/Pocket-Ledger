@@ -11,7 +11,8 @@ data class AppLockState(
         get() = availability is AppLockAvailability.Available
 
     val isContentVisible: Boolean
-        get() = status == AppLockStatus.Unlocked
+        get() = status == AppLockStatus.Unlocked ||
+            (status == AppLockStatus.Authenticating && !isEnabled)
 }
 
 enum class AppLockStatus {
