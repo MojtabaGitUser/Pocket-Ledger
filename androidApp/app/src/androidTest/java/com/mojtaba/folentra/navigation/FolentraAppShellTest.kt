@@ -6,6 +6,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -96,6 +97,23 @@ class FolentraAppShellTest {
         composeRule.onNodeWithContentDescription("Settings navigation destination")
             .assertIsSelected()
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
+    }
+
+    @Test
+    fun settingsMonthlySummaryControlsUpdateState() {
+        setContent()
+
+        composeRule.onNodeWithContentDescription("Settings navigation destination").performClick()
+        composeRule.waitUntilTextExists("Background jobs")
+        composeRule.onNodeWithContentDescription("Monthly summary preparation switch")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Off"))
+            .performClick()
+
+        composeRule.onNodeWithContentDescription("Monthly summary preparation switch")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "On"))
+        composeRule.onNodeWithText("6:00 PM").assertIsEnabled().performClick()
+        composeRule.onNodeWithText("Runs monthly at 6:00 PM").assertIsDisplayed()
+
     }
     @Test
     fun debugHealthDestinationShowsSafeDiagnosticsWhenIncluded() {

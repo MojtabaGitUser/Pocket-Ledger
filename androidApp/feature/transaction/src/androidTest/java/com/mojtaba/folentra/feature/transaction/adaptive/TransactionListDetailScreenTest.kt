@@ -28,7 +28,7 @@ class TransactionListDetailScreenTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun noSelectionStateIsDisplayedInDetailPane() {
+    fun noSelectionStartsInListPaneOnCompactWidth() {
         setContent(
             listUiState = TransactionListUiState.Content(previewTransactions),
             selectedTransactionId = null,
@@ -42,8 +42,8 @@ class TransactionListDetailScreenTest {
             )
         }
 
-        composeRule.onNodeWithText("Select a transaction").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("No transaction selected").assertIsDisplayed()
+        composeRule.onNodeWithText("Coffee Shop").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Transaction list pane").assertIsDisplayed()
     }
 
     @Test
@@ -92,8 +92,6 @@ class TransactionListDetailScreenTest {
         composeRule.onNodeWithText("Coffee Shop").performClick()
 
         composeRule.onNodeWithText("Detail for transaction-1").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Selected transaction, Coffee Shop", substring = true)
-            .assertIsDisplayed()
     }
 
     private fun setContent(

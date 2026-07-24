@@ -13,6 +13,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import com.mojtaba.folentra.core.designsystem.theme.FolentraTheme
 import com.mojtaba.folentra.feature.transaction.form.TransactionFormMode
@@ -85,10 +86,12 @@ class TransactionEditorScreenTest {
         composeRule.onNodeWithContentDescription("Transaction amount").performTextInput("25.00")
         composeRule.onNodeWithText("Food").performClick()
         composeRule.onNodeWithText("Work").performClick()
-        composeRule.onNodeWithText("Save").performClick()
+        composeRule.onNodeWithContentDescription("Save transaction").performScrollTo().performClick()
 
-        assertTrue(harness.saveClicked)
-        assertEquals(setOf("work"), harness.state.selectedTagIds)
+        composeRule.runOnIdle {
+            assertTrue(harness.saveClicked)
+            assertEquals(setOf("work"), harness.state.selectedTagIds)
+        }
     }
 
     @Test
@@ -99,11 +102,13 @@ class TransactionEditorScreenTest {
         composeRule.onNodeWithContentDescription("Note").performTextInput("Team breakfast")
         composeRule.onNodeWithContentDescription("Recurring transaction")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Off"))
-        composeRule.onNodeWithContentDescription("Recurring transaction").performClick()
+        composeRule.onNodeWithContentDescription("Recurring transaction").performScrollTo().performClick()
 
-        assertEquals("Coffee Shop", harness.state.formState.merchant)
-        assertEquals("Team breakfast", harness.state.formState.note)
-        assertTrue(harness.state.formState.isRecurring)
+        composeRule.runOnIdle {
+            assertEquals("Coffee Shop", harness.state.formState.merchant)
+            assertEquals("Team breakfast", harness.state.formState.note)
+            assertTrue(harness.state.formState.isRecurring)
+        }
         composeRule.onNodeWithContentDescription("Recurring transaction")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "On"))
     }
