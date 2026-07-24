@@ -15,7 +15,6 @@ import com.mojtaba.folentra.account.AndroidPlayIntegrityRequestHook
 import com.mojtaba.folentra.background.WorkManagerScheduler
 import com.mojtaba.folentra.core.ai.AiFallbackStrategy
 import com.mojtaba.folentra.core.ai.AiProviderSelector
-import com.mojtaba.folentra.core.ai.GeminiNanoAiProvider
 import com.mojtaba.folentra.core.ai.MlKitAiProvider
 import com.mojtaba.folentra.core.ai.NoOpAiProvider
 import com.mojtaba.folentra.core.ai.RuleBasedAiProvider
@@ -201,7 +200,6 @@ class FolentraAppGraph private constructor(
                 val featureFlags = FeatureFlagEvaluator(featureFlagProvider)
                 val aiProviderSelector = AiProviderSelector(
                     providers = listOf(
-                        GeminiNanoAiProvider(),
                         MlKitAiProvider(),
                         RuleBasedAiProvider,
                         NoOpAiProvider,
