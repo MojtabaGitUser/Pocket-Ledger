@@ -75,14 +75,18 @@ fun TransactionListDetailContent(
     detailPane: @Composable () -> Unit,
 ) {
     val navigator = rememberListDetailPaneScaffoldNavigator<String>(
-        initialDestinationHistory = listOf(
-            ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.List),
-            ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.Detail, selectedTransactionId),
-        ),
+        initialDestinationHistory = buildList {
+            add(ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.List))
+            selectedTransactionId?.let { transactionId ->
+                add(ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.Detail, transactionId))
+            }
+        },
     )
 
     LaunchedEffect(selectedTransactionId) {
-        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, selectedTransactionId)
+        selectedTransactionId?.let { transactionId ->
+            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, transactionId)
+        }
     }
 
     NavigableListDetailPaneScaffold(

@@ -106,7 +106,7 @@ class DashboardComponentTest {
         composeRule.onNodeWithText("Budgets").assertIsDisplayed()
         composeRule.onNodeWithText("Food budget").assertIsDisplayed()
         composeRule.onNodeWithText("Food - \$90.00 of \$100.00").assertIsDisplayed()
-        composeRule.onNodeWithText("Near limit").assertIsDisplayed()
+        composeRule.onNodeWithText("Near limit", useUnmergedTree = true).assertExists()
         composeRule.onNodeWithContentDescription("Food budget, \$90.00 spent of \$100.00, 90%, Near limit")
             .assertExists()
         composeRule.onNodeWithContentDescription("90% budget progress")

@@ -38,7 +38,7 @@ class TransactionListScreenTest {
 
         composeRule.onNodeWithText("-\$42.50").assertIsDisplayed()
         composeRule.onNodeWithText("Food - Expense - Nov 14, 2023 - Team breakfast").assertIsDisplayed()
-        composeRule.onNodeWithText("Work").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Tags Work", substring = true).assertIsDisplayed()
     }
 
     @Test

@@ -8,10 +8,12 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import com.mojtaba.folentra.core.data.search.SearchQuery
 import com.mojtaba.folentra.core.data.search.SearchTransactionType
@@ -120,8 +122,14 @@ class SearchScreenTest {
 
         composeRule.onNodeWithContentDescription("Filter by transaction type Expense")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
+        composeRule.onNodeWithContentDescription("Search filters")
+            .performScrollToNode(hasContentDescription("Clear search filters"))
         composeRule.onNodeWithContentDescription("Clear search filters").performClick()
 
+        composeRule.onNodeWithContentDescription("Search filters")
+            .performScrollToNode(
+                hasContentDescription("Filter by transaction type Expense"),
+            )
         composeRule.onNodeWithContentDescription("Filter by transaction type Expense")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Not selected"))
         assertEquals(SearchQuery(), harness.uiState.query)
@@ -135,7 +143,7 @@ class SearchScreenTest {
 
         composeRule.onNodeWithText("Coffee Shop").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("-${'$'}4.50").assertIsDisplayed()
-        composeRule.onNodeWithText("Work").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Tag Work").assertIsDisplayed()
 
         assertEquals(SearchAction.ResultClicked("preview-transaction"), actions.single())
     }
@@ -159,12 +167,16 @@ class SearchScreenTest {
     }
 
     @Test
-    fun loadingAndErrorStatesRender() {
+    fun loadingStateRenders() {
         setContent(SearchUiState(isLoading = true))
         composeRule.onNodeWithText("Searching transactions").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Searching transactions")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Loading"))
 
+    }
+
+    @Test
+    fun errorStateRenders() {
         setContent(SearchUiState(isLoading = false, errorMessage = "Local ledger unavailable"))
         composeRule.onNodeWithText("Could not search transactions").assertIsDisplayed()
         composeRule.onNodeWithText("Local ledger unavailable").assertIsDisplayed()

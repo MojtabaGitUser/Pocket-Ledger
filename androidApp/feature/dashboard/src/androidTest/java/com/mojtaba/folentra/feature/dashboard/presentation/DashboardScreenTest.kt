@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
 import com.mojtaba.folentra.core.designsystem.adaptive.FolentraWindowWidthSizeClass
@@ -82,7 +83,9 @@ class DashboardScreenTest {
         composeRule.onNodeWithText("Budgets").assertIsDisplayed()
         composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Food budget"))
         composeRule.onNodeWithText("Food budget").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Near limit")[0].assertIsDisplayed()
+        composeRule.onAllNodesWithText("Near limit", useUnmergedTree = true)[0]
+            .performScrollTo()
+            .assertIsDisplayed()
     }
 
     @Test
@@ -185,8 +188,9 @@ class DashboardScreenTest {
         )
 
         composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
-        composeRule.onNodeWithTag("DashboardContentList").performScrollToNode(hasText("Food budget"))
-        composeRule.onNodeWithText("Food budget").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(
+            "Food budget, $524.20 spent of $650.00, 81%, Near limit",
+        ).performScrollTo().assertIsDisplayed()
     }
 
     @Test

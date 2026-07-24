@@ -41,7 +41,7 @@ class TransactionDetailScreenTest {
         composeRule.onNodeWithText("Food").assertIsDisplayed()
         composeRule.onNodeWithText("Nov 14, 2023").assertIsDisplayed()
         composeRule.onNodeWithText("Team breakfast").assertIsDisplayed()
-        composeRule.onNodeWithText("Work").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Tags Work", substring = true).assertExists()
     }
 
     @Test

@@ -6,12 +6,16 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasText
 import androidx.navigation.compose.rememberNavController
 import com.mojtaba.folentra.FolentraAppGraph
 import com.mojtaba.folentra.adaptive.LocalAdaptiveNavigationState
@@ -22,6 +26,7 @@ import com.mojtaba.folentra.core.ai.RuleBasedAiProvider
 import com.mojtaba.folentra.core.designsystem.adaptive.AdaptiveNavigationState
 import com.mojtaba.folentra.core.designsystem.adaptive.FolentraWindowWidthSizeClass
 import com.mojtaba.folentra.core.designsystem.theme.FolentraTheme
+import com.mojtaba.folentra.core.featureflags.DefaultFeatureFlags
 import com.mojtaba.folentra.core.featureflags.FeatureFlagEvaluator
 import com.mojtaba.folentra.core.security.applock.AppLockAuthenticationResult
 import com.mojtaba.folentra.core.security.applock.AppLockAuthenticator
@@ -85,15 +90,51 @@ class FolentraAppShellTest {
     }
 
     @Test
+    fun selectingSettingsDestinationShowsSettingsScreen() {
+        setContent()
+
+        composeRule.onNodeWithContentDescription("Settings navigation destination").performClick()
+
+        composeRule.waitUntilTextExists("Security and privacy")
+        composeRule.onNodeWithText("App lock").assertIsDisplayed()
+        composeRule.onNodeWithText("Background jobs").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Settings navigation destination")
+            .assertIsSelected()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
+    }
+
+    @Test
+    fun settingsMonthlySummaryControlsUpdateState() {
+        setContent()
+
+        composeRule.onNodeWithContentDescription("Settings navigation destination").performClick()
+        composeRule.waitUntilTextExists("Background jobs")
+        composeRule.onNodeWithContentDescription("Monthly summary preparation switch")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Off"))
+            .performClick()
+
+        composeRule.onNodeWithContentDescription("Monthly summary preparation switch")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "On"))
+        composeRule.onNodeWithText("18:00", useUnmergedTree = true).assertIsEnabled().performClick()
+        composeRule.onNodeWithText("Scheduled around 18:00.", substring = true).assertIsDisplayed()
+
+    }
+    @Test
     fun debugHealthDestinationShowsSafeDiagnosticsWhenIncluded() {
-        setContent(includeDebugDestinations = true)
+        setContent(
+            includeDebugDestinations = true,
+            widthSizeClass = FolentraWindowWidthSizeClass.Expanded,
+        )
 
         composeRule.onNodeWithContentDescription("Debug navigation destination").performClick()
 
         composeRule.waitUntilTextExists("Debug health")
         composeRule.onNodeWithText("Build").assertIsDisplayed()
+        composeRule.onNodeWithTag("DebugHealthList").performScrollToNode(hasText("CI/CD"))
         composeRule.onNodeWithText("CI/CD").assertIsDisplayed()
+        composeRule.onNodeWithTag("DebugHealthList").performScrollToNode(hasText("Firebase/App Distribution"))
         composeRule.onNodeWithText("Firebase/App Distribution").assertIsDisplayed()
+        composeRule.onNodeWithTag("DebugHealthList").performScrollToNode(hasText("Release Safety"))
         composeRule.onNodeWithText("Release Safety").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Release diagnostics privacy")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Release diagnostics privacy: Release hidden"))
@@ -103,9 +144,12 @@ class FolentraAppShellTest {
             .assertCountEquals(0)
     }
 
-    private fun setContent(includeDebugDestinations: Boolean = false) {
+    private fun setContent(
+        includeDebugDestinations: Boolean = false,
+        widthSizeClass: FolentraWindowWidthSizeClass = FolentraWindowWidthSizeClass.Compact,
+    ) {
         val appGraph = testAppGraph()
-        val adaptiveNavigationState = AdaptiveNavigationState(FolentraWindowWidthSizeClass.Compact)
+        val adaptiveNavigationState = AdaptiveNavigationState(widthSizeClass)
 
         composeRule.setContent {
             val appState = rememberFolentraAppState(
@@ -129,7 +173,10 @@ class FolentraAppShellTest {
         val transaction = testLedgerTransaction()
         val tagLink = testTransactionTagLink(transactionId = transaction.id, tagId = tag.id)
 
-        val featureFlags = FeatureFlagEvaluator(FakeFeatureFlagProvider())
+        val featureFlagProvider = FakeFeatureFlagProvider().apply {
+            enable(DefaultFeatureFlags.BackgroundJobsEnabled)
+        }
+        val featureFlags = FeatureFlagEvaluator(featureFlagProvider)
         val aiProviderSelector = AiProviderSelector(
             providers = listOf(RuleBasedAiProvider, NoOpAiProvider),
             featureFlags = featureFlags,
