@@ -126,6 +126,10 @@ class SearchScreenTest {
             .performScrollToNode(hasContentDescription("Clear search filters"))
         composeRule.onNodeWithContentDescription("Clear search filters").performClick()
 
+        composeRule.onNodeWithContentDescription("Search filters")
+            .performScrollToNode(
+                hasContentDescription("Filter by transaction type Expense"),
+            )
         composeRule.onNodeWithContentDescription("Filter by transaction type Expense")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Not selected"))
         assertEquals(SearchQuery(), harness.uiState.query)
@@ -139,7 +143,7 @@ class SearchScreenTest {
 
         composeRule.onNodeWithText("Coffee Shop").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("-${'$'}4.50").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Tags Work", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Tag Work").assertIsDisplayed()
 
         assertEquals(SearchAction.ResultClicked("preview-transaction"), actions.single())
     }
