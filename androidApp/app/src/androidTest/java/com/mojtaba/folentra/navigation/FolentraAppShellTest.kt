@@ -85,6 +85,19 @@ class FolentraAppShellTest {
     }
 
     @Test
+    fun selectingSettingsDestinationShowsSettingsScreen() {
+        setContent()
+
+        composeRule.onNodeWithContentDescription("Settings navigation destination").performClick()
+
+        composeRule.waitUntilTextExists("Security & privacy")
+        composeRule.onNodeWithText("App lock").assertIsDisplayed()
+        composeRule.onNodeWithText("Background jobs").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Settings navigation destination")
+            .assertIsSelected()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
+    }
+    @Test
     fun debugHealthDestinationShowsSafeDiagnosticsWhenIncluded() {
         setContent(includeDebugDestinations = true)
 
