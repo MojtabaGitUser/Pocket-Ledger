@@ -233,6 +233,10 @@ class TransactionEditorScreenTest {
                 is TransactionEditorAction.CurrencyChanged -> updateForm { copy(currencyCode = action.value) }
                 is TransactionEditorAction.RecurringChanged -> updateForm { copy(isRecurring = action.value) }
                 TransactionEditorAction.SaveClicked -> saveClicked = true
+                TransactionEditorAction.SmartAutofillAccepted,
+                TransactionEditorAction.SmartAutofillClicked,
+                TransactionEditorAction.SmartAutofillDismissed,
+                -> Unit
             }
         }
 
