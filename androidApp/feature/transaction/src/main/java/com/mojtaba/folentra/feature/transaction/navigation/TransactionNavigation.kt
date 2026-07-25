@@ -38,6 +38,7 @@ fun NavGraphBuilder.transactionGraph(
                 categoryRepository = categoryRepository,
                 tagRepository = tagRepository,
                 initialSelectedTransactionId = null,
+                onAddTransaction = { navController.navigate(TransactionRoutes.CreateRoute) },
                 onEditTransaction = { id -> navController.navigate(TransactionRoutes.editRoute(id)) },
             )
         } else {
@@ -48,8 +49,22 @@ fun NavGraphBuilder.transactionGraph(
                 onOpenTransaction = { transactionId ->
                     navController.navigate(TransactionRoutes.detailRoute(transactionId))
                 },
+                onAddTransaction = { navController.navigate(TransactionRoutes.CreateRoute) },
             )
         }
+    }
+
+    composable(route = TransactionRoutes.CreateRoute) {
+        TransactionEditorRoute(
+            transactionRepository = transactionRepository,
+            categoryRepository = categoryRepository,
+            tagRepository = tagRepository,
+            aiFallbackStrategy = aiFallbackStrategy,
+            mode = TransactionFormMode.CREATE,
+            transactionId = null,
+            onNavigateBack = navController::navigateUp,
+            onSaved = { navController.popBackStack() },
+        )
     }
 
     composable(
@@ -72,6 +87,7 @@ fun NavGraphBuilder.transactionGraph(
                 categoryRepository = categoryRepository,
                 tagRepository = tagRepository,
                 initialSelectedTransactionId = transactionId,
+                onAddTransaction = { navController.navigate(TransactionRoutes.CreateRoute) },
                 onEditTransaction = { id -> navController.navigate(TransactionRoutes.editRoute(id)) },
             )
         } else {

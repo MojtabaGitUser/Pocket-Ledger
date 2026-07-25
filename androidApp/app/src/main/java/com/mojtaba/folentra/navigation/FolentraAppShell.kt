@@ -73,6 +73,7 @@ private fun FolentraAppState.shouldShowShellTopBar(): Boolean {
         currentRoute != DashboardRoutes.BudgetEditRoutePattern &&
         currentRoute != SearchRoutes.SearchRoute &&
         currentRoute != TransactionRoutes.ListRoute &&
+        currentRoute != TransactionRoutes.CreateRoute &&
         currentRoute != TransactionRoutes.DetailRoutePattern &&
         currentRoute != TransactionRoutes.EditRoutePattern
 }

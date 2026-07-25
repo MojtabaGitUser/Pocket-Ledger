@@ -26,10 +26,13 @@ class TransactionListScreenTest {
 
     @Test
     fun emptyStateIsDisplayed() {
-        setContent(TransactionListUiState.Empty)
+        var addClicked = false
+        setContent(TransactionListUiState.Empty, onAddTransaction = { addClicked = true })
 
         composeRule.onNodeWithText("No transactions yet").assertIsDisplayed()
-        composeRule.onNodeWithText("Saved transactions will appear here.").assertIsDisplayed()
+        composeRule.onNodeWithText("Add an expense or income to start tracking your ledger.").assertIsDisplayed()
+        composeRule.onNodeWithText("Add your first transaction").performClick()
+        assertEquals(true, addClicked)
     }
 
     @Test
@@ -89,6 +92,7 @@ class TransactionListScreenTest {
         uiState: TransactionListUiState,
         onAction: (TransactionListAction) -> Unit = {},
         selectedTransactionId: String? = null,
+        onAddTransaction: () -> Unit = {},
     ) {
         composeRule.setContent {
             FolentraTheme(dynamicColor = false) {
@@ -96,6 +100,7 @@ class TransactionListScreenTest {
                     uiState = uiState,
                     onAction = onAction,
                     selectedTransactionId = selectedTransactionId,
+                    onAddTransaction = onAddTransaction,
                 )
             }
         }

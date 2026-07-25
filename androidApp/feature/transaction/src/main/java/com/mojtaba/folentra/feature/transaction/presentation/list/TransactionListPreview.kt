@@ -14,6 +14,7 @@ private fun TransactionListLoadingPreview() {
         TransactionListScreen(
             uiState = TransactionListUiState.Loading,
             onAction = {},
+            onAddTransaction = {},
         )
     }
 }
@@ -25,6 +26,7 @@ private fun TransactionListEmptyPreview() {
         TransactionListScreen(
             uiState = TransactionListUiState.Empty,
             onAction = {},
+            onAddTransaction = {},
         )
     }
 }
@@ -36,6 +38,7 @@ private fun TransactionListContentPreview() {
         TransactionListScreen(
             uiState = TransactionListUiState.Content(previewTransactions),
             onAction = {},
+            onAddTransaction = {},
         )
     }
 }
@@ -47,6 +50,7 @@ private fun TransactionListErrorPreview() {
         TransactionListScreen(
             uiState = TransactionListUiState.Error("The local ledger could not be read."),
             onAction = {},
+            onAddTransaction = {},
         )
     }
 }

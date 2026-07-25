@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -29,6 +31,7 @@ import com.mojtaba.folentra.core.designsystem.theme.FolentraThemeDefaults
 fun TransactionListScreen(
     uiState: TransactionListUiState,
     onAction: (TransactionListAction) -> Unit,
+    onAddTransaction: () -> Unit,
     modifier: Modifier = Modifier,
     selectedTransactionId: String? = null,
 ) {
@@ -43,6 +46,14 @@ fun TransactionListScreen(
                 },
             )
         },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onAddTransaction,
+                modifier = Modifier.testTag("AddTransactionButton"),
+            ) {
+                Text("Add transaction")
+            }
+        },
         modifier = modifier.fillMaxSize(),
     ) { contentPadding ->
         AdaptiveContainer(
@@ -54,6 +65,7 @@ fun TransactionListScreen(
             TransactionListContent(
                 uiState = uiState,
                 onAction = onAction,
+                onAddTransaction = onAddTransaction,
                 selectedTransactionId = selectedTransactionId,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -65,6 +77,7 @@ fun TransactionListScreen(
 fun TransactionListContent(
     uiState: TransactionListUiState,
     onAction: (TransactionListAction) -> Unit,
+    onAddTransaction: () -> Unit = {},
     modifier: Modifier = Modifier,
     selectedTransactionId: String? = null,
 ) {
@@ -75,7 +88,12 @@ fun TransactionListContent(
         TransactionListUiState.Empty -> Centered(modifier) {
             EmptyState(
                 title = "No transactions yet",
-                message = "Saved transactions will appear here.",
+                message = "Add an expense or income to start tracking your ledger.",
+                action = {
+                    Button(onClick = onAddTransaction) {
+                        Text("Add your first transaction")
+                    }
+                },
             )
         }
         is TransactionListUiState.Error -> Centered(modifier) {
