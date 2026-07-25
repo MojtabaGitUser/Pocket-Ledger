@@ -62,7 +62,7 @@ class TransactionListDetailScreenTest {
         }
 
         composeRule.onNodeWithText("No transactions yet").assertIsDisplayed()
-        composeRule.onNodeWithText("Saved transactions will appear here.").assertIsDisplayed()
+        composeRule.onNodeWithText("Add an expense or income to start tracking your ledger.").assertIsDisplayed()
     }
 
     @Test

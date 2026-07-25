@@ -25,6 +25,7 @@ fun TransactionAdaptiveRoute(
     categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
     initialSelectedTransactionId: String?,
+    onAddTransaction: () -> Unit,
     onEditTransaction: (String) -> Unit,
     selectionViewModel: TransactionSelectionViewModel = viewModel(
         key = "transaction-selection-${initialSelectedTransactionId.orEmpty()}",
@@ -68,6 +69,7 @@ fun TransactionAdaptiveRoute(
             }
         },
         onClearSelection = selectionViewModel::clearSelection,
+        onAddTransaction = onAddTransaction,
         onEditTransaction = onEditTransaction,
     )
 }

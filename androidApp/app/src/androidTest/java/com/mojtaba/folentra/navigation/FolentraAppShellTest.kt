@@ -77,6 +77,19 @@ class FolentraAppShellTest {
     }
 
     @Test
+    fun addTransactionFromListOpensCreateEditor() {
+        setContent()
+
+        composeRule.onNodeWithContentDescription("Transactions navigation destination").performClick()
+        composeRule.waitUntilTextExists("Add transaction")
+        composeRule.onNodeWithText("Add transaction").performClick()
+
+        composeRule.waitUntilTextExists("Create Transaction")
+        composeRule.onNodeWithText("Create Transaction").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Save transaction").assertIsDisplayed()
+    }
+
+    @Test
     fun selectingSearchDestinationShowsSearchScreen() {
         setContent()
 

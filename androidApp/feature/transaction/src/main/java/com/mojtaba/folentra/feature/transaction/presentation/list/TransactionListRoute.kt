@@ -17,6 +17,7 @@ fun TransactionListRoute(
     categoryRepository: CategoryRepository,
     tagRepository: TagRepository,
     onOpenTransaction: (String) -> Unit,
+    onAddTransaction: () -> Unit,
     viewModel: TransactionListViewModel = viewModel(
         factory = TransactionListViewModelFactory(
             transactionRepository = transactionRepository,
@@ -38,6 +39,7 @@ fun TransactionListRoute(
     TransactionListScreen(
         uiState = uiState,
         onAction = viewModel::onAction,
+        onAddTransaction = onAddTransaction,
     )
 }
 

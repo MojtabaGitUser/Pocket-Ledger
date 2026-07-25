@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -41,6 +42,7 @@ fun TransactionListDetailScreen(
     snackbarHostState: SnackbarHostState,
     onListAction: (TransactionListAction) -> Unit,
     onClearSelection: () -> Unit,
+    onAddTransaction: () -> Unit,
     onEditTransaction: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -48,6 +50,7 @@ fun TransactionListDetailScreen(
         listUiState = listUiState,
         selectedTransactionId = selectedTransactionId,
         onListAction = onListAction,
+        onAddTransaction = onAddTransaction,
         modifier = modifier,
     ) {
         TransactionDetailPane(
@@ -71,6 +74,7 @@ fun TransactionListDetailContent(
     listUiState: TransactionListUiState,
     selectedTransactionId: String?,
     onListAction: (TransactionListAction) -> Unit,
+    onAddTransaction: () -> Unit = {},
     modifier: Modifier = Modifier,
     detailPane: @Composable () -> Unit,
 ) {
@@ -105,10 +109,19 @@ fun TransactionListDetailContent(
                             },
                         )
                     },
+                    floatingActionButton = {
+                        ExtendedFloatingActionButton(
+                            onClick = onAddTransaction,
+                            modifier = Modifier.semantics { contentDescription = "Add transaction" },
+                        ) {
+                            Text("Add transaction")
+                        }
+                    },
                 ) { contentPadding ->
                     TransactionListContent(
                         uiState = listUiState,
                         onAction = onListAction,
+                        onAddTransaction = onAddTransaction,
                         selectedTransactionId = selectedTransactionId,
                         modifier = Modifier
                             .padding(contentPadding)
