@@ -1,6 +1,8 @@
 # Gradle
 .gradle/
 **/build/
+androidApp/performance-evidence/*
+!androidApp/performance-evidence/README.md
 
 # Local SDK config
 local.properties

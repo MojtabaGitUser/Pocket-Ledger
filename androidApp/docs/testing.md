@@ -202,3 +202,15 @@ CI keeps screenshot verification off the default pull-request path to avoid
 adding screenshot runtime to every PR. The Screenshot And Benchmark Validation
 workflow can be run manually with `run_screenshots=true` to execute
 `verifyAdaptiveScreenshots` on GitHub Actions.
+
+Recomposition and jank evidence is generated with:
+
+```powershell
+.\scripts\collect_android_performance_evidence.ps1 -DeviceSerial <serial>
+```
+
+The collector builds release Compose compiler reports and copies connected
+Macrobenchmark JSON, instrumentation results, and Compose-aware Perfetto traces
+to a timestamped, git-ignored directory under
+`androidApp/performance-evidence`. See
+`androidApp/performance-evidence/README.md` for the evidence contract.
