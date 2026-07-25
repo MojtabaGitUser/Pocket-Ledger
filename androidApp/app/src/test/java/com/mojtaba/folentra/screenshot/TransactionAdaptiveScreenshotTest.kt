@@ -30,6 +30,7 @@ class TransactionAdaptiveScreenshotTest(
                 uiState = ScreenshotTestData.transactionListContent,
                 selectedTransactionId = ScreenshotTestData.selectedTransactionId,
                 onAction = {},
+                onAddTransaction = {},
             )
         }
     }
@@ -40,6 +41,7 @@ class TransactionAdaptiveScreenshotTest(
             TransactionListScreen(
                 uiState = TransactionListUiState.Empty,
                 onAction = {},
+                onAddTransaction = {},
             )
         }
     }
