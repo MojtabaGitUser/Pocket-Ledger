@@ -753,3 +753,47 @@ Backlog source note:
   this report update. The report uses the GitHub task description, parent
   story context, existing docs, current code, tests, Gradle setup, CI workflow,
   and validation commands as source of truth.
+
+## Emulator validation batch — 2026-07-24
+
+A fixed Pixel 8 Pro API 30 AVD (`emulator-5556`, Android 11) was used for the
+post-change connected and release-like validation batch.
+
+Connected instrumentation results:
+
+- `:core:database:connectedAndroidDeviceTest` passed.
+- `:core:data:connectedDebugAndroidTest`: 35/35 passed.
+- `:core:security:connectedDebugAndroidTest`: 6/6 passed.
+- `:feature:dashboard:connectedDebugAndroidTest`: 33/33 passed.
+- `:feature:search:connectedDebugAndroidTest`: 11/11 passed.
+- `:feature:transaction:connectedDebugAndroidTest`: 28/28 passed.
+- `:app:connectedDebugAndroidTest`: 14/14 passed.
+
+The app-shell and feature suites cover Dashboard, transaction create/edit/delete,
+Search, and Settings behavior. Repository instrumentation was made deterministic
+by asserting each completed Room operation through `Flow.first()` instead of
+requiring transient invalidation emissions to be delivered in a particular
+scheduler order.
+
+The release-like benchmark APK was installed and the six-class smoke/performance
+runner completed successfully. It covered Dashboard cold start, transaction-list
+scrolling, seeded search, Settings navigation, a large-dataset scroll/search
+scenario, and cold startup. The run produced 28 Perfetto traces and one benchmark
+JSON file under the ignored evidence directory
+`androidApp/performance-evidence/20260724-234902`.
+
+LeakCanary was also exercised in a standalone debug process. The runtime log
+records `LeakCanary is running and ready to detect memory leaks`; no retained-object
+or leak signature appeared during the bounded observation window. This is a
+successful diagnostic pass, not a proof that every possible application flow is
+leak-free.
+
+Environment notes:
+
+- API 37 connected Espresso tests are blocked by Espresso's use of an Android
+  hidden API removed by that platform image, so API 30 is the stable connected
+  test target for this batch.
+- The attached Samsung physical device was credential-locked and was not altered.
+- Emulator benchmark numbers are evidence of scenario execution and regression
+  comparability only. A lower-end physical-device run remains required before
+  making production performance claims.

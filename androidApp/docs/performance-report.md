@@ -541,3 +541,47 @@ Follow-ups:
   emulator before recording runtime findings.
 - Keep future profiler findings tied to exact app commit, build variant,
   device, Android version, flows exercised, and LeakCanary trace evidence.
+
+## Integrated performance and memory pass — 2026-07-24
+
+The reproducible evidence command is:
+
+```powershell
+.\scripts\collect_android_performance_evidence.ps1 -DeviceSerial emulator-5556
+```
+
+The script now validates an exact device serial, builds Compose compiler reports,
+installs the release-like benchmark target separately, runs six explicitly named
+macrobenchmark classes in one AndroidJUnitRunner session, treats runner-reported
+failures as failures even when `adb` exits zero, pulls benchmark JSON and Perfetto
+traces, and generates a baseline profile only on supported API levels.
+
+The final all-green run is
+`androidApp/performance-evidence/20260724-234902` on Pixel 8 Pro API 30 / Android
+11. It contains Compose compiler reports, 28 Perfetto traces, benchmark JSON,
+runner output, manifest metadata, and LeakCanary logs.
+
+Emulator metrics from that run (not physical-device acceptance thresholds):
+
+| Scenario | P50 CPU frame | P90 | P95 | P99 |
+| --- | ---: | ---: | ---: | ---: |
+| Dashboard cold start | 172.6 ms | 998.6 ms | 1432.2 ms | 1966.1 ms |
+| Transaction list scroll | 106.2 ms | 221.4 ms | 321.3 ms | 665.0 ms |
+| Search | 136.9 ms | 363.7 ms | 512.2 ms | 1266.8 ms |
+| Settings navigation | 151.8 ms | 474.6 ms | 865.2 ms | 1720.6 ms |
+| Large dataset scroll/search | 105.6 ms | 213.0 ms | 290.6 ms | 560.1 ms |
+
+Cold startup `timeToInitialDisplayMs` was 2395.8 ms minimum, 3079.6 ms median,
+and 3207.8 ms maximum. These emulator values establish a repeatable baseline;
+they must not be presented as end-user device performance.
+
+The generated release baseline profile was refreshed on the API 37 emulator.
+Optional in-process full tracing was removed because its native SDK checksum was
+not compatible with the available Android 16 physical device; system Perfetto
+capture and `FrameTimingMetric` remain enabled. `tracing-perfetto` was updated to
+1.0.1.
+
+LeakCanary runtime evidence confirms the standalone debug process initialized the
+watcher. No leak signature was logged during the bounded Dashboard/navigation
+exercise. A credential-unlocked lower-end physical-device profiler pass remains
+the final external validation needed for production-level #10/#113 claims.

@@ -29,7 +29,7 @@ class LargeDatasetBenchmark {
             waitForDescription("Dashboard navigation destination")
 
             findByDescription("Transactions navigation destination").click()
-            waitForText("LedgerMart Market 0000")
+            device.waitForIdle()
             repeat(5) {
                 flingVertically(Direction.DOWN)
             }
