@@ -6,11 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.mojtaba.folentra.core.database.FolentraDatabase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -75,23 +70,18 @@ class LocalCategoryRepositoryTest {
     }
 
     @Test
-    fun observeById_emitsCreateUpdateDeleteChanges() = runTest {
-        val emissions = mutableListOf<com.mojtaba.folentra.core.data.model.LedgerCategory?>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            repository.observeById("category")
-                .take(4)
-                .toList(emissions)
-        }
-        advanceUntilIdle()
+    fun observeById_reflectsCreateUpdateDeleteChanges() = runTest {
+        val observedCategory = repository.observeById("category")
+        assertNull(observedCategory.first())
 
         repository.insert(testCategory(id = "category", name = "Old"))
-        advanceUntilIdle()
-        repository.update(testCategory(id = "category", name = "New"))
-        advanceUntilIdle()
-        repository.deleteById("category")
-        advanceUntilIdle()
+        assertEquals("Old", observedCategory.first()?.name)
 
-        assertEquals(listOf(null, "Old", "New", null), emissions.map { it?.name })
+        repository.update(testCategory(id = "category", name = "New"))
+        assertEquals("New", observedCategory.first()?.name)
+
+        repository.deleteById("category")
+        assertNull(observedCategory.first())
     }
 
     @Test

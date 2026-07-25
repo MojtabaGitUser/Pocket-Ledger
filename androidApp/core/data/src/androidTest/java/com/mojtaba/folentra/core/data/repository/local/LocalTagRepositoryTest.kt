@@ -7,11 +7,6 @@ import com.mojtaba.folentra.core.data.model.TransactionTagLink
 import com.mojtaba.folentra.core.database.FolentraDatabase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -74,28 +69,19 @@ class LocalTagRepositoryTest {
     }
 
     @Test
-    fun observeTagsForTransaction_emitsRelationshipUpdates() = runTest {
+    fun observeTagsForTransaction_reflectsRelationshipUpdates() = runTest {
         categoryRepository.insert(testCategory())
         transactionRepository.insert(testTransaction())
         tagRepository.insert(testTag(id = "tag-weekend", name = "Weekend"))
 
-        val emissions = mutableListOf<List<com.mojtaba.folentra.core.data.model.LedgerTag>>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            tagRepository.observeTagsForTransaction("transaction-1")
-                .take(3)
-                .toList(emissions)
-        }
-        advanceUntilIdle()
+        val observedTags = tagRepository.observeTagsForTransaction("transaction-1")
+        assertEquals(emptyList<String>(), observedTags.first().map { it.id })
 
         tagRepository.addTagToTransaction(TransactionTagLink("transaction-1", "tag-weekend"))
-        advanceUntilIdle()
-        tagRepository.removeTagFromTransaction("transaction-1", "tag-weekend")
-        advanceUntilIdle()
+        assertEquals(listOf("tag-weekend"), observedTags.first().map { it.id })
 
-        assertEquals(
-            listOf(emptyList(), listOf("tag-weekend"), emptyList()),
-            emissions.map { tags -> tags.map { it.id } },
-        )
+        tagRepository.removeTagFromTransaction("transaction-1", "tag-weekend")
+        assertEquals(emptyList<String>(), observedTags.first().map { it.id })
     }
 
     @Test

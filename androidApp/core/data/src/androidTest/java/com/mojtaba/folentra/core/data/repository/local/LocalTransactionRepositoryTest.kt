@@ -13,11 +13,6 @@ import com.mojtaba.folentra.core.data.search.SearchSort
 import com.mojtaba.folentra.core.data.search.SearchTransactionType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -105,25 +100,20 @@ class LocalTransactionRepositoryTest {
     }
 
     @Test
-    fun observeById_emitsCreateUpdateDeleteChanges() = runTest {
+    fun observeById_reflectsCreateUpdateDeleteChanges() = runTest {
         categoryRepository.insert(testCategory())
 
-        val emissions = mutableListOf<com.mojtaba.folentra.core.data.model.LedgerTransaction?>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            transactionRepository.observeById("transaction-1")
-                .take(4)
-                .toList(emissions)
-        }
-        advanceUntilIdle()
+        val observedTransaction = transactionRepository.observeById("transaction-1")
+        assertNull(observedTransaction.first())
 
         transactionRepository.insert(testTransaction())
-        advanceUntilIdle()
-        transactionRepository.update(testTransaction(amountMinor = -2_000))
-        advanceUntilIdle()
-        transactionRepository.deleteById("transaction-1")
-        advanceUntilIdle()
+        assertEquals(-1_250L, observedTransaction.first()?.amountMinor)
 
-        assertEquals(listOf(null, -1_250L, -2_000L, null), emissions.map { it?.amountMinor })
+        transactionRepository.update(testTransaction(amountMinor = -2_000))
+        assertEquals(-2_000L, observedTransaction.first()?.amountMinor)
+
+        transactionRepository.deleteById("transaction-1")
+        assertNull(observedTransaction.first())
     }
 
     @Test

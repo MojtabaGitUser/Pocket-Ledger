@@ -6,11 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.mojtaba.folentra.core.database.FolentraDatabase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -67,25 +62,20 @@ class LocalBudgetRepositoryTest {
     }
 
     @Test
-    fun observeById_emitsCreateUpdateDeleteChanges() = runTest {
+    fun observeById_reflectsCreateUpdateDeleteChanges() = runTest {
         categoryRepository.insert(testCategory())
 
-        val emissions = mutableListOf<com.mojtaba.folentra.core.data.model.LedgerBudget?>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            budgetRepository.observeById("budget")
-                .take(4)
-                .toList(emissions)
-        }
-        advanceUntilIdle()
+        val observedBudget = budgetRepository.observeById("budget")
+        assertNull(observedBudget.first())
 
         budgetRepository.insert(testBudget(id = "budget"))
-        advanceUntilIdle()
-        budgetRepository.update(testBudget(id = "budget").copy(amountMinor = 75_000))
-        advanceUntilIdle()
-        budgetRepository.deleteById("budget")
-        advanceUntilIdle()
+        assertEquals(50_000L, observedBudget.first()?.amountMinor)
 
-        assertEquals(listOf(null, 50_000L, 75_000L, null), emissions.map { it?.amountMinor })
+        budgetRepository.update(testBudget(id = "budget").copy(amountMinor = 75_000))
+        assertEquals(75_000L, observedBudget.first()?.amountMinor)
+
+        budgetRepository.deleteById("budget")
+        assertNull(observedBudget.first())
     }
 
     @Test

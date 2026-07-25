@@ -20,6 +20,6 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext =
             InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.mojtaba.folentra", appContext.packageName)
+        assertEquals(BuildConfig.APPLICATION_ID, appContext.packageName)
     }
 }

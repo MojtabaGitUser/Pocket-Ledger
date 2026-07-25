@@ -11,9 +11,7 @@ $androidRoot = Join-Path $repoRoot "androidApp"
 $adb = Join-Path $env:LOCALAPPDATA "Android\SDK1\platform-tools\adb.exe"
 if (-not (Test-Path -LiteralPath $adb)) {
     $adbCommand = Get-Command adb -ErrorAction SilentlyContinue
-    if (-not $adbCommand) {
-        throw "adb was not found. Install Android platform-tools or add adb to PATH."
-    }
+    if (-not $adbCommand) { throw "adb was not found." }
     $adb = $adbCommand.Source
 }
 
@@ -21,8 +19,10 @@ if (-not $SkipBenchmarks) {
     if ([string]::IsNullOrWhiteSpace($DeviceSerial)) {
         throw "DeviceSerial is required unless -SkipBenchmarks is used."
     }
-    $connectedDevices = & $adb devices
-    if ($connectedDevices -notmatch "(?m)^$([regex]::Escape($DeviceSerial))\s+device$") {
+    $connectedSerials = & $adb devices |
+        Select-String '^\S+\s+device$' |
+        ForEach-Object { ($_ -split '\s+')[0] }
+    if ($DeviceSerial -notin $connectedSerials) {
         throw "Device '$DeviceSerial' is not connected and ready."
     }
 }
@@ -52,7 +52,11 @@ $commands = @(
     ".\gradlew.bat :app:compileReleaseKotlin :feature:dashboard:compileReleaseKotlin :feature:search:compileReleaseKotlin :feature:transaction:compileReleaseKotlin -Pfolentra.composeReports=true --console=plain"
 )
 if (-not $SkipBenchmarks) {
-    $commands += ".\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest --console=plain"
+    $commands += ".\gradlew.bat :app:installBenchmark :macrobenchmark:assembleBenchmarkBenchmark --console=plain"
+    $commands += "adb -s $DeviceSerial shell am instrument <six benchmark classes>"
+    if ([int]$apiLevel -ge 33) {
+        $commands += ".\gradlew.bat :app:generateReleaseBaselineProfile --console=plain"
+    }
 }
 
 Push-Location $androidRoot
@@ -80,20 +84,54 @@ try {
 
     if (-not $SkipBenchmarks) {
         $env:ANDROID_SERIAL = $DeviceSerial
-        & .\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest --console=plain
+        & .\gradlew.bat :app:installBenchmark :macrobenchmark:assembleBenchmarkBenchmark --console=plain
         if ($LASTEXITCODE -ne 0) {
-            throw "Macrobenchmark evidence run failed with exit code $LASTEXITCODE."
+            throw "Benchmark APK build/install failed with exit code $LASTEXITCODE."
         }
 
-        $benchmarkOutputs = Join-Path $androidRoot "macrobenchmark\build\outputs"
-        foreach ($relativePath in @(
-            "connected_android_test_additional_output",
-            "androidTest-results\connected\benchmarkBenchmark"
-        )) {
-            $source = Join-Path $benchmarkOutputs $relativePath
-            if (Test-Path -LiteralPath $source) {
-                $safeName = $relativePath.Replace("\", "__")
-                Copy-Item -LiteralPath $source -Destination (Join-Path $benchmarkDestination $safeName) -Recurse -Force
+        $testApk = Join-Path $androidRoot "macrobenchmark\build\outputs\apk\benchmarkBenchmark\macrobenchmark-benchmarkBenchmark.apk"
+        & $adb -s $DeviceSerial install -r -t $testApk
+        if ($LASTEXITCODE -ne 0) {
+            throw "Benchmark test APK installation failed with exit code $LASTEXITCODE."
+        }
+
+        $benchmarkClasses = @(
+            "DashboardBenchmark",
+            "TransactionListScrollBenchmark",
+            "SearchBenchmark",
+            "SettingsBenchmark",
+            "LargeDatasetBenchmark",
+            "StartupBenchmark"
+        ) | ForEach-Object { "com.mojtaba.folentra.macrobenchmark.$_" }
+        $logPath = Join-Path $benchmarkDestination "macrobenchmark-suite.txt"
+        $benchmarkOutput = & $adb -s $DeviceSerial shell am instrument -w -r `
+            -e androidx.benchmark.suppressErrors EMULATOR `
+            -e class ($benchmarkClasses -join ",") `
+            "com.mojtaba.folentra.macrobenchmark/androidx.test.runner.AndroidJUnitRunner" 2>&1 |
+            Tee-Object -FilePath $logPath
+        $benchmarkFailed = $benchmarkOutput -match "FAILURES!!!|INSTRUMENTATION_STATUS_CODE: -2"
+        if ($LASTEXITCODE -ne 0 -or $benchmarkFailed) {
+            throw "Macrobenchmark suite failed. See $logPath."
+        }
+
+        & $adb -s $DeviceSerial pull `
+            "/sdcard/Android/media/com.mojtaba.folentra.macrobenchmark/." `
+            (Join-Path $benchmarkDestination "device-output") | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Pulling benchmark evidence failed with exit code $LASTEXITCODE."
+        }
+
+        if ([int]$apiLevel -ge 33) {
+            $profileArgs = @(
+                ":app:generateReleaseBaselineProfile",
+                "--console=plain"
+            )
+            if ($DeviceSerial.StartsWith("emulator-", [StringComparison]::OrdinalIgnoreCase)) {
+                $profileArgs += "-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR"
+            }
+            & .\gradlew.bat @profileArgs
+            if ($LASTEXITCODE -ne 0) {
+                throw "Baseline Profile generation failed with exit code $LASTEXITCODE."
             }
         }
     }
@@ -105,11 +143,7 @@ finally {
 
 $manifest = [ordered]@{
     generatedAt = (Get-Date).ToString("o")
-    git = [ordered]@{
-        commit = $commit
-        branch = $branch
-        dirty = $dirty
-    }
+    git = [ordered]@{ commit = $commit; branch = $branch; dirty = $dirty }
     device = [ordered]@{
         serial = $DeviceSerial
         model = $deviceModel
@@ -133,14 +167,10 @@ $summary = @"
 
 ## Review
 
-1. Inspect ``compose-compiler`` for unstable parameters and non-skippable
-   composables in critical Dashboard, Transaction, Search, and Settings paths.
-2. Inspect benchmark JSON for frame-duration and frame-overrun metrics.
-3. Open each Perfetto trace and correlate slow frames with Compose
-   composition/recomposition slices.
-4. Compare only against evidence captured on the same device, OS, build type,
-   and thermal conditions.
+1. Inspect ``compose-compiler`` for unstable parameters and non-skippable composables.
+2. Inspect benchmark JSON for frame-duration and startup metrics.
+3. Open each Perfetto trace and correlate slow frames with Compose slices.
+4. Compare only runs from the same device, OS, build type, and thermal state.
 "@
 $summary | Set-Content -LiteralPath (Join-Path $runRoot "summary.md")
-
 Write-Output "Performance evidence written to: $runRoot"

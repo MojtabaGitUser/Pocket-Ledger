@@ -29,10 +29,9 @@ class AdaptiveNavigationScaffoldTest {
         setContent(AdaptiveNavigationType.BottomBar)
 
         composeRule.onNodeWithContentDescription("Bottom navigation").assertIsDisplayed()
-        composeRule.onNodeWithText("Dashboard").assertIsDisplayed()
-        composeRule.onNodeWithText("Transactions").assertIsDisplayed()
-        composeRule.onNodeWithText("Search").assertIsDisplayed()
-        composeRule.onNodeWithText("Settings").assertIsDisplayed()
+        listOf("Dashboard", "Transactions", "Search", "Settings").forEach { label ->
+            composeRule.onNodeWithContentDescription("$label navigation destination").assertIsDisplayed()
+        }
         composeRule.onNodeWithContentDescription("Dashboard navigation destination")
             .assertIsSelected()
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
