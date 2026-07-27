@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.mojtaba.folentra.core.designsystem.accessibility.folentraValidationError
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
@@ -48,7 +49,7 @@ fun DateSelector(
             Text(
                 text = errorText,
                 color = androidx.compose.material3.MaterialTheme.colorScheme.error,
-                modifier = Modifier.semantics { error(errorText) },
+                modifier = Modifier.folentraValidationError(errorText),
             )
         }
     }

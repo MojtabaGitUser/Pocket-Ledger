@@ -4,6 +4,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -62,8 +63,12 @@ class TransactionEditorScreenTest {
             ),
         )
 
-        composeRule.onNodeWithText("Enter a valid amount").assertExists()
-        composeRule.onNodeWithText("Expense requires a category").assertExists()
+        composeRule.onNodeWithText("Enter a valid amount")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, "Enter a valid amount"))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
+        composeRule.onNodeWithText("Expense requires a category")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, "Expense requires a category"))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
     }
 
     @Test

@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -49,8 +50,12 @@ class BudgetSetupScreenTest {
             ),
         )
 
-        composeRule.onNodeWithText("Budget name is required").assertExists()
-        composeRule.onNodeWithText("Enter a valid amount").assertExists()
+        composeRule.onNodeWithText("Budget name is required")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, "Budget name is required"))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
+        composeRule.onNodeWithText("Enter a valid amount")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Error, "Enter a valid amount"))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
     }
 
     @Test

@@ -110,6 +110,25 @@ Pass criteria:
 - Icons that convey meaning have text labels, semantic labels, or adjacent text.
 - Disabled controls still communicate disabled state through platform semantics or state description.
 
+## Automated implementation record — 2026-07-26
+
+The code-assisted portion of the #14 / #134 accessibility pass now includes:
+
+- Polite live-region announcements for visible validation errors in Transaction Editor and Budget Setup.
+- Instrumentation assertions that validation errors expose both error semantics and `LiveRegionMode.Polite`.
+- 200% font-scale Paparazzi coverage for Transaction Editor in valid and validation-error states on compact-phone and expanded-tablet layouts.
+- Existing primary-screen semantics, adaptive screenshots, and manual QA instructions remain the baseline for the full pass.
+
+Automated verification:
+
+| Check | Result |
+| --- | --- |
+| App screenshot test compilation | Pass |
+| Dashboard instrumentation test compilation | Pass |
+| Transaction instrumentation test compilation | Pass |
+| Transaction Editor 200% Paparazzi verification | Pass |
+
+The automated result does not replace listening to TalkBack output, observing hardware-keyboard/D-pad focus movement, or human contrast review. Those checks remain pending until recorded against a named device/build in the template below.
 ## QA Record Template
 
 Copy this table into the PR description, release record, or issue comment when #14-related QA is run.
