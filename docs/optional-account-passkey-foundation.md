@@ -4,7 +4,7 @@ This document records the implementation boundary for #83, #84, #85, #86, parent
 
 ## Scope
 
-Pocket Ledger remains fully local-first and fully usable without login. The optional account/passkey work in this implementation is a foundation and prototype layer only. It does not create a production account service, cloud backup, sync, recovery flow, or Play Integrity enforcement policy.
+Folentra remains fully local-first and fully usable without login. The optional account/passkey work in this implementation is a foundation and prototype layer only. It does not create a production account service, cloud backup, sync, recovery flow, or Play Integrity enforcement policy.
 
 Implemented pieces:
 
@@ -65,7 +65,7 @@ Future account flow
 - Do not log Credential Manager request JSON, response JSON, Play Integrity tokens, account identifiers, session tokens, challenges, or raw backend payloads.
 - Keep the feature flag disabled by default until a real backend, recovery model, privacy review, and release review exist.
 - Treat Play Integrity as a request signal for a backend decision, not as local-only proof of user identity.
-- Keep Pocket Ledger usable without login.
+- Keep Folentra usable without login.
 
 ## Explicit Non-Goals
 

@@ -1,6 +1,6 @@
 # Product Event Taxonomy
 
-Pocket Ledger defines product events in `:core:analytics` so future analytics,
+Folentra defines product events in `:core:analytics` so future analytics,
 observability, crash triage, app-health reporting, and release monitoring use a
 single privacy-safe vocabulary. The taxonomy is a contract only; it does not
 turn on production analytics collection by itself.

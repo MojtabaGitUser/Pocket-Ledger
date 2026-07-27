@@ -1,17 +1,17 @@
 # Play Store Asset Plan
 
 This document tracks repository-ready Play Store listing assets for #131 and
-feeds the parent #17 Play Store release story. It does not claim that assets
-were uploaded to Play Console. Final dimensions,
-format rules, and policy checks must still be verified in Play Console before
+feeds the parent #17 Play Store release story. The final repository package is
+committed under `docs/release/assets/play-store/`. It does not claim that assets
+were uploaded to Play Console; policy checks must still be verified there before
 submission.
 
 ## Current Repository Assets
 
 | Asset | Repository status | Release note |
 | --- | --- | --- |
-| App name | `@string/app_name` is `PocketLedger`. | Store title should use `Pocket Ledger` for readability unless product naming changes. |
-| Launcher icon | Adaptive and round launcher resources exist under `androidApp/app/src/main/res/mipmap-*` and foreground/background drawables exist under `res/drawable`. | Review final brand artwork before public release; current resources compile. |
+| App name | `@string/app_name` is `Folentra`. | Store title should use `Folentra` for readability unless product naming changes. |
+| Launcher icon | Adaptive launcher resources plus opaque `assets/play-store/icon-512.png`. | The committed 512 x 512 export matches the production launcher artwork. |
 | Privacy policy copy | `docs/privacy-policy.md`. | Must be hosted at a public HTTPS URL before Play Store submission. |
 | Play Store readiness checklist | `docs/play-store-readiness.md`. | Use it for app content, data safety, permissions, and limitations review. |
 | Release checklist | `docs/release/release-checklist.md`. | Final release gate for signing, privacy, store listing, smoke tests, and manual review. |
@@ -22,10 +22,10 @@ submission.
 | Requirement | Repository evidence | Status |
 | --- | --- | --- |
 | Listing copy exists. | Store title, short description, full description draft, and release notes template are maintained in this file. | Complete. |
-| App icon source exists. | Launcher adaptive icon XML and foreground/background resources exist under `androidApp/app/src/main/res/`. | Complete for source; high-res PNG export remains manual. |
-| Screenshots are planned from real app screens. | Screenshot capture plan covers dashboard, transactions, search, insights, and settings/app lock. | Complete for plan; binary captures remain manual. |
-| Feature graphic direction exists. | Required graphic assets table defines a feature graphic using actual app value and sample-safe data. | Complete for direction; final binary graphic remains manual. |
-| Store claims avoid unsupported behavior. | Listing copy says local-first, no bank connection, no financial advice, no required account, and no Pocket Ledger server sync. | Complete. |
+| App icon source exists. | Launcher adaptive resources and `assets/play-store/icon-512.png`. | Complete; validated as opaque 512 x 512 PNG. |
+| Screenshots are prepared from real app screens. | Four phone and three tablet images under `assets/play-store/`, copied from deterministic Paparazzi goldens. | Complete for repository handoff. |
+| Feature graphic exists. | `assets/play-store/feature-graphic.png` uses the production launcher mark and conservative local-first copy. | Complete for repository handoff. |
+| Store claims avoid unsupported behavior. | Listing copy says local-first, no bank connection, no financial advice, no required account, and no Folentra server sync. | Complete. |
 | Play Console handoff remains explicit. | Manual Play Console steps list hosted privacy URL, Data Safety, app-content forms, and signed AAB upload. | Complete. |
 
 ## Store Listing Copy
@@ -33,7 +33,7 @@ submission.
 Store title:
 
 ```text
-Pocket Ledger
+Folentra
 ```
 
 Short description:
@@ -45,16 +45,16 @@ Track spending, budgets, search, and local insights in a private ledger.
 Full description draft:
 
 ```text
-Pocket Ledger is a local-first personal finance ledger for tracking
+Folentra is a local-first personal finance ledger for tracking
 transactions, budgets, categories, tags, and monthly summaries.
 
 Record income and expenses, review recent activity, search your ledger, and
 see private spending insights generated on device or through deterministic
 local fallback logic. The current app does not connect to banks, provide
-financial advice, require an account, or sync ledger records to a Pocket Ledger
+financial advice, require an account, or sync ledger records to a Folentra
 server.
 
-Pocket Ledger is designed for users who want a simple private ledger they
+Folentra is designed for users who want a simple private ledger they
 control. Ledger records stay in app-private storage on the device. Android
 backup and device-transfer rules exclude the ledger database by default. A
 local-first backup-ready profile foundation exists, but encrypted backup and
@@ -73,8 +73,9 @@ Initial release candidate:
 
 ## Required Graphic Assets
 
-Create final graphic files outside this repository or in a future reviewed
-asset commit. Use sample-safe ledger data only in screenshots.
+Final graphic files are committed under `docs/release/assets/play-store/`. Run
+`python scripts/validate_play_store_assets.py` to verify dimensions and format.
+Use sample-safe ledger data only when replacing screenshots.
 
 | Asset | Expected Play Console requirement to verify | Source screen | Suggested repo location if committed | Acceptance criteria |
 | --- | --- | --- | --- | --- |
@@ -109,9 +110,8 @@ secrets, Firebase IDs, or Play Console credentials.
 
 ## Traceability
 
-- #131: repository listing copy, asset acceptance matrix, screenshot plan, and
-  manual Play Console handoff steps are prepared; binary graphics and Play
-  Console upload remain manual.
+- #131: listing copy, icon, feature graphic, phone/tablet screenshots, validation,
+  and manual Play Console handoff are repository-ready; upload remains manual.
 - #128: release-ready install evidence is tracked in
   `docs/release/release-ready-install.md` and `docs/release/smoke-test.md`.
 - #129: final release gate references this asset plan.

@@ -1,0 +1,108 @@
+package com.mojtaba.folentra.feature.transaction.presentation.list
+
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.mojtaba.folentra.core.designsystem.theme.FolentraTheme
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+
+class TransactionListScreenTest {
+    @get:Rule
+    val composeRule = createComposeRule()
+
+    @Test
+    fun loadingStateIsDisplayed() {
+        setContent(TransactionListUiState.Loading)
+
+        composeRule.onNodeWithText("Loading transactions").assertIsDisplayed()
+    }
+
+    @Test
+    fun emptyStateIsDisplayed() {
+        var addClicked = false
+        setContent(TransactionListUiState.Empty, onAddTransaction = { addClicked = true })
+
+        composeRule.onNodeWithText("No transactions yet").assertIsDisplayed()
+        composeRule.onNodeWithText("Add an expense or income to start tracking your ledger.").assertIsDisplayed()
+        composeRule.onNodeWithText("Add your first transaction").performClick()
+        assertEquals(true, addClicked)
+    }
+
+    @Test
+    fun rowDisplaysAmountCategoryDateNoteAndTags() {
+        setContent(TransactionListUiState.Content(previewTransactions))
+
+        composeRule.onNodeWithText("-\$42.50").assertIsDisplayed()
+        composeRule.onNodeWithText("Food - Expense - Nov 14, 2023 - Team breakfast").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Tags Work", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun rowClickCallsOpenDetailAction() {
+        val actions = mutableListOf<TransactionListAction>()
+        setContent(TransactionListUiState.Content(previewTransactions), actions::add)
+
+        composeRule.onNodeWithText("Coffee Shop").performClick()
+
+        assertEquals(TransactionListAction.TransactionClicked("transaction-1"), actions.single())
+    }
+
+    @Test
+    fun selectedRowExposesAccessibleSelectionState() {
+        setContent(
+            uiState = TransactionListUiState.Content(previewTransactions),
+            selectedTransactionId = "transaction-1",
+        )
+
+        composeRule
+            .onNodeWithContentDescription("Selected transaction, Coffee Shop", substring = true)
+            .assertIsDisplayed()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Selected"))
+    }
+
+    @Test
+    fun rowContentDescriptionIncludesVisibleTags() {
+        setContent(TransactionListUiState.Content(previewTransactions))
+
+        composeRule
+            .onNodeWithContentDescription("Tags Work", substring = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun errorStateDisplaysMessageAndRetryAction() {
+        val actions = mutableListOf<TransactionListAction>()
+        setContent(TransactionListUiState.Error("Local ledger unavailable"), actions::add)
+
+        composeRule.onNodeWithText("Could not load transactions").assertIsDisplayed()
+        composeRule.onNodeWithText("Local ledger unavailable").assertIsDisplayed()
+        composeRule.onNodeWithText("Retry").performClick()
+
+        assertEquals(TransactionListAction.RetryClicked, actions.single())
+    }
+
+    private fun setContent(
+        uiState: TransactionListUiState,
+        onAction: (TransactionListAction) -> Unit = {},
+        selectedTransactionId: String? = null,
+        onAddTransaction: () -> Unit = {},
+    ) {
+        composeRule.setContent {
+            FolentraTheme(dynamicColor = false) {
+                TransactionListScreen(
+                    uiState = uiState,
+                    onAction = onAction,
+                    selectedTransactionId = selectedTransactionId,
+                    onAddTransaction = onAddTransaction,
+                )
+            }
+        }
+    }
+}

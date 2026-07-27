@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.mojtaba.pocketledger.macrobenchmark"
+    namespace = "com.mojtaba.folentra.macrobenchmark"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -45,4 +45,6 @@ dependencies {
     implementation(libs.androidx.test.runner)
     implementation(libs.androidx.test.rules)
     implementation(libs.androidx.uiautomator)
+    implementation(libs.androidx.tracing.perfetto)
+    implementation(libs.androidx.tracing.perfetto.binary)
 }

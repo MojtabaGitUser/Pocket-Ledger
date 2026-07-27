@@ -1,8 +1,8 @@
 # Release Signing And Versioning Plan
 
-Pocket Ledger's installable release-ready builds are produced by the Android app
+Folentra's installable release-ready builds are produced by the Android app
 module at `androidApp/app` (`:app`). The production application ID is
-`com.mojtaba.pocketledger`. Debug builds use the `.debug` application ID suffix
+`com.mojtaba.folentra`. Debug builds use the `.debug` application ID suffix
 and `-debug` versionName suffix. Benchmark builds are non-debuggable,
 profileable, minified, and debug-signed for local benchmark installation.
 
@@ -14,7 +14,7 @@ Firebase upload, Crashlytics upload, or any credential material to the app.
 Local debug signing:
 
 - `debug` uses the Android Gradle Plugin debug signing configuration.
-- It is installable locally as `com.mojtaba.pocketledger.debug`.
+- It is installable locally as `com.mojtaba.folentra.debug`.
 - It may expose debug-only diagnostics such as Debug Health.
 - It is not a Play Store, staged rollout, or production artifact.
 
@@ -36,7 +36,7 @@ Unsigned release validation:
 Signed release-ready builds:
 
 - Signed release APK/AAB builds require all release signing inputs.
-- Set `POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true` for true signed-release
+- Set `FOLENTRA_REQUIRE_RELEASE_SIGNING=true` for true signed-release
   validation. Missing values fail Gradle configuration clearly.
 - Run `:app:validateReleaseSigning` before producing a signed release-ready APK
   or AAB.
@@ -55,24 +55,24 @@ Gradle reads signing inputs from Gradle properties or matching environment
 variables:
 
 ```text
-POCKET_LEDGER_RELEASE_STORE_FILE
-POCKET_LEDGER_RELEASE_STORE_PASSWORD
-POCKET_LEDGER_RELEASE_KEY_ALIAS
-POCKET_LEDGER_RELEASE_KEY_PASSWORD
-POCKET_LEDGER_REQUIRE_RELEASE_SIGNING
+FOLENTRA_RELEASE_STORE_FILE
+FOLENTRA_RELEASE_STORE_PASSWORD
+FOLENTRA_RELEASE_KEY_ALIAS
+FOLENTRA_RELEASE_KEY_PASSWORD
+FOLENTRA_REQUIRE_RELEASE_SIGNING
 ```
 
 For GitHub Actions signed release candidates, configure these repository or
 environment secrets:
 
 ```text
-POCKET_LEDGER_RELEASE_STORE_BASE64
-POCKET_LEDGER_RELEASE_STORE_PASSWORD
-POCKET_LEDGER_RELEASE_KEY_ALIAS
-POCKET_LEDGER_RELEASE_KEY_PASSWORD
+FOLENTRA_RELEASE_STORE_BASE64
+FOLENTRA_RELEASE_STORE_PASSWORD
+FOLENTRA_RELEASE_KEY_ALIAS
+FOLENTRA_RELEASE_KEY_PASSWORD
 ```
 
-The release-candidate workflow decodes `POCKET_LEDGER_RELEASE_STORE_BASE64` into
+The release-candidate workflow decodes `FOLENTRA_RELEASE_STORE_BASE64` into
 the runner temporary directory and exports the Gradle properties through
 `ORG_GRADLE_PROJECT_*`. The keystore file is never uploaded as an artifact.
 
@@ -94,8 +94,8 @@ Non-secret version defaults live in Gradle properties:
 
 ```text
 androidApp/gradle.properties
-POCKET_LEDGER_VERSION_CODE=1
-POCKET_LEDGER_VERSION_NAME=1.0.0
+FOLENTRA_VERSION_CODE=1
+FOLENTRA_VERSION_NAME=1.0.0
 ```
 
 The repository-root `gradle.properties` mirrors these values so root Gradle
@@ -110,7 +110,7 @@ Version policy:
 - Internal Firebase distribution currently uses the debug build and the same
   base version metadata for artifact names.
 - CI may override values for release candidates through workflow inputs or
-  `POCKET_LEDGER_VERSION_CODE` / `POCKET_LEDGER_VERSION_NAME` Gradle properties.
+  `FOLENTRA_VERSION_CODE` / `FOLENTRA_VERSION_NAME` Gradle properties.
 
 Developers should bump the checked-in Gradle properties for normal release
 trains. CI overrides are for candidate validation and should not hide the need
@@ -136,11 +136,11 @@ Signed release-ready builds require local secret-backed properties or
 environment variables:
 
 ```powershell
-$env:POCKET_LEDGER_RELEASE_STORE_FILE="C:\secure\pocket-ledger-upload.jks"
-$env:POCKET_LEDGER_RELEASE_STORE_PASSWORD="<secret>"
-$env:POCKET_LEDGER_RELEASE_KEY_ALIAS="<secret>"
-$env:POCKET_LEDGER_RELEASE_KEY_PASSWORD="<secret>"
-$env:POCKET_LEDGER_REQUIRE_RELEASE_SIGNING="true"
+$env:FOLENTRA_RELEASE_STORE_FILE="C:\secure\folentra-upload.jks"
+$env:FOLENTRA_RELEASE_STORE_PASSWORD="<secret>"
+$env:FOLENTRA_RELEASE_KEY_ALIAS="<secret>"
+$env:FOLENTRA_RELEASE_KEY_PASSWORD="<secret>"
+$env:FOLENTRA_REQUIRE_RELEASE_SIGNING="true"
 .\androidApp\gradlew.bat :app:validateReleaseSigning :app:assembleRelease :app:bundleRelease --console=plain
 ```
 

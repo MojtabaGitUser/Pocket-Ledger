@@ -2,14 +2,14 @@
 
 This document records the validation evidence for #117, `T-E16-03 - Test 200% font scaling`.
 
-Pocket Ledger treats 200% font scale as a release-significant accessibility gate. The goal is not pixel-perfect density parity; the goal is that primary screens stay understandable, important content does not overlap or clip, and primary actions remain reachable when Android font size is set to 200%.
+Folentra treats 200% font scale as a release-significant accessibility gate. The goal is not pixel-perfect density parity; the goal is that primary screens stay understandable, important content does not overlap or clip, and primary actions remain reachable when Android font size is set to 200%.
 
 ## Automated Coverage
 
 The focused 200% coverage lives in:
 
-- `androidApp/app/src/test/java/com/mojtaba/pocketledger/screenshot/TwoHundredPercentFontScaleScreenshotTest.kt`
-- `androidApp/app/src/test/java/com/mojtaba/pocketledger/screenshot/AdaptiveDeviceMatrix.kt`
+- `androidApp/app/src/test/java/com/mojtaba/folentra/screenshot/TwoHundredPercentFontScaleScreenshotTest.kt`
+- `androidApp/app/src/test/java/com/mojtaba/folentra/screenshot/AdaptiveDeviceMatrix.kt`
 - `androidApp/app/src/test/snapshots/images/`
 
 The test uses `AdaptiveDeviceMatrix.TwoHundredPercentFontScaleDevices`, which renders compact phone and expanded tablet configurations with `fontScale = 2.0f`.
@@ -32,13 +32,13 @@ This coverage complements the broader adaptive screenshot suite at normal, 130%,
 From the repository root on Windows:
 
 ```powershell
-.\androidApp\gradlew.bat :app:verifyPaparazziDebug --tests "com.mojtaba.pocketledger.screenshot.TwoHundredPercentFontScaleScreenshotTest" --console=plain
+.\androidApp\gradlew.bat :app:verifyPaparazziDebug --tests "com.mojtaba.folentra.screenshot.TwoHundredPercentFontScaleScreenshotTest" --console=plain
 ```
 
 From `androidApp/` on macOS/Linux:
 
 ```bash
-./gradlew :app:verifyPaparazziDebug --tests "com.mojtaba.pocketledger.screenshot.TwoHundredPercentFontScaleScreenshotTest" --console=plain
+./gradlew :app:verifyPaparazziDebug --tests "com.mojtaba.folentra.screenshot.TwoHundredPercentFontScaleScreenshotTest" --console=plain
 ```
 
 Run the full screenshot suite when a UI change may affect surrounding adaptive states:
@@ -50,7 +50,7 @@ Run the full screenshot suite when a UI change may affect surrounding adaptive s
 If a deliberate UI change updates the expected 200% layout, record new baselines with:
 
 ```powershell
-.\androidApp\gradlew.bat :app:recordPaparazziDebug --tests "com.mojtaba.pocketledger.screenshot.TwoHundredPercentFontScaleScreenshotTest" --console=plain
+.\androidApp\gradlew.bat :app:recordPaparazziDebug --tests "com.mojtaba.folentra.screenshot.TwoHundredPercentFontScaleScreenshotTest" --console=plain
 ```
 
 Review generated diffs before committing new snapshots. Do not accept a baseline that clips important text, overlaps controls, hides primary actions, or makes financial values ambiguous.

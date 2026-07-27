@@ -1,6 +1,6 @@
-﻿# AI Architecture
+# AI Architecture
 
-Pocket Ledger E-12 uses a local-only AI provider abstraction in `:core:ai`.
+Folentra E-12 uses a local-only AI provider abstraction in `:core:ai`.
 
 ## Provider Contracts
 
@@ -24,7 +24,7 @@ Contracts are strongly typed and avoid exposing database entities directly. Feat
 
 ## Current Provider Status
 
-`GeminiNanoAiProvider` and `MlKitAiProvider` are compile-safe local provider shells. They do not perform inference in the current build and are unavailable by default. The active implementation is `RuleBasedAiProvider`, which works offline and requires no secrets or model assets.
+`MlKitAiProvider` is backed by the ML Kit GenAI Prompt API and performs real on-device Gemini Nano inference for general and monthly summaries. It checks AICore model status before inference, downloads the shared model when the device reports it as downloadable, and contains SDK, quota, timeout, and unsupported-device failures. `RuleBasedAiProvider` remains the deterministic fallback. The legacy `GeminiNanoAiProvider` shell is retained for source compatibility but is not registered in the application graph.
 
 ## Feature Behavior
 

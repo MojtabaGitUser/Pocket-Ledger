@@ -1,6 +1,6 @@
-# Pocket Ledger Architecture
+# Folentra Architecture
 
-Pocket Ledger is organized as a thin Android app shell over modular core and feature modules.
+Folentra is organized as a thin Android app shell over modular core and feature modules.
 
 Accessibility semantics are part of the UI architecture. Shared conventions for
 headings, navigation state, transaction rows, filter chips, progress
@@ -14,7 +14,7 @@ transaction, dashboard, search, settings, or insight screens; feature-specific
 adaptive layouts belong to later tasks.
 
 Reusable adaptive decisions live in `:core:designsystem` under
-`com.mojtaba.pocketledger.core.designsystem.adaptive`. The app maps window
+`com.mojtaba.folentra.core.designsystem.adaptive`. The app maps window
 width into a single `AdaptiveNavigationState`:
 
 - Compact widths use `AdaptiveNavigationType.BottomBar` and
@@ -25,7 +25,7 @@ width into a single `AdaptiveNavigationState`:
   `AdaptivePaneType.ListDetail` capable.
 
 The `:app` module owns Android-specific adaptive integration. It calculates the
-adaptive navigation state, hosts `PocketLedgerAdaptiveApp`, and renders
+adaptive navigation state, hosts `FolentraAdaptiveApp`, and renders
 `AdaptiveNavigationScaffold`, which chooses bottom navigation, navigation rail,
 or permanent navigation drawer. The `NavHost` and feature navigation graphs do
 not know which navigation chrome is active.
@@ -41,7 +41,7 @@ modules.
 
 T-E06-03 adapts the existing dashboard UI from `:feature:dashboard` without
 replacing dashboard widgets or adding new summary logic. The app shell passes
-the existing `PocketLedgerWindowWidthSizeClass` from T-E06-01 into the
+the existing `FolentraWindowWidthSizeClass` from T-E06-01 into the
 dashboard navigation graph. Dashboard maps that size class to a feature-local
 layout mode only:
 
@@ -90,7 +90,7 @@ business code can depend on scheduling without depending on Android background
 execution details.
 
 Typed task definitions live in `:core:background` under
-`com.mojtaba.pocketledger.core.background.tasks`. They centralize stable task
+`com.mojtaba.folentra.core.background.tasks`. They centralize stable task
 IDs for future work such as sync, cleanup, and budget refresh. They are task
 definitions only; no worker behavior is implemented by T-E09-01.
 
@@ -128,7 +128,7 @@ Local or test provider
 ```
 
 `:core:featureflags` owns typed flag definitions and provider contracts under
-`com.mojtaba.pocketledger.core.featureflags`. App, feature, and business code
+`com.mojtaba.folentra.core.featureflags`. App, feature, and business code
 should depend on `FeatureFlag`, `FeatureFlagProvider`, or
 `FeatureFlagEvaluator` rather than raw string keys, raw booleans, direct
 `BuildConfig` checks, or Android `Context`. The module has no dependency on
@@ -175,7 +175,7 @@ does not add passkeys, login, cloud sync, biometric unlock, key rotation, or
 production storage of real user secrets.
 
 Sensitive preference storage is isolated in `:core:security` under
-`com.mojtaba.pocketledger.core.security.preferences`:
+`com.mojtaba.folentra.core.security.preferences`:
 
 ```text
 UI / future use cases
@@ -204,7 +204,7 @@ not write values or enable the related features.
 `EncryptedSensitivePreferences` uses AndroidX Security Crypto with an AES-256
 GCM `MasterKey`, encrypted preference keys, and encrypted preference values. It
 stores data in the stable app-private file
-`pocket_ledger_sensitive_prefs`, uses the application context, does not log
+`folentra_sensitive_prefs`, uses the application context, does not log
 sensitive values, and does not include keys or values in error messages.
 AndroidX Security Crypto is kept behind the `SensitivePreferences` abstraction
 so a future Android Keystore implementation or key-rotation strategy can replace
@@ -224,7 +224,7 @@ Security rules:
   rotation out of this module until dedicated tasks define those requirements.
 
 T-E10-04 adds privacy-safe logging infrastructure to `:core:security` under
-`com.mojtaba.pocketledger.core.security.logging`. Application and feature code
+`com.mojtaba.folentra.core.security.logging`. Application and feature code
 should depend on `AppLogger` instead of direct Logcat, Timber, `println`, or
 `printStackTrace` calls. `SafeAppLogger` centralizes redaction and build-type
 policy enforcement: debug builds allow sanitized debug/info/warning/error logs,
@@ -342,7 +342,7 @@ adaptive list/detail experience with the selected transaction open.
 ## Core Data Search Models
 
 `:core:data` owns pure Kotlin search and filter query models under
-`com.mojtaba.pocketledger.core.data.search`. These models describe a
+`com.mojtaba.folentra.core.data.search`. These models describe a
 type-safe, offline-first query contract for future local transaction search and
 repository/Room query mapping.
 
@@ -369,11 +369,11 @@ category-name keyword search, and tag-name keyword search are deferred.
 
 ## Core Database
 
-`:core:database` owns the Room KMP database, entities, DAOs, exported schema snapshots, and migration registration. The module keeps the Room schema surface in `src/commonMain` so Android and desktop/JVM use the same entities, DAO contracts, database version, and migration registry. Platform source sets provide only filesystem-specific database builders: Android resolves the app database path from `Context`, while desktop stores the database at `~/.pocket-ledger/pocket-ledger.db`. Common database construction uses `BundledSQLiteDriver` and the shared migration list so SQLite behavior stays consistent across supported targets.
+`:core:database` owns the Room KMP database, entities, DAOs, exported schema snapshots, and migration registration. The module keeps the Room schema surface in `src/commonMain` so Android and desktop/JVM use the same entities, DAO contracts, database version, and migration registry. Platform source sets provide only filesystem-specific database builders: Android resolves the app database path from `Context`, while desktop stores the database at `~/.folentra/folentra.db`. Common database construction uses `BundledSQLiteDriver` and the shared migration list so SQLite behavior stays consistent across supported targets.
 
 Room migration rules:
-- Version 1 is the initial Pocket Ledger schema.
-- Future schema changes must bump `PocketLedgerDatabase` and `DatabaseMigrations.CURRENT_VERSION` together.
+- Version 1 is the initial Folentra schema.
+- Future schema changes must bump `FolentraDatabase` and `DatabaseMigrations.CURRENT_VERSION` together.
 - Every released migration must live in `DatabaseMigrations.ALL`.
 - Room schema JSON files under `core/database/schemas` are source artifacts and must be committed.
 - Migration tests must validate each version step and the full path to the current version before release.
@@ -395,7 +395,7 @@ Migration workflow:
 ## Demo Seed Data
 
 Deterministic local seed data tools live in `:core:data` under
-`com.mojtaba.pocketledger.core.data.seed`. They populate Room-backed local
+`com.mojtaba.folentra.core.data.seed`. They populate Room-backed local
 repositories with realistic categories, budgets, tags, transactions, and
 transaction-tag links for developer, preview, test, and demo use.
 

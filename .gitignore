@@ -1,6 +1,8 @@
 # Gradle
 .gradle/
 **/build/
+androidApp/performance-evidence/*
+!androidApp/performance-evidence/README.md
 
 # Local SDK config
 local.properties
@@ -15,6 +17,7 @@ local.properties
 
 # IntelliJ
 *.iml
+!.idea/Folentra.iml
 
 # OS files
 .DS_Store
@@ -32,3 +35,7 @@ play-store-credentials*.json
 
 # Local Codex skills
 .codex/
+# Keep the renamed root project module descriptor tracked.
+!.idea/
+.idea/*
+!.idea/Folentra.iml

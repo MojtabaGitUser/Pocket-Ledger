@@ -1,7 +1,7 @@
 # Cloud Sync Extension Path
 
 This document satisfies #143 by defining a future cloud sync path without
-implementing cloud sync. Pocket Ledger remains local-first today. The current
+implementing cloud sync. Folentra remains local-first today. The current
 app has no account, passkey, backend, remote API, cloud sync worker, sync queue,
 or remote ledger storage.
 

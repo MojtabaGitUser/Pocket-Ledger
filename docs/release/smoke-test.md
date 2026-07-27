@@ -7,7 +7,7 @@
 | Branch / commit | `dev` / `adc51e4` plus the uncommitted #10 + #128 implementation under validation |
 | Target | Android Emulator `Pixel_9_Pro_XL(AVD)`, model `sdk_gphone16k_x86_64`, API 37 |
 | Installed artifact | `androidApp/app/build/outputs/apk/benchmark/app-benchmark.apk` |
-| Install | Passed with `adb install -r`; package `com.mojtaba.pocketledger` |
+| Install | Passed with `adb install -r`; package `com.mojtaba.folentra` |
 | Launch | Passed; cold launch reached Dashboard without a fatal exception |
 | Build behavior | Non-debuggable, minified, resource-shrunk, profileable, release-like, debug-signed |
 | Signed production release | Still blocked because local release-signing inputs are intentionally unavailable |
@@ -28,7 +28,7 @@ Artifacts were rebuilt successfully with `:app:assembleRelease`, `:app:bundleRel
 Remaining release blockers are limited to production signing credentials, a real Play internal-testing upload/install, physical-device coverage (including lower-end hardware), and runtime backup/device-transfer validation. Earlier statements below that say no emulator/device was attached are retained as historical run evidence and are superseded by this section.
 
 This record supports `T-E19-05 - Run release candidate smoke test` and #128
-`US-E19-01 - Install a release-ready Pocket Ledger build` under
+`US-E19-01 - Install a release-ready Folentra build` under
 `E-19 - Play Store Readiness`. It records the release-candidate validation that
 was possible from the local repository state and clearly separates verified
 results from device-dependent blockers.
@@ -38,9 +38,9 @@ results from device-dependent blockers.
 | Field | Result |
 | --- | --- |
 | Date | 2026-07-15 America/Vancouver |
-| Repository | `D:\PocketLedger` |
+| Repository | `D:\Folentra` |
 | App module | `:app` at `androidApp/app` |
-| Production application ID | `com.mojtaba.pocketledger` |
+| Production application ID | `com.mojtaba.folentra` |
 | Version tested | `versionName=1.0.0`, `versionCode=1` |
 | Release build tested | `release` unsigned validation APK/AAB rebuilt with `assembleRelease` and `bundleRelease` |
 | Closest installable release-like build | `benchmark` APK rebuilt with `assembleBenchmark`; see `docs/release/release-ready-install.md` |
@@ -65,7 +65,7 @@ results from device-dependent blockers.
 ## Latest Batch 3 Validation
 
 During the #131 + #128 + #17 readiness batch, the following repository checks
-were re-run from `D:\PocketLedger`:
+were re-run from `D:\Folentra`:
 
 - `:app:assembleRelease`: passed.
 - `:app:bundleRelease`: passed.
@@ -91,10 +91,10 @@ install evidence exists yet.
 Release signing is not configured locally. `:app:validateReleaseSigning` failed
 with the expected Gradle message requiring all of:
 
-- `POCKET_LEDGER_RELEASE_STORE_FILE`
-- `POCKET_LEDGER_RELEASE_STORE_PASSWORD`
-- `POCKET_LEDGER_RELEASE_KEY_ALIAS`
-- `POCKET_LEDGER_RELEASE_KEY_PASSWORD`
+- `FOLENTRA_RELEASE_STORE_FILE`
+- `FOLENTRA_RELEASE_STORE_PASSWORD`
+- `FOLENTRA_RELEASE_KEY_ALIAS`
+- `FOLENTRA_RELEASE_KEY_PASSWORD`
 
 No release signing secrets were added, printed, uploaded, or inferred. The
 release APK/AAB are validation artifacts only and must not be treated as
@@ -106,13 +106,13 @@ minification/resource shrinking, is not debuggable, and uses debug signing.
 
 | Check | Status | Evidence |
 | --- | --- | --- |
-| Release application ID | Passed | APK metadata and generated `BuildConfig` show `com.mojtaba.pocketledger` |
+| Release application ID | Passed | APK metadata and generated `BuildConfig` show `com.mojtaba.folentra` |
 | Release version | Passed | APK metadata and generated `BuildConfig` show `1.0.0` / `1` |
 | Release debuggability | Passed | Release `BuildConfig.DEBUG=false`; merged manifest has no `android:debuggable` flag |
 | Release environment | Passed | Release `BuildConfig.APP_ENV="release"` |
 | Release internal diagnostics | Passed | Release `BuildConfig.IS_INTERNAL_BUILD=false` |
 | Release logging | Passed | Release `BuildConfig.LOGGING_ENABLED=false` |
-| Benchmark application ID | Passed | APK metadata and generated `BuildConfig` show `com.mojtaba.pocketledger` |
+| Benchmark application ID | Passed | APK metadata and generated `BuildConfig` show `com.mojtaba.folentra` |
 | Benchmark version | Passed | APK metadata and generated `BuildConfig` show `1.0.0` / `1` |
 | Benchmark debuggability | Passed | Benchmark `BuildConfig.DEBUG=false`; merged manifest has no `android:debuggable` flag |
 | Benchmark minified build path | Passed | `:app:assembleBenchmark` ran R8 and generated benchmark mapping outputs |
@@ -151,23 +151,23 @@ above has been executed.
 
 | Check | Status | Result |
 | --- | --- | --- |
-| Google Services processing | Passed | `:app:processReleaseGoogleServices` and `:app:processBenchmarkGoogleServices` ran during artifact generation. |
-| Firebase clients present | Passed | `androidApp/app/google-services.json` contains release and debug clients for the project package names. |
-| Release merged manifest Firebase initialization | Passed | Release merged manifest includes Firebase measurement services and `FirebaseInitProvider`. |
+| Google Services processing | Blocked after rename | Disabled until matching Folentra Firebase clients are installed. |
+| Firebase clients present | Blocked after rename | The checked-in file belongs to the retired package IDs; download clients for `com.mojtaba.folentra` and `.debug`. |
+| Release merged manifest Firebase initialization | Intentionally disabled | Re-test after installing the Folentra Firebase configuration. |
 | Runtime Firebase startup | Blocked | Requires app launch on device/emulator. |
-| Debug-only Firebase client dependency | Passed by static review | Release application ID matches the release Firebase client; debug suffix is not used by release/benchmark. |
+| Firebase client/package match | Blocked after rename | Both Folentra package IDs must be registered in Firebase before distribution. |
 | External distribution | Not applicable | No Firebase App Distribution upload was triggered. Existing workflow distributes debug APKs only and remains separate. |
 
-Firebase Analytics is present in the release app. Product analytics logging in
+Firebase Analytics remains an unconfigured dependency after the rename. Product analytics logging in
 app code remains no-op for release and benchmark through `NoOpProductAnalyticsLogger`.
 
 ## Debug Health Release-Hidden Verification
 
 | Check | Status | Result |
 | --- | --- | --- |
-| Debug navigation gated | Passed | `PocketLedgerApp` passes `includeDebugDestinations = BuildConfig.DEBUG`; release and benchmark have `DEBUG=false`. |
-| Debug top-level item hidden | Passed | `PocketLedgerAppState` only adds `TopLevelDestination.DebugHealth` when debug destinations are included. |
-| Debug route not registered | Passed | `PocketLedgerNavGraph` only registers `AppDestination.DebugHealth` inside `if (includeDebugDestinations)`. |
+| Debug navigation gated | Passed | `FolentraApp` passes `includeDebugDestinations = BuildConfig.DEBUG`; release and benchmark have `DEBUG=false`. |
+| Debug top-level item hidden | Passed | `FolentraAppState` only adds `TopLevelDestination.DebugHealth` when debug destinations are included. |
+| Debug route not registered | Passed | `FolentraNavGraph` only registers `AppDestination.DebugHealth` inside `if (includeDebugDestinations)`. |
 | Release source-set implementation | Passed | Release `DebugHealthScreen` is an empty compile stub and is not normally routable. |
 | Normal navigation route access | Passed by static review | No release/benchmark top-level navigation entry registers `debug/health`. |
 | Accessibility exposure | Passed by static review | Debug Health UI semantics live in the debug source-set implementation and are not composed in release/benchmark navigation. |
@@ -177,7 +177,7 @@ app code remains no-op for release and benchmark through `NoOpProductAnalyticsLo
 
 | Check | Status | Result |
 | --- | --- | --- |
-| Privacy policy consistency | Passed by document/source review | `docs/privacy-policy.md` matches local-first storage, Firebase Analytics presence, no Crashlytics runtime, no cloud sync, and backup limitations. |
+| Privacy policy consistency | Passed by document/source review | `docs/privacy-policy.md` matches local-first storage, Firebase dependencies with runtime disabled pending new config, no cloud sync, and backup limitations. |
 | Play Store app content consistency | Passed by document/source review | `docs/play-store-readiness.md` records Firebase/Data Safety, permissions, backup, support-contact, and policy-hosting limitations. |
 | Product event taxonomy | Passed by source/test review | Taxonomy uses approved event names and bucketed parameters; no exact amounts, notes, merchant names, category names, raw IDs, or secrets are allowed. |
 | Release product analytics behavior | Passed by source review | Release and benchmark construct `NoOpProductAnalyticsLogger`. |
@@ -221,7 +221,7 @@ backup or restore; #81 is only a local-first foundation.
    logcat startup review.
 3. Execute the manual core-flow checklist in this file and update each blocked
    item to Passed or Failed with evidence.
-4. Run a signed release candidate build with `POCKET_LEDGER_REQUIRE_RELEASE_SIGNING=true`
+4. Run a signed release candidate build with `FOLENTRA_REQUIRE_RELEASE_SIGNING=true`
    after release signing inputs are available.
 5. Re-run backup/device-transfer review before public Play Store submission and
    keep ledger data excluded unless encrypted backup/restore is implemented.

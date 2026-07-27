@@ -12,4 +12,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PocketLedgerBuildLogic"
+rootProject.name = "FolentraBuildLogic"

@@ -1,6 +1,6 @@
 # Internal Distribution
 
-Pocket Ledger uses `.github/workflows/internal-distribution.yml` for internal
+Folentra uses `.github/workflows/internal-distribution.yml` for internal
 tester distribution through Firebase App Distribution. This workflow is separate
 from PR validation and the release candidate workflow so internal testing cannot
 publish to production or upload to Play Store by accident.
@@ -26,13 +26,13 @@ The workflow distributes the existing `debug` APK:
 ./gradlew :app:assembleDebug
 ```
 
-This is intentional for the current project state. Pocket Ledger does not yet
+This is intentional for the current project state. Folentra does not yet
 have a dedicated `internal` or `beta` build type. Release signing is
 secret-backed and reserved for release-candidate APK/AAB artifacts. The debug APK is installable through the normal debug signing
 configuration and uses the `.debug` application ID suffix. It is appropriate for
 internal tester feedback, not staged Play Store rollout or production testing.
 Version metadata for artifact names comes from the non-secret
-`POCKET_LEDGER_VERSION_CODE` and `POCKET_LEDGER_VERSION_NAME` Gradle properties.
+`FOLENTRA_VERSION_CODE` and `FOLENTRA_VERSION_NAME` Gradle properties.
 The workflow validates the version name and version code before building so
 misconfigured internal artifacts fail early instead of reaching testers.
 
@@ -86,7 +86,7 @@ Every successful build uploads the generated debug APK as a GitHub Actions
 artifact named:
 
 ```text
-pocket-ledger-internal-apk-<version>-<code>-<ref>-<run>
+folentra-internal-apk-<version>-<code>-<ref>-<run>
 ```
 
 The artifact comes from:

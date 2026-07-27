@@ -1,10 +1,10 @@
 plugins {
-    id("pocketledger.android.library")
-    id("pocketledger.android.compose")
+    id("folentra.android.library")
+    id("folentra.android.compose")
 }
 
 android {
-    namespace = "com.mojtaba.pocketledger.core.designsystem"
+    namespace = "com.mojtaba.folentra.core.designsystem"
 }
 
 dependencies {

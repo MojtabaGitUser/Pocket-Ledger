@@ -1,10 +1,10 @@
 # Portfolio Artifact Review
 
-This document supports #135 by reviewing Pocket Ledger as a portfolio artifact rather than as a hidden implementation backlog.
+This document supports #135 by reviewing Folentra as a portfolio artifact rather than as a hidden implementation backlog.
 
 ## Overall Assessment
 
-Pocket Ledger is ready to present as a portfolio-quality Android engineering sample after this documentation pass. Its strongest signal is not a single flashy screen; it is the combination of modular architecture, offline-first data ownership, selective KMP reuse, privacy/security boundaries, adaptive UI validation, release-aware build configuration, and traceable documentation.
+Folentra is ready to present as a portfolio-quality Android engineering sample after this documentation pass. Its strongest signal is not a single flashy screen; it is the combination of modular architecture, offline-first data ownership, selective KMP reuse, privacy/security boundaries, adaptive UI validation, release-aware build configuration, and traceable documentation.
 
 ## Strengths
 

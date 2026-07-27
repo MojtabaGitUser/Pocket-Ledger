@@ -1,6 +1,6 @@
 # Privacy-Safe Logging Policy
 
-Pocket Ledger logs operational state only. Logs must never contain personal
+Folentra logs operational state only. Logs must never contain personal
 financial data, security credentials, secrets, or raw user-entered text.
 
 ## Data Classification
@@ -59,8 +59,8 @@ logger.error(
 Do not use these in feature or business code:
 
 ```kotlin
-Log.d("PocketLedger", query)
-Log.e("PocketLedger", exception.message)
+Log.d("Folentra", query)
+Log.e("Folentra", exception.message)
 println(transaction)
 exception.printStackTrace()
 ```

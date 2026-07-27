@@ -1,4 +1,4 @@
-# Pocket Ledger Architecture
+# Folentra Architecture
 
 This document explains the current Android/Kotlin Multiplatform project structure, the intended module ownership boundaries, and the dependency rules reviewers should enforce during PR review.
 
@@ -140,13 +140,13 @@ Domain code should stay free of Android framework APIs, Compose, database implem
 
 `:core:database` is a Kotlin Multiplatform Room module with Android and
 desktop/JVM targets. Shared schema code lives in `src/commonMain`: entities,
-DAOs, `PocketLedgerDatabase`, migration registration, and schema versioning.
+DAOs, `FolentraDatabase`, migration registration, and schema versioning.
 Platform-specific source sets own only construction details:
 
 - `src/androidMain` builds the database from Android `Context` and the stable
   app database name.
 - `src/desktopMain` builds a file-backed desktop database at
-  `~/.pocket-ledger/pocket-ledger.db`.
+  `~/.folentra/folentra.db`.
 
 Consumers should depend on repository contracts or UI models rather than Room
 entities. Android production flows continue to go through `:core:data` local
@@ -249,7 +249,7 @@ Also avoid feature-to-feature dependencies unless an explicit architecture decis
 
 ### Android-first
 
-Pocket Ledger is currently an Android app. The project should optimize for Android correctness, Android build reliability, Compose UI, and Android release hardening first. KMP should support reuse where it is valuable, not force every layer into a cross-platform abstraction prematurely.
+Folentra is currently an Android app. The project should optimize for Android correctness, Android build reliability, Compose UI, and Android release hardening first. KMP should support reuse where it is valuable, not force every layer into a cross-platform abstraction prematurely.
 
 ### Offline-first
 

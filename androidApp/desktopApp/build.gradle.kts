@@ -25,7 +25,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.mojtaba.pocketledger.desktop.MainKt"
+        mainClass = "com.mojtaba.folentra.desktop.MainKt"
     }
 }
 

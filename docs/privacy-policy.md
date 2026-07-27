@@ -1,26 +1,26 @@
-# Pocket Ledger Privacy Policy
+# Folentra Privacy Policy
 
 Effective date: July 5, 2026
-Last updated: July 5, 2026
+Last updated: July 20, 2026
 
-Contact: [add public support email before Play Store submission]
+Contact: support.folentra@gmail.com
 
-Pocket Ledger is a personal finance app for recording transactions, budgets,
+Folentra is a personal finance app for recording transactions, budgets,
 categories, tags, and related ledger summaries. This policy describes the
 behavior implemented in the current Android app package
-`com.mojtaba.pocketledger`.
+`com.mojtaba.folentra`.
 
 This policy must be reviewed and updated before public Play Store publication if
 app behavior, third-party services, support contact details, hosted policy URL,
-or data disclosures change. Before submission, Pocket Ledger must publish this
+or data disclosures change. Before submission, Folentra must publish this
 policy at a public HTTPS URL, add that URL to Play Console, and replace the
 support-contact placeholder with the same public contact used in the Play Store
 listing.
 
 ## Information Stored Locally
 
-Pocket Ledger stores ledger data in the app-private Room database
-`pocket-ledger.db` on the user's device. This local data can include:
+Folentra stores ledger data in the app-private Room database
+`folentra.db` on the user's device. This local data can include:
 
 - Transactions, including amount, currency, date, type, merchant, note, source,
   recurring state, and timestamps.
@@ -29,14 +29,14 @@ Pocket Ledger stores ledger data in the app-private Room database
 - Categories, tags, and transaction-tag links.
 - Local app settings and feature-flag state used by the app.
 
-Pocket Ledger also stores app-lock preference state in encrypted Android shared
+Folentra also stores app-lock preference state in encrypted Android shared
 preferences. The current app-lock preference records whether app lock is enabled.
 Future passkey/session preference keys are defined in code, but the current app
 does not implement user accounts, passkeys, or server-backed authentication.
 
 ## Financial Data Handling
 
-Pocket Ledger is designed to keep financial records local unless a feature is
+Folentra is designed to keep financial records local unless a feature is
 explicitly changed to require external processing. In the current app:
 
 - There is no account login.
@@ -52,11 +52,11 @@ explicitly changed to require external processing. In the current app:
   fallback runs locally and offline.
 
 The local Room database is protected by the Android app sandbox, but it is not
-currently encrypted by Pocket Ledger. App-lock helps prevent casual access to
+currently encrypted by Folentra. App-lock helps prevent casual access to
 screens when enabled, but it does not encrypt ledger records.
 
 Android backup and device-transfer rules are explicit and privacy-safe by
-default. Pocket Ledger excludes app-private ledger data, the Room database,
+default. Folentra excludes app-private ledger data, the Room database,
 SQLite sidecar files, encrypted sensitive preferences, local-only settings,
 caches, logs, temporary files, debug files, generated reports, and external app
 files from automatic Android cloud backup and Android device-to-device transfer.
@@ -72,15 +72,17 @@ The current app does not ask users to provide an email address, phone number,
 mailing address, government identifier, contact list, photos, camera input,
 location, or payment-card credentials.
 
-Pocket Ledger does not intentionally collect transaction descriptions, merchant
+Folentra does not intentionally collect transaction descriptions, merchant
 names, account names, category names, exact balances, exact amounts, notes,
 search text, or budget values for analytics, crash reports, logs, or release
 diagnostics.
 
 ## Analytics And Product Events
 
-Pocket Ledger includes Firebase Analytics as an Android dependency and has
-Firebase app configuration for the release and debug application IDs. The
+Folentra includes Firebase Analytics as an Android dependency. After the package
+rename, the checked-in Firebase file still belongs to the retired package IDs;
+Google Services processing and Firebase runtime initialization are therefore
+disabled until replacement release and debug clients are downloaded. The
 project also defines a typed product event taxonomy in `:core:analytics` for
 future analytics, observability, app-health reporting, and release monitoring.
 
@@ -89,7 +91,7 @@ Current behavior is conservative:
 - Release and benchmark builds use no-op product analytics behavior in app code.
 - Debug builds may map typed product events to sanitized event names and approved
   parameters through the existing safe logger if future code logs those events.
-- Product event logging is not currently wired from Pocket Ledger feature code to
+- Product event logging is not currently wired from Folentra feature code to
   Firebase Analytics.
 
 If product analytics are enabled in a future release, approved event names and
@@ -104,14 +106,19 @@ IDs, tokens, stack traces, or service-account data.
 Because Firebase Analytics is present, Google/Firebase SDK behavior may involve
 app instance identifiers, app version, device/app metadata, install referrer or
 attribution data, network state, and advertising or ad-services identifiers as
-permitted by the Android platform and Firebase SDK configuration. Pocket Ledger
+permitted by the Android platform and Firebase SDK configuration. Folentra
 should review Firebase Analytics settings and Play Console data disclosures
 before production publication.
 
 ## Crash Reporting And Diagnostics
 
-Pocket Ledger does not currently include the Firebase Crashlytics runtime
-dependency and does not intentionally upload crash reports from app code.
+Folentra includes the Firebase Crashlytics dependency, but Crashlytics is
+disabled for every build until a matching Folentra Firebase configuration is
+installed. After that configuration is reviewed, automatic collection may be
+enabled for release builds while remaining disabled for debug and benchmark.
+Reports may include stack traces and non-sensitive technical
+metadata; ledger content, credentials, tokens, and financial values must not be
+intentionally attached.
 
 Logging is centralized behind a safe logging abstraction. Debug builds allow
 sanitized debug, info, warning, and error logs. Release builds allow sanitized
@@ -120,14 +127,13 @@ merchant names, notes, tags, search text, budget values, credentials, tokens,
 secrets, encryption keys, encrypted payloads, raw AI prompts, provider diagnostics, and generated
 sensitive content.
 
-If crash reporting is added later, this policy must be updated to describe the
-provider and the diagnostic data collected, such as app version, device type,
-operating system version, non-sensitive technical logs, and crash stack traces.
-Sensitive financial content must not be intentionally included in crash reports.
+Crashlytics configuration and this policy must be reviewed before every public
+release. Sensitive financial content must not be intentionally included in crash
+reports.
 
 ## Firebase App Distribution And Internal Testing
 
-Pocket Ledger has a GitHub Actions workflow for Firebase App Distribution. This
+Folentra has a GitHub Actions workflow for Firebase App Distribution. This
 workflow can distribute debug APKs to authorized internal testers after CI
 validation and only when required Firebase secrets are configured in GitHub
 Actions.
@@ -157,7 +163,7 @@ AndroidX, Firebase, WorkManager, and Biometric dependencies:
 - `com.google.android.gms.permission.AD_ID`,
   `android.permission.ACCESS_ADSERVICES_ATTRIBUTION`, and
   `android.permission.ACCESS_ADSERVICES_AD_ID`: contributed by Google/Firebase
-  SDKs for analytics/attribution capabilities. Pocket Ledger does not use these
+  SDKs for analytics/attribution capabilities. Folentra does not use these
   identifiers to store financial records.
 - `<applicationId>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`: an app-scoped
   permission used by AndroidX runtime components for non-exported dynamic
@@ -176,7 +182,7 @@ privacy claim.
 
 The current Android app includes or uses these relevant third-party components:
 
-- Firebase Analytics and Google Services configuration.
+- Firebase Analytics, Firebase Crashlytics, and Google Services configuration.
 - Firebase App Distribution through GitHub Actions for internal debug APK
   distribution.
 - AndroidX Room for local database storage.
@@ -188,12 +194,12 @@ The current Android app includes or uses these relevant third-party components:
 - Paparazzi, Macrobenchmark, JUnit, and AndroidX test libraries for development
   and CI validation.
 
-Pocket Ledger does not currently include Firebase Crashlytics in the app module.
+Firebase Crashlytics remains disabled until matching Folentra Firebase clients are installed; debug and benchmark builds keep automatic collection disabled.
 
 ## Data Sharing
 
-Pocket Ledger does not sell personal data and does not serve ads. Current app
-code does not send ledger records to Pocket Ledger servers because no Pocket
+Folentra does not sell personal data and does not serve ads. Current app
+code does not send ledger records to Folentra servers because no Pocket
 Ledger server, account, or cloud sync feature is implemented.
 
 Firebase/Google SDKs may receive technical analytics or attribution data when
@@ -205,7 +211,7 @@ private release data in logs or artifacts.
 ## Data Retention
 
 Ledger records remain on the user's device until the user deletes them in the
-app, clears app storage, or uninstalls the app. Pocket Ledger's Android backup
+app, clears app storage, or uninstalls the app. Folentra's Android backup
 and data-extraction rules exclude the local ledger database from automatic
 cloud backup and device-to-device transfer by default because encrypted backup
 and restore are not implemented.
@@ -219,7 +225,7 @@ Users can delete ledger records through implemented app screens where deletion
 is available. Users can also clear app storage or uninstall the app through
 Android system settings to remove local app data from the device.
 
-There is currently no Pocket Ledger account portal or server-side deletion
+There is currently no Folentra account portal or server-side deletion
 request process because the app does not implement user accounts or server-side
 ledger storage.
 
@@ -231,9 +237,9 @@ The Android manifest enables backup plumbing with explicit rule files:
 `data_extraction_rules.xml` for Android 12+ cloud backup and device-to-device
 transfer.
 
-Pocket Ledger does not intentionally include app-private data in automatic
+Folentra does not intentionally include app-private data in automatic
 Android cloud backup or device-to-device transfer. The rules exclude the local
-Room ledger database `pocket-ledger.db`, SQLite sidecar files, encrypted
+Room ledger database `folentra.db`, SQLite sidecar files, encrypted
 sensitive preferences, app-private files, shared preferences, external app
 files, device-protected storage, caches, logs, temporary files, debug artifacts,
 and generated reports.
@@ -245,25 +251,25 @@ local-data security goals related to #7 without weakening local-only storage.
 
 ## Security
 
-Pocket Ledger uses Android app-private storage for the local database and
+Folentra uses Android app-private storage for the local database and
 AndroidX Security Crypto for sensitive preference storage. Optional app lock uses
 Android system authentication when enabled and available. Release builds use
 release-safe logging, and debug-only diagnostics are excluded from release
 navigation.
 
-No app can guarantee complete security. Pocket Ledger does not currently encrypt
+No app can guarantee complete security. Folentra does not currently encrypt
 the Room database, prevent screenshots, prevent screen recording, protect
 against compromised devices, or replace the security of the user's device lock
 screen.
 
 ## Children's Privacy
 
-Pocket Ledger is a personal finance utility and is not designed for children.
+Folentra is a personal finance utility and is not designed for children.
 The app does not knowingly request personal information from children.
 
 ## Changes To This Policy
 
-This policy should be updated when Pocket Ledger adds or changes analytics,
+This policy should be updated when Folentra adds or changes analytics,
 crash reporting, cloud sync, account login, import/export, AI providers,
 permissions, backup behavior, third-party services, or Play Store disclosures.
 The effective date at the top of this document should be updated when the policy

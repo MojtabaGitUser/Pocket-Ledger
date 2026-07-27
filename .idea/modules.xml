@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Pocket Ledger.iml" filepath="$PROJECT_DIR$/.idea/Pocket Ledger.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Folentra.iml" filepath="$PROJECT_DIR$/.idea/Folentra.iml" />
     </modules>
   </component>
 </project>

@@ -1,4 +1,4 @@
-# Pocket Ledger intentionally keeps app-specific R8 rules narrow.
+# Folentra intentionally keeps app-specific R8 rules narrow.
 #
 # Current release builds rely on:
 # - Android's optimized default rules from proguard-android-optimize.txt.

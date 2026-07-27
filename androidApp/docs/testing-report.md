@@ -1,8 +1,8 @@
-﻿# Pocket Ledger Testing Report
+# Folentra Testing Report
 
 ## Executive Summary
 
-Pocket Ledger currently has a layered Android test strategy that gives solid
+Folentra currently has a layered Android test strategy that gives solid
 MVP confidence for local-first ledger behavior, feature ViewModels and pure
 logic, adaptive UI rendering, release assembly, and R8 compatibility.
 
@@ -125,7 +125,7 @@ WorkManager, network, sleeps, random IDs, and wall-clock timing.
 
 ## Room And Repository Integration Coverage
 
-Room KMP tests live in `:core:database` under `src/commonTest`, `src/desktopTest`, and Android device-test source sets. Desktop tests validate file-backed persistence across database instances; Android tests construct isolated in-memory `PocketLedgerDatabase` instances for DAO behavior when an SDK and device are available.
+Room KMP tests live in `:core:database` under `src/commonTest`, `src/desktopTest`, and Android device-test source sets. Desktop tests validate file-backed persistence across database instances; Android tests construct isolated in-memory `FolentraDatabase` instances for DAO behavior when an SDK and device are available.
 Migration coverage uses Room `MigrationTestHelper` with committed schema JSON
 assets under `core/database/schemas`.
 
@@ -175,7 +175,7 @@ Adaptive screenshot coverage uses Paparazzi 2.0.0-alpha05 in `:app`.
 Screenshot tests live under:
 
 ```text
-app/src/test/java/com/mojtaba/pocketledger/screenshot
+app/src/test/java/com/mojtaba/folentra/screenshot
 ```
 
 Committed PNG baselines live under:
@@ -638,7 +638,7 @@ Focused large dataset benchmark execution with an attached representative
 device or emulator:
 
 ```powershell
-.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.folentra.macrobenchmark.LargeDatasetBenchmark
 ```
 
 Baseline Profile generation with an attached representative device or emulator:
@@ -741,7 +741,7 @@ Commands not run because no device or emulator was attached:
 .\gradlew.bat :app:connectedDebugAndroidTest
 .\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
 .\gradlew.bat :macrobenchmark:connectedCheck
-.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.pocketledger.macrobenchmark.LargeDatasetBenchmark
+.\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.mojtaba.folentra.macrobenchmark.LargeDatasetBenchmark
 .\gradlew.bat :app:generateReleaseBaselineProfile
 .\gradlew.bat :macrobenchmark:collectNonMinifiedReleaseBaselineProfile
 .\gradlew.bat :macrobenchmark:collectNonMinifiedBenchmarkBaselineProfile
@@ -753,3 +753,47 @@ Backlog source note:
   this report update. The report uses the GitHub task description, parent
   story context, existing docs, current code, tests, Gradle setup, CI workflow,
   and validation commands as source of truth.
+
+## Emulator validation batch — 2026-07-24
+
+A fixed Pixel 8 Pro API 30 AVD (`emulator-5556`, Android 11) was used for the
+post-change connected and release-like validation batch.
+
+Connected instrumentation results:
+
+- `:core:database:connectedAndroidDeviceTest` passed.
+- `:core:data:connectedDebugAndroidTest`: 35/35 passed.
+- `:core:security:connectedDebugAndroidTest`: 6/6 passed.
+- `:feature:dashboard:connectedDebugAndroidTest`: 33/33 passed.
+- `:feature:search:connectedDebugAndroidTest`: 11/11 passed.
+- `:feature:transaction:connectedDebugAndroidTest`: 28/28 passed.
+- `:app:connectedDebugAndroidTest`: 14/14 passed.
+
+The app-shell and feature suites cover Dashboard, transaction create/edit/delete,
+Search, and Settings behavior. Repository instrumentation was made deterministic
+by asserting each completed Room operation through `Flow.first()` instead of
+requiring transient invalidation emissions to be delivered in a particular
+scheduler order.
+
+The release-like benchmark APK was installed and the six-class smoke/performance
+runner completed successfully. It covered Dashboard cold start, transaction-list
+scrolling, seeded search, Settings navigation, a large-dataset scroll/search
+scenario, and cold startup. The run produced 28 Perfetto traces and one benchmark
+JSON file under the ignored evidence directory
+`androidApp/performance-evidence/20260724-234902`.
+
+LeakCanary was also exercised in a standalone debug process. The runtime log
+records `LeakCanary is running and ready to detect memory leaks`; no retained-object
+or leak signature appeared during the bounded observation window. This is a
+successful diagnostic pass, not a proof that every possible application flow is
+leak-free.
+
+Environment notes:
+
+- API 37 connected Espresso tests are blocked by Espresso's use of an Android
+  hidden API removed by that platform image, so API 30 is the stable connected
+  test target for this batch.
+- The attached Samsung physical device was credential-locked and was not altered.
+- Emulator benchmark numbers are evidence of scenario execution and regression
+  comparability only. A lower-end physical-device run remains required before
+  making production performance claims.

@@ -6,13 +6,13 @@ Accepted
 
 ## Context
 
-Pocket Ledger is intended to be reviewed by humans as a portfolio artifact. Code alone is not enough for that review. A reviewer needs a fast path through the product story, architecture, test strategy, performance posture, release readiness, privacy/security boundaries, and honest limitations.
+Folentra is intended to be reviewed by humans as a portfolio artifact. Code alone is not enough for that review. A reviewer needs a fast path through the product story, architecture, test strategy, performance posture, release readiness, privacy/security boundaries, and honest limitations.
 
 Without a traceable documentation set, the project risks looking like a collection of disconnected tasks instead of a coherent engineering sample.
 
 ## Decision
 
-Pocket Ledger keeps a portfolio-facing documentation layer under `docs/portfolio/` and supports it with detailed engineering docs elsewhere in the repository.
+Folentra keeps a portfolio-facing documentation layer under `docs/portfolio/` and supports it with detailed engineering docs elsewhere in the repository.
 
 The portfolio layer must include:
 
