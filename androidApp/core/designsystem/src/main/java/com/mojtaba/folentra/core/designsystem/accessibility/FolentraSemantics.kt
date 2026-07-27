@@ -1,7 +1,10 @@
 package com.mojtaba.folentra.core.designsystem.accessibility
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 
@@ -29,4 +32,10 @@ fun Modifier.folentraCheckedState(
 fun Modifier.folentraProgressState(description: String): Modifier =
     semantics {
         stateDescription = description
+    }
+
+fun Modifier.folentraValidationError(message: String): Modifier =
+    semantics {
+        error(message)
+        liveRegion = LiveRegionMode.Polite
     }

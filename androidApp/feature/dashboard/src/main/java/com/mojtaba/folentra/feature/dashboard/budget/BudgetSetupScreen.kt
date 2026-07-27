@@ -27,6 +27,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.mojtaba.folentra.core.designsystem.accessibility.folentraValidationError
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
@@ -114,7 +115,7 @@ private fun BudgetSetupContent(
             singleLine = true,
             isError = uiState.validationResult.errors.name != null,
             supportingText = {
-                uiState.validationResult.errors.name?.message?.let { Text(it) }
+                uiState.validationResult.errors.name?.message?.let { Text(it, modifier = Modifier.folentraValidationError(it)) }
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -131,7 +132,7 @@ private fun BudgetSetupContent(
             prefix = { Text("$") },
             isError = uiState.validationResult.errors.amount != null,
             supportingText = {
-                uiState.validationResult.errors.amount?.message?.let { Text(it) }
+                uiState.validationResult.errors.amount?.message?.let { Text(it, modifier = Modifier.folentraValidationError(it)) }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier
@@ -155,7 +156,7 @@ private fun BudgetSetupContent(
             singleLine = true,
             isError = uiState.validationResult.errors.currency != null,
             supportingText = {
-                uiState.validationResult.errors.currency?.message?.let { Text(it) }
+                uiState.validationResult.errors.currency?.message?.let { Text(it, modifier = Modifier.folentraValidationError(it)) }
             },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
             modifier = Modifier
@@ -178,7 +179,7 @@ private fun BudgetSetupContent(
             Text(
                 text = message,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.semantics { error(message) },
+                modifier = Modifier.folentraValidationError(message),
             )
         }
         Spacer(Modifier.height(spacing.small))
@@ -242,7 +243,7 @@ private fun CategorySelector(
             Text(
                 text = errorText,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.semantics { error(errorText) },
+                modifier = Modifier.folentraValidationError(errorText),
             )
         }
     }
@@ -283,7 +284,7 @@ private fun PeriodSummary(
             Text(
                 text = errorText,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.semantics { error(errorText) },
+                modifier = Modifier.folentraValidationError(errorText),
             )
         }
     }

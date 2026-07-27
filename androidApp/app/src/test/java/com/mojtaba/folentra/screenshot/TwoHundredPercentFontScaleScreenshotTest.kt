@@ -18,6 +18,12 @@ import com.mojtaba.folentra.feature.dashboard.presentation.DashboardScreen
 import com.mojtaba.folentra.feature.dashboard.presentation.DashboardUiState
 import com.mojtaba.folentra.feature.dashboard.presentation.preview.DashboardPreviewFixtures
 import com.mojtaba.folentra.feature.search.presentation.SearchScreen
+import com.mojtaba.folentra.feature.transaction.form.TransactionFormState
+import com.mojtaba.folentra.feature.transaction.form.TransactionFormValidation
+import com.mojtaba.folentra.feature.transaction.presentation.editor.TransactionCategoryOption
+import com.mojtaba.folentra.feature.transaction.presentation.editor.TransactionEditorScreen
+import com.mojtaba.folentra.feature.transaction.presentation.editor.TransactionEditorUiState
+import com.mojtaba.folentra.feature.transaction.presentation.editor.TransactionTagOption
 import com.mojtaba.folentra.feature.transaction.adaptive.TransactionListDetailContent
 import com.mojtaba.folentra.feature.transaction.presentation.detail.TransactionDetailContent
 import com.mojtaba.folentra.navigation.SettingsScreen
@@ -100,6 +106,59 @@ class TwoHundredPercentFontScaleScreenshotTest(
         }
     }
 
+
+    @Test
+    fun transactionEditorAtTwoHundredPercentFontScale() {
+        val categories = listOf(
+            TransactionCategoryOption("food", "Food and dining", "expense"),
+            TransactionCategoryOption("transport", "Transportation", "expense"),
+        )
+        val tags = listOf(
+            TransactionTagOption("work", "Work"),
+            TransactionTagOption("family", "Family"),
+        )
+        val validForm = TransactionFormState(
+            amountInput = "86.42",
+            categoryId = "food",
+            occurredAt = 1_700_000_000_000L,
+            merchant = "Neighborhood Market",
+            note = "Weekly groceries",
+        )
+        screenshotRule.snapshotScreen("accessibility-200/transaction-editor", "valid") {
+            TransactionEditorScreen(
+                uiState = TransactionEditorUiState(
+                    formState = validForm,
+                    validationResult = TransactionFormValidation.validate(
+                        validForm,
+                        currentTimeMillis = 1_700_000_000_000L,
+                    ),
+                    categories = categories,
+                    tags = tags,
+                ),
+                snackbarHostState = SnackbarHostState(),
+                onAction = {},
+                onNavigateBack = {},
+            )
+        }
+
+        val invalidForm = validForm.copy(amountInput = "invalid", categoryId = null)
+        screenshotRule.snapshotScreen("accessibility-200/transaction-editor", "validation_errors") {
+            TransactionEditorScreen(
+                uiState = TransactionEditorUiState(
+                    formState = invalidForm,
+                    validationResult = TransactionFormValidation.validate(
+                        invalidForm,
+                        currentTimeMillis = 1_700_000_000_000L,
+                    ),
+                    categories = categories,
+                    tags = tags,
+                ),
+                snackbarHostState = SnackbarHostState(),
+                onAction = {},
+                onNavigateBack = {},
+            )
+        }
+    }
     @Test
     fun settingsAndAppLockAtTwoHundredPercentFontScale() {
         screenshotRule.snapshotScreen("accessibility-200/settings", "app_lock_available") {

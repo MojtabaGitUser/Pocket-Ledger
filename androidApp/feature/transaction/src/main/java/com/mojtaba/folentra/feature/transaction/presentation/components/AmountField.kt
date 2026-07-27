@@ -5,6 +5,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.mojtaba.folentra.core.designsystem.accessibility.folentraValidationError
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
@@ -26,7 +27,7 @@ fun AmountField(
         isError = errorText != null,
         supportingText = {
             if (errorText != null) {
-                Text(errorText)
+                Text(errorText, modifier = Modifier.folentraValidationError(errorText))
             }
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),

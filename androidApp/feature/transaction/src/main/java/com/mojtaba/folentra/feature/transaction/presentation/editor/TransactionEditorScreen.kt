@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -22,10 +24,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
@@ -36,6 +40,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.mojtaba.folentra.core.designsystem.accessibility.folentraCheckedState
+import com.mojtaba.folentra.core.designsystem.accessibility.folentraValidationError
 import com.mojtaba.folentra.core.designsystem.accessibility.folentraHeading
 import com.mojtaba.folentra.core.designsystem.component.AdaptiveContainer
 import com.mojtaba.folentra.core.designsystem.theme.FolentraThemeDefaults
@@ -69,19 +74,26 @@ fun TransactionEditorScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = title,
-                        modifier = Modifier.folentraHeading(),
-                    )
-                },
-                navigationIcon = {
+            Surface {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+                        .heightIn(min = 64.dp)
+                        .padding(horizontal = 4.dp, vertical = 8.dp),
+                ) {
                     TextButton(onClick = onNavigateBack) {
                         Text("Close")
                     }
-                },
-            )
+                    Text(
+                        text = title,
+                        modifier = Modifier
+                            .weight(1f)
+                            .folentraHeading(),
+                    )
+                }
+            }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = modifier.fillMaxSize(),
@@ -204,7 +216,7 @@ private fun SecondaryFields(
             singleLine = true,
             isError = uiState.validationResult.errors.currencyCode != null,
             supportingText = {
-                uiState.validationResult.errors.currencyCode?.message?.let { Text(it) }
+                uiState.validationResult.errors.currencyCode?.message?.let { Text(it, modifier = Modifier.folentraValidationError(it)) }
             },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
             modifier = Modifier
@@ -221,7 +233,7 @@ private fun SecondaryFields(
             singleLine = true,
             isError = uiState.validationResult.errors.merchant != null,
             supportingText = {
-                uiState.validationResult.errors.merchant?.message?.let { Text(it) }
+                uiState.validationResult.errors.merchant?.message?.let { Text(it, modifier = Modifier.folentraValidationError(it)) }
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -238,7 +250,7 @@ private fun SecondaryFields(
             maxLines = 5,
             isError = uiState.validationResult.errors.note != null,
             supportingText = {
-                uiState.validationResult.errors.note?.message?.let { Text(it) }
+                uiState.validationResult.errors.note?.message?.let { Text(it, modifier = Modifier.folentraValidationError(it)) }
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -272,7 +284,7 @@ private fun SecondaryFields(
             Text(
                 text = message,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.semantics { error(message) },
+                modifier = Modifier.folentraValidationError(message),
             )
         }
         Spacer(Modifier.height(spacing.small))
