@@ -22,7 +22,7 @@ checklist. If app behavior changes, update this document and
   `androidApp/app/src/main/res/xml/backup_rules.xml` and
   `androidApp/app/src/main/res/xml/data_extraction_rules.xml`.
 - Firebase setup:
-  `androidApp/app/google-services.json`,
+  the protected `FIREBASE_GOOGLE_SERVICES_JSON` CI secret,
   `androidApp/app/build.gradle.kts`, and
   `androidApp/gradle/libs.versions.toml`.
 - Runtime analytics boundary:
@@ -40,7 +40,7 @@ Backlog context that is present lives in `docs/github-issue-import-report.md`.
 | --- | --- | --- |
 | Privacy policy | Draft policy exists at `docs/privacy-policy.md`. README links to it. No hosted public URL is committed. | Required pre-release action: publish the policy at a public HTTPS URL and paste that URL into Play Console. |
 | Public support contact | `support.folentra@gmail.com` is documented in both privacy-policy formats. | Use the same monitored address in the Play Store listing and keep account recovery and two-factor authentication enabled. |
-| Data Safety | Local ledger data is stored on device in Room. Firebase dependencies are present, but Google Services and Crashlytics are disabled until Folentra Firebase clients are installed. Product event logging remains no-op in release. | Declare conservatively and re-review after installing the replacement Firebase config. |
+| Data Safety | Local ledger data is stored on device in Room. Configured release builds enable Crashlytics; Firebase SDKs may collect crash logs, diagnostics, automatic analytics events, and device/app-instance identifiers. Product event logging remains no-op in release. | Use `docs/data-safety.md`, declare conservatively, and re-review against final Firebase settings and artifact. |
 | App access | The current app has no account login, paid wall, institution login, server-backed profile, or restricted content gate. Optional app lock uses Android system authentication after installation when enabled by the user. | Mark no special app access instructions unless future features add gated access. |
 | Ads | No ad UI, ad network integration, or ad-serving feature is implemented. Firebase/Google SDKs contribute advertising/ad-services identifier permissions for analytics/attribution capability, not app-served ads. | Declare no ads if Play Console asks whether the app contains ads. |
 | Content ratings | App is a personal finance ledger and budget utility. It does not include user-generated public content, gambling, social networking, shopping, or regulated investment/banking flows. | Complete the questionnaire as a finance/productivity utility based on actual screenshots and features. |
@@ -48,10 +48,10 @@ Backlog context that is present lives in `docs/github-issue-import-report.md`.
 | Financial features | The app records local transactions, budgets, categories, tags, summaries, search, private monthly insights, and user-confirmed smart autofill. It does not provide banking, lending, investing, money transmission, payments, credit, tax filing, financial advice, or regulated financial services. | Declare as personal finance tracking only. Do not overstate regulated services or AI advice. |
 | Permissions declaration | Release merged manifest permissions are listed below. No contacts, camera, location, photos, calendar, SMS, phone, microphone, or notification permission is in the release merged manifest. | Use release manifest only for production declarations. |
 | Data collection | Local financial data stays in app-private storage unless Android backup/device transfer or Firebase SDK behavior applies. No user account data, contact data, payment-card credentials, cloud sync data, import/export payload, or remote AI data path is implemented. | Declare local financial data handling and Firebase SDK metadata conservatively. |
-| Data sharing | Current app code does not send ledger records to a Folentra server. Firebase/Google SDKs may receive technical analytics or attribution data. Firebase App Distribution shares debug APKs with authorized testers through CI, not runtime app code. | Do not claim ledger records are shared. Do disclose Firebase/Google SDK behavior where Play Console requires it. |
+| Data sharing | Current app code does not send ledger records to a Folentra server. Firebase/Google SDKs may receive technical analytics, crash, diagnostic, identifier, or attribution data. Firebase App Distribution shares signed release APKs with authorized testers through CI, not runtime app code. | Do not claim ledger records are shared. Do disclose Firebase/Google SDK behavior where Play Console requires it. |
 | Encryption and security | Room database is app-private but not encrypted by Folentra. Sensitive preferences use AndroidX Security Crypto. Optional app lock uses Android system authentication. No network transport claim should be made for ledger sync because sync is not implemented. | Do not claim full database encryption or cloud transport protection for ledger data. |
 | App category | Personal finance, budgeting, or finance utility. | Final category should match store listing copy and screenshots. |
-| Internal testing readiness | Release candidate workflow creates release APK/AAB artifacts for Play Console internal testing. Firebase App Distribution distributes debug APKs only and remains separate from Play Store artifacts. | Use release AAB for Play Console internal testing. |
+| Internal testing readiness | Release candidate workflow creates release APK/AAB artifacts for Play Console. Firebase App Distribution builds and distributes a separately tracked signed, minified release APK to protected tester groups. | Use release AAB for Play Console internal testing and retain Firebase distribution evidence separately. |
 | Backup/device-transfer behavior | `allowBackup=true`; `dataExtractionRules` and `fullBackupContent` are configured with explicit deny-by-default rules from #227. Ledger database files, encrypted preferences, app-private files, caches, logs, temp/debug/generated files, and external app files are excluded from cloud backup and device transfer. | Review before release; claim only local-first backup-ready profile foundation unless encrypted backup and restore are separately implemented. |
 | Release diagnostics/privacy safety | Debug Health exists only in debug navigation with a release source-set stub. CI/CD and Debug Health docs prohibit secrets, tester emails, stack traces, IDs, and sensitive ledger values in diagnostics. | Keep release diagnostics hidden and recheck before submission. |
 
@@ -89,10 +89,10 @@ be treated as release permissions.
 ## Firebase Analytics And Data Safety Notes
 
 Firebase Analytics is included through the Firebase BoM and
-`libs.firebase.analytics`. The checked-in `google-services.json` still contains
-clients for the retired package IDs. `app/build.gradle.kts` disables Google
-Services and Crashlytics unless both `com.mojtaba.folentra` and
-`com.mojtaba.folentra.debug` clients are present. Dependencies may still
+`libs.firebase.analytics`. `google-services.json` is not committed; protected
+CI injects it from a secret and validates both `com.mojtaba.folentra` and
+`com.mojtaba.folentra.debug` clients before Gradle runs. Builds without a
+matching configuration disable Google Services and Crashlytics. Dependencies may still
 contribute Firebase/Google manifest components and permissions, so Data Safety
 must remain conservative.
 

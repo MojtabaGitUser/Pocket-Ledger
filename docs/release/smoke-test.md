@@ -151,15 +151,17 @@ above has been executed.
 
 | Check | Status | Result |
 | --- | --- | --- |
-| Google Services processing | Blocked after rename | Disabled until matching Folentra Firebase clients are installed. |
-| Firebase clients present | Blocked after rename | The checked-in file belongs to the retired package IDs; download clients for `com.mojtaba.folentra` and `.debug`. |
-| Release merged manifest Firebase initialization | Intentionally disabled | Re-test after installing the Folentra Firebase configuration. |
+| Google Services processing | CI-ready, runtime evidence pending | Protected CI injects and validates matching Folentra clients before Gradle runs. |
+| Firebase clients present | External configuration required | Store reviewed release/debug JSON in `FIREBASE_GOOGLE_SERVICES_JSON`; the file is intentionally not committed. |
+| Release merged manifest Firebase initialization | Automated configuration ready | Re-test the generated configured release manifest and installed artifact. |
 | Runtime Firebase startup | Blocked | Requires app launch on device/emulator. |
-| Firebase client/package match | Blocked after rename | Both Folentra package IDs must be registered in Firebase before distribution. |
-| External distribution | Not applicable | No Firebase App Distribution upload was triggered. Existing workflow distributes debug APKs only and remains separate. |
+| Firebase client/package match | Automated gate ready | CI rejects missing package clients and a release App ID mismatch. |
+| External distribution | External execution pending | Workflow distributes a signed, minified release APK after protected secrets are configured. |
 
-Firebase Analytics remains an unconfigured dependency after the rename. Product analytics logging in
-app code remains no-op for release and benchmark through `NoOpProductAnalyticsLogger`.
+Firebase Analytics configuration is supplied only by protected CI. Product
+analytics logging in app code remains no-op for release and benchmark through
+`NoOpProductAnalyticsLogger`; automatic Firebase SDK behavior must still be
+reviewed and disclosed.
 
 ## Debug Health Release-Hidden Verification
 

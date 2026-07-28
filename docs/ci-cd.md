@@ -140,19 +140,18 @@ Firebase App Distribution path for internal testers. It runs on
 `workflow_dispatch` and `beta-*` tags only; it does not run for pull requests and
 does not publish to Play Store.
 
-The workflow validates and builds the existing debug APK with:
+The workflow validates and builds a signed, minified release APK with:
 
 ```bash
-./gradlew projects
-./gradlew lintDebug
-./gradlew testDebugUnitTest :shared:allTests
-./gradlew :app:assembleDebug
+./gradlew :app:validateFirebaseConfiguration :app:lintRelease \
+  :app:testDebugUnitTest :shared:allTests \
+  :app:validateReleaseSigning :app:assembleRelease
 ```
 
-The debug APK is uploaded as a GitHub Actions artifact and distributed through
-Firebase CLI only after `FIREBASE_APP_ID`, `FIREBASE_SERVICE_ACCOUNT_JSON`, and
-`FIREBASE_TESTER_GROUPS` are configured as GitHub Actions secrets. Missing
-secrets fail the workflow before Firebase distribution. See
+The signed APK and R8 mapping are uploaded as private GitHub Actions artifacts.
+Firebase CLI distribution starts only after the Firebase config, service
+account, tester groups, and release-signing secrets are validated. Missing or
+mismatched secrets fail before the build or distribution. See
 `docs/internal-distribution.md` for triggering, release notes, tester groups,
 artifact paths, and current limits.
 
@@ -235,7 +234,7 @@ Release readiness is supported by:
 - Release APK/AAB generation and mapping upload in the release candidate
   workflow.
 - Benchmark build assembly in PR validation and the controlled workflow.
-- Firebase App Distribution for manual or beta-tagged internal debug APKs.
+- Firebase App Distribution for manual or beta-tagged signed release APKs.
 - Paparazzi coverage for adaptive UI, theme, and 200% font-scale states.
 - Existing accessibility guidance in `androidApp/docs/accessibility.md`.
 - Existing privacy-safe logging guidance in `androidApp/docs/logging-policy.md`.
@@ -275,7 +274,7 @@ change affects startup, scrolling, release/R8 behavior, or profile coverage.
   automated lint/test/build verification, release/R8 assembly, benchmark artifact
   assembly, README badges, and this workflow documentation.
 - #120 is covered by `.github/workflows/internal-distribution.yml`, Firebase
-  App Distribution secret validation, internal debug APK artifact upload,
+  App Distribution secret validation, signed release APK and mapping upload,
   release-note handling, credential cleanup, and `docs/internal-distribution.md`.
 - #123 is covered by the PR validation, release candidate, screenshot/benchmark,
   and internal distribution workflows plus the README badges and local commands.
