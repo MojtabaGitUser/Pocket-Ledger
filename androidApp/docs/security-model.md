@@ -193,8 +193,11 @@ Current providers:
 
 - `GeminiNanoAiProvider` is a compile-safe stub. It reports unavailable by
   default and returns unavailable inference results.
-- `MlKitAiProvider` is a compile-safe stub. It reports unavailable by default,
-  does not support summaries, and returns unavailable semantic search results.
+- `MlKitAiProvider` uses the beta ML Kit GenAI Prompt API and AICore for
+  on-device monthly summaries, semantic transaction re-ranking, and smart
+  transaction autofill. It checks model status before selection, can prepare a
+  downloadable model, validates generated IDs and fields against local
+  candidates, and applies bounded availability and inference timeouts.
 - `RuleBasedAiProvider` is local, deterministic, and always available. It
   generates summaries from supplied local facts and ranks semantic search
   documents by local token matching.
@@ -205,6 +208,7 @@ Current providers:
 
 - `AiInsightsEnabled` gates monthly summary capability.
 - `SemanticSearchEnabled` gates semantic search capability.
+- `SmartAutofillEnabled` gates transaction-editor suggestions.
 
 Implemented local AI flags default to enabled in `DefaultFeatureFlags`, while
 incomplete optional account, cloud sync, background job, demo tooling, and
@@ -217,17 +221,24 @@ Search and dashboard integration:
 - Dashboard summary generation is routed through `DashboardSummaryGenerator`
   and `AiFallbackStrategy`.
 - Search can expose semantic search only when the semantic flag is enabled.
-  If semantic search is not available on the device, the UI falls back to
-  keyword mode with an unavailable message.
+- Search exposes whether semantic ranking uses on-device AI or the local
+  rule-based fallback. Unsupported devices keep semantic search usable through
+  deterministic local ranking.
 - Semantic ranking, when reached, uses locally observed candidate transactions
   and local provider behavior.
+- Transaction Editor smart autofill accepts only category/account candidates
+  supplied by the app and never overwrites explicit amount, category, account,
+  or note input.
 
 Limitations:
 
-- There is no real Gemini Nano or ML Kit inference in the current build.
 - There is no remote AI provider in the current code.
-- There is no model download, cloud ranking, embeddings service, or network AI
-  request path in the current implementation.
+- There is no cloud ranking, embeddings service, or network AI request path in
+  the current implementation. AICore may download or update the shared Gemini
+  Nano model through Android system services.
+- ML Kit GenAI Prompt is a beta SDK and only runs on supported, locked devices
+  with compatible AICore/Gemini Nano availability. All other devices use the
+  rule-based provider.
 - Future AI providers must be reviewed before transaction notes, merchant
   names, tags, categories, search text, or budget data are sent outside the
   device.
@@ -335,7 +346,7 @@ Out of scope and known limitations:
 - Cloud backup or device-transfer of ledger data. Android backup rules are
   explicitly restricted by #227, but runtime restore/transfer behavior still
   depends on Android platform services and should be release-tested.
-- Real Gemini Nano or ML Kit inference. Current providers are stubs.
+- Runtime validation across every supported Gemini Nano device/model version.
 - Remote AI or cloud sync privacy controls. Those features are not implemented.
 - Multi-user profile edge cases beyond Android's normal app sandbox behavior.
 - Protection against sensitive data visible in OS recents thumbnails, unless a

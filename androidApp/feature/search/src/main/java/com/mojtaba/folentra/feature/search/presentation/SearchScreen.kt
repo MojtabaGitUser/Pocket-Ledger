@@ -172,11 +172,15 @@ private fun SearchFilterBar(
                     enabled = semanticAvailable,
                     modifier = Modifier
                         .semantics {
-                            contentDescription = "Semantic search, coming soon"
+                            contentDescription = if (uiState.capabilities.semanticSearchAiEnhanced) {
+                                "Semantic search, on-device AI"
+                            } else {
+                                "Semantic search, local fallback"
+                            }
                             stateDescription = if (semanticAvailable) {
                                 if (selected) "Selected" else "Not selected"
                             } else {
-                                "Disabled, coming soon"
+                                "Disabled on this device"
                             }
                         },
                 )

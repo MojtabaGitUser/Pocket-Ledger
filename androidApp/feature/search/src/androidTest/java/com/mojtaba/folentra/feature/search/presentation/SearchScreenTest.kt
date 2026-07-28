@@ -59,14 +59,14 @@ class SearchScreenTest {
 
         assertTrue(
             composeRule
-                .onAllNodesWithContentDescription("Semantic search, coming soon")
+                .onAllNodesWithContentDescription("Semantic search, local fallback")
                 .fetchSemanticsNodes()
                 .isEmpty(),
         )
     }
 
     @Test
-    fun semanticModeRendersDisabledPlaceholderWhenCapabilityIsVisible() {
+    fun semanticModeRendersDisabledStateWhenCapabilityIsVisible() {
         setContent(
             SearchUiState(
                 capabilities = SearchCapabilities(
@@ -77,9 +77,9 @@ class SearchScreenTest {
             ),
         )
 
-        composeRule.onNodeWithContentDescription("Semantic search, coming soon")
+        composeRule.onNodeWithContentDescription("Semantic search, local fallback")
             .assertIsDisplayed()
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Disabled, coming soon"))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Disabled on this device"))
     }
 
     @Test

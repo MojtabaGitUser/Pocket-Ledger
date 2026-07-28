@@ -12,7 +12,7 @@ import org.junit.Test
 
 class AiProviderSelectorTest {
     @Test
-    fun disabledFeatureFlagSelectsNoOpProvider() {
+    fun disabledFeatureFlagSelectsNoOpProvider() = runTest {
         val selector = selector(
             providers = listOf(availableProvider(AiProviderType.GeminiNano), RuleBasedAiProvider, NoOpAiProvider),
             enabledFlags = mapOf(
@@ -26,7 +26,7 @@ class AiProviderSelectorTest {
     }
 
     @Test
-    fun supportedDeviceSelectsPreferredAiProvider() {
+    fun supportedDeviceSelectsPreferredAiProvider() = runTest {
         val selector = selector(
             providers = listOf(availableProvider(AiProviderType.GeminiNano), RuleBasedAiProvider, NoOpAiProvider),
             enabledFlags = mapOf(DefaultFeatureFlags.AiInsightsEnabled.key to FeatureFlagValue.BooleanValue(true)),
@@ -36,7 +36,7 @@ class AiProviderSelectorTest {
     }
 
     @Test
-    fun unsupportedDeviceFallsBackToRuleBasedProvider() {
+    fun unsupportedDeviceFallsBackToRuleBasedProvider() = runTest {
         val selector = selector(
             providers = listOf(unavailableProvider(AiProviderType.GeminiNano), RuleBasedAiProvider, NoOpAiProvider),
             enabledFlags = mapOf(DefaultFeatureFlags.AiInsightsEnabled.key to FeatureFlagValue.BooleanValue(true)),

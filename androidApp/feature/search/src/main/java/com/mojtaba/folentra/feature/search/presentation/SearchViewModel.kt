@@ -7,6 +7,7 @@ import com.mojtaba.folentra.core.ai.AiCapability
 import com.mojtaba.folentra.core.ai.AiFallbackStrategy
 import com.mojtaba.folentra.core.ai.AiInferenceResult
 import com.mojtaba.folentra.core.ai.AiProviderSelector
+import com.mojtaba.folentra.core.ai.AiProviderType
 import com.mojtaba.folentra.core.ai.SemanticSearchDocument
 import com.mojtaba.folentra.core.ai.SemanticSearchRequest
 import com.mojtaba.folentra.core.data.model.LedgerTag
@@ -56,12 +57,11 @@ class SearchViewModel(
     private val query = MutableStateFlow(savedStateHandle.restoredSearchQuery())
     private val refreshRequests = MutableStateFlow(0)
     private val modeUnavailableMessage = MutableStateFlow<String?>(null)
-
-    private val capabilities: SearchCapabilities
-        get() = SearchCapabilities(
+    private val capabilities = MutableStateFlow(
+        SearchCapabilities(
             semanticSearchVisible = featureFlags.isEnabled(DefaultFeatureFlags.SemanticSearchEnabled),
-            semanticSearchAvailable = aiProviderSelector.isAvailable(AiCapability.SemanticSearch),
-        )
+        ),
+    )
 
     val uiState: StateFlow<SearchUiState> = refreshRequests
         .flatMapLatest { observeUiState() }
@@ -70,7 +70,7 @@ class SearchViewModel(
             emit(
                 SearchUiState(
                     query = query.value,
-                    capabilities = capabilities,
+                    capabilities = capabilities.value,
                     keywordInput = query.value.text,
                     isLoading = false,
                     errorMessage = throwable.message ?: "Unable to search transactions.",
@@ -85,6 +85,10 @@ class SearchViewModel(
 
     private val _effects = MutableSharedFlow<SearchEffect>()
     val effects: SharedFlow<SearchEffect> = _effects.asSharedFlow()
+
+    init {
+        refreshCapabilities()
+    }
 
     fun onAction(action: SearchAction) {
         when (action) {
@@ -150,7 +154,7 @@ class SearchViewModel(
                 setQuery(query.value.copy(mode = SearchMode.Keyword))
             }
             SearchMode.Semantic -> {
-                if (capabilities.semanticSearchAvailable) {
+                if (capabilities.value.semanticSearchAvailable) {
                     setQuery(query.value.copy(mode = SearchMode.Semantic))
                 } else {
                     modeUnavailableMessage.value = "Semantic search is not available on this device."
@@ -165,10 +169,11 @@ class SearchViewModel(
         val tags = tagRepository.observeTags()
         val hasAnyTransactions = transactionRepository.observeRecentTransactions(limit = 1)
             .map { it.isNotEmpty() }
-        val searchState = combine(query, modeUnavailableMessage) { searchQuery, unavailableMessage ->
+        val searchState = combine(query, modeUnavailableMessage, capabilities) { searchQuery, unavailableMessage, currentCapabilities ->
             SearchQueryState(
                 query = searchQuery,
                 modeUnavailableMessage = unavailableMessage,
+                capabilities = currentCapabilities,
             )
         }
 
@@ -185,7 +190,7 @@ class SearchViewModel(
             val categoriesById = categoryOptions.associateBy { it.id }
             SearchUiState(
                 query = searchQuery,
-                capabilities = capabilities,
+                capabilities = currentSearchState.capabilities,
                 keywordInput = searchQuery.text,
                 results = transactionTagPairs.map { (transaction, transactionTags) ->
                     SearchResultMapper.map(
@@ -213,6 +218,24 @@ class SearchViewModel(
                 modeUnavailableMessage = currentSearchState.modeUnavailableMessage,
                 errorMessage = null,
             )
+        }
+    }
+
+    private fun refreshCapabilities() {
+        viewModelScope.launch {
+            val provider = aiProviderSelector.selectFor(AiCapability.SemanticSearch)
+            val available = provider.type != AiProviderType.NoOp
+            capabilities.update {
+                it.copy(
+                    semanticSearchAvailable = available,
+                    semanticSearchAiEnhanced =
+                        provider.type == AiProviderType.MlKit || provider.type == AiProviderType.GeminiNano,
+                )
+            }
+            if (!available && query.value.mode == SearchMode.Semantic) {
+                modeUnavailableMessage.value = "Semantic search is not available on this device."
+                setQuery(query.value.copy(mode = SearchMode.Keyword))
+            }
         }
     }
 
@@ -301,6 +324,7 @@ private object SearchSavedStateKeys {
 private data class SearchQueryState(
     val query: SearchQuery,
     val modeUnavailableMessage: String?,
+    val capabilities: SearchCapabilities,
 )
 
 private fun Set<String>.toggle(value: String): Set<String> =

@@ -1,6 +1,14 @@
 package com.mojtaba.folentra.feature.transaction.presentation.editor
 
 import androidx.lifecycle.SavedStateHandle
+import com.mojtaba.folentra.core.ai.AiFallbackStrategy
+import com.mojtaba.folentra.core.ai.AiProviderSelector
+import com.mojtaba.folentra.core.ai.NoOpAiProvider
+import com.mojtaba.folentra.core.ai.RuleBasedAiProvider
+import com.mojtaba.folentra.core.featureflags.DefaultFeatureFlags
+import com.mojtaba.folentra.core.featureflags.FeatureFlagEvaluator
+import com.mojtaba.folentra.core.featureflags.FeatureFlagValue
+import com.mojtaba.folentra.core.featureflags.LocalFeatureFlagProvider
 import com.mojtaba.folentra.core.testing.coroutine.MainDispatcherRule
 import com.mojtaba.folentra.core.testing.fixture.TestClock
 import com.mojtaba.folentra.core.testing.fixture.testLedgerCategory
@@ -310,6 +318,47 @@ class TransactionEditorViewModelTest {
         assertEquals(setOf("weekend"), state.selectedTagIds)
     }
 
+    @Test
+    fun smartAutofillUsesLocalFallbackAndAppliesSuggestion() = runTest {
+        val transactionRepository = FakeTransactionRepository(
+            listOf(
+                testLedgerTransaction(
+                    id = "history-1",
+                    merchant = "Coffee House",
+                    categoryId = "food",
+                    amountMinor = -425,
+                    isRecurring = true,
+                ),
+                testLedgerTransaction(
+                    id = "history-2",
+                    merchant = "Coffee House",
+                    categoryId = "food",
+                    amountMinor = -425,
+                    isRecurring = true,
+                ),
+            ),
+        )
+        val viewModel = newViewModel(
+            transactionRepository = transactionRepository,
+            aiFallbackStrategy = localAiStrategy(),
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(TransactionEditorAction.MerchantChanged("Coffee House"))
+        viewModel.onAction(TransactionEditorAction.SmartAutofillClicked)
+        advanceUntilIdle()
+
+        val suggestion = viewModel.uiState.value.autofillSuggestion
+        assertEquals("food", suggestion?.categoryId)
+        assertEquals("4.25", suggestion?.amountInput)
+        assertEquals(true, suggestion?.recurring)
+
+        viewModel.onAction(TransactionEditorAction.SmartAutofillAccepted)
+        assertEquals("food", viewModel.uiState.value.formState.categoryId)
+        assertEquals("4.25", viewModel.uiState.value.formState.amountInput)
+        assertTrue(viewModel.uiState.value.formState.isRecurring)
+    }
+
     private fun newViewModel(
         transactionRepository: FakeTransactionRepository = FakeTransactionRepository(),
         categoryRepository: FakeCategoryRepository = defaultCategoryRepository(),
@@ -318,6 +367,7 @@ class TransactionEditorViewModelTest {
         mode: TransactionFormMode = TransactionFormMode.CREATE,
         transactionId: String? = null,
         idGenerator: () -> String = { "generated-id" },
+        aiFallbackStrategy: AiFallbackStrategy? = null,
     ): TransactionEditorViewModel = TransactionEditorViewModel(
         transactionRepository = transactionRepository,
         categoryRepository = categoryRepository,
@@ -327,6 +377,7 @@ class TransactionEditorViewModelTest {
         initialTransactionId = transactionId,
         currentTimeMillis = { CURRENT_TIME },
         idGenerator = idGenerator,
+        aiFallbackStrategy = aiFallbackStrategy,
     )
 
     private companion object {
@@ -348,5 +399,21 @@ class TransactionEditorViewModelTest {
             ),
             initialLinks = initialLinks,
         )
+
+        fun localAiStrategy(): AiFallbackStrategy {
+            val evaluator = FeatureFlagEvaluator(
+                LocalFeatureFlagProvider(
+                    mapOf(
+                        DefaultFeatureFlags.SmartAutofillEnabled.key to
+                            FeatureFlagValue.BooleanValue(true),
+                    ),
+                ),
+            )
+            val selector = AiProviderSelector(
+                providers = listOf(RuleBasedAiProvider, NoOpAiProvider),
+                featureFlags = evaluator,
+            )
+            return AiFallbackStrategy(selector)
+        }
     }
 }
