@@ -349,6 +349,7 @@ private fun SmartAutofillPanel(
                 suggestion.categoryName?.let { Text("Category: $it") }
                 suggestion.amountInput?.let { Text("Amount: $it") }
                 suggestion.recurring?.let { Text("Recurring: ${if (it) "Yes" else "No"}") }
+                suggestion.note?.let { Text("Note: $it") }
                 Text(
                     text = "Confidence: ${suggestion.confidenceLabel}. ${suggestion.reason}",
                     style = MaterialTheme.typography.bodySmall,

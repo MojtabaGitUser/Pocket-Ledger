@@ -1,5 +1,7 @@
 package com.mojtaba.folentra.core.ai
 
+import kotlinx.coroutines.CancellationException
+
 class AiFallbackStrategy(
     private val selector: AiProviderSelector,
     private val ruleBasedProvider: AiProvider = RuleBasedAiProvider,
@@ -50,7 +52,7 @@ class AiFallbackStrategy(
         if (type == AiProviderType.NoOp) {
             return operation()
         }
-        if (safeAvailability() !is AiProviderAvailability.Available || !capabilities.supports(capability)) {
+        if (safeCurrentAvailability() !is AiProviderAvailability.Available || !capabilities.supports(capability)) {
             return fallback("${type.name} is unavailable.")
         }
         return try {
@@ -60,14 +62,16 @@ class AiFallbackStrategy(
                 is AiInferenceResult.Failure -> fallback(result.reason)
             }
         } catch (throwable: Throwable) {
+            if (throwable is CancellationException) throw throwable
             fallback(throwable.message ?: "${type.name} failed.")
         }
     }
 
-    private fun AiProvider.safeAvailability(): AiProviderAvailability =
+    private suspend fun AiProvider.safeCurrentAvailability(): AiProviderAvailability =
         try {
-            availability()
+            currentAvailability()
         } catch (throwable: Throwable) {
+            if (throwable is CancellationException) throw throwable
             AiProviderAvailability.Unavailable(throwable.message ?: "${type.name} availability check failed.")
         }
 

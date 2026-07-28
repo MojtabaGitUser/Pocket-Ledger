@@ -39,3 +39,4 @@ play-store-credentials*.json
 !.idea/
 .idea/*
 !.idea/Folentra.iml
+node_modules/

@@ -1,6 +1,7 @@
 package com.mojtaba.folentra.core.ai
 
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.delay
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -50,6 +51,93 @@ class MlKitAiProviderTest {
         assertEquals("quota", (result as AiInferenceResult.Failure).reason)
     }
 
+    @Test
+    fun `availability reflects runtime status`() = runTest {
+        val available = MlKitAiProvider(FakeRuntime(OnDeviceModelStatus.Available))
+        val unsupported = MlKitAiProvider(FakeRuntime(OnDeviceModelStatus.Unavailable))
+
+        assertEquals(AiProviderAvailability.Available, available.currentAvailability())
+        assertTrue(unsupported.currentAvailability() is AiProviderAvailability.Unavailable)
+    }
+
+    @Test
+    fun `semantic search validates ids and orders scores`() = runTest {
+        val provider = MlKitAiProvider(
+            FakeRuntime(
+                OnDeviceModelStatus.Available,
+                output = """
+                    MATCH:groceries|72|Food shopping
+                    MATCH:unknown|100|Not a supplied record
+                    MATCH:coffee|91|Cafe purchase
+                """.trimIndent(),
+            ),
+        )
+
+        val result = provider.semanticSearch(
+            SemanticSearchRequest(
+                query = "coffee and groceries",
+                documents = listOf(
+                    SemanticSearchDocument("coffee", "Coffee", "Cafe"),
+                    SemanticSearchDocument("groceries", "Market", "Food"),
+                ),
+            ),
+        ) as AiInferenceResult.Success
+
+        assertEquals(listOf("coffee", "groceries"), result.value.rankedIds)
+        assertEquals(listOf(91, 72), result.value.matches.map { it.relevanceScore })
+    }
+
+    @Test
+    fun `smart autofill accepts only allowed candidates and preserves explicit fields`() = runTest {
+        val provider = MlKitAiProvider(
+            FakeRuntime(
+                OnDeviceModelStatus.Available,
+                output = """
+                    CATEGORY_ID:food
+                    ACCOUNT_ID:unknown
+                    AMOUNT_MINOR:4250
+                    RECURRING:true
+                    NOTE:Morning coffee
+                    CONFIDENCE:HIGH
+                    REASON:Matched prior cafe purchases.
+                """.trimIndent(),
+            ),
+        )
+
+        val result = provider.smartAutofill(
+            SmartAutofillRequest(
+                partialInput = SmartAutofillInput(
+                    description = "Cafe",
+                    transactionType = "expense",
+                    amountMinor = 5000,
+                ),
+                candidates = SmartAutofillCandidates(
+                    categories = listOf(SmartAutofillCategory("food", "Food", "expense")),
+                ),
+                history = emptyList(),
+                occurredAtMillis = 1,
+            ),
+        ) as AiInferenceResult.Success
+
+        assertEquals("food", result.value.suggestion?.categoryId)
+        assertEquals(null, result.value.suggestion?.accountId)
+        assertEquals(null, result.value.suggestion?.amountMinor)
+        assertEquals(AiResultQuality.High, result.value.confidence)
+    }
+
+    @Test
+    fun `inference timeout is reported as failure`() = runTest {
+        val provider = MlKitAiProvider(
+            runtime = FakeRuntime(OnDeviceModelStatus.Available, generationDelayMillis = 100),
+            inferenceTimeoutMillis = 10,
+        )
+
+        val result = provider.generateMonthlySummary(request())
+
+        assertTrue(result is AiInferenceResult.Failure)
+        assertEquals("On-device inference timed out.", (result as AiInferenceResult.Failure).reason)
+    }
+
     private fun request() = MonthlySummaryRequest(
         periodLabel = "June 2026",
         startMillis = 1,
@@ -64,6 +152,13 @@ class MlKitAiProviderTest {
         private val initialStatus: OnDeviceModelStatus,
         private val preparedStatus: OnDeviceModelStatus = initialStatus,
         private val failure: Throwable? = null,
+        private val output: String = """
+            TITLE: June overview
+            SUMMARY: Spending stayed within income.
+            INSIGHT: Food was the largest category.
+            WARNING: Transport exceeded its budget.
+        """.trimIndent(),
+        private val generationDelayMillis: Long = 0,
     ) : OnDeviceGenAiRuntime {
         var prepareCalls = 0
         var generateCalls = 0
@@ -77,13 +172,9 @@ class MlKitAiProviderTest {
 
         override suspend fun generate(prompt: String): String {
             generateCalls++
+            if (generationDelayMillis > 0) delay(generationDelayMillis)
             failure?.let { throw it }
-            return """
-                TITLE: June overview
-                SUMMARY: Spending stayed within income.
-                INSIGHT: Food was the largest category.
-                WARNING: Transport exceeded its budget.
-            """.trimIndent()
+            return output
         }
     }
 }

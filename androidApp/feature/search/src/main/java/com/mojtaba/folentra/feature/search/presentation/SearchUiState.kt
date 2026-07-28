@@ -32,6 +32,7 @@ data class SearchCapabilities(
     val keywordSearchAvailable: Boolean = true,
     val semanticSearchVisible: Boolean = false,
     val semanticSearchAvailable: Boolean = false,
+    val semanticSearchAiEnhanced: Boolean = false,
 )
 
 @Immutable
