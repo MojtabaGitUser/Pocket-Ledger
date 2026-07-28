@@ -79,11 +79,11 @@ diagnostics.
 
 ## Analytics And Product Events
 
-Folentra includes Firebase Analytics as an Android dependency. After the package
-rename, the checked-in Firebase file still belongs to the retired package IDs;
-Google Services processing and Firebase runtime initialization are therefore
-disabled until replacement release and debug clients are downloaded. The
-project also defines a typed product event taxonomy in `:core:analytics` for
+Folentra includes Firebase Analytics as an Android dependency. Firebase
+configuration is not stored in the source repository; protected release CI
+injects reviewed `com.mojtaba.folentra` and `com.mojtaba.folentra.debug`
+clients. Builds without that configuration disable Firebase initialization.
+The project also defines a typed product event taxonomy in `:core:analytics` for
 future analytics, observability, app-health reporting, and release monitoring.
 
 Current behavior is conservative:
@@ -112,10 +112,9 @@ before production publication.
 
 ## Crash Reporting And Diagnostics
 
-Folentra includes the Firebase Crashlytics dependency, but Crashlytics is
-disabled for every build until a matching Folentra Firebase configuration is
-installed. After that configuration is reviewed, automatic collection may be
-enabled for release builds while remaining disabled for debug and benchmark.
+Folentra includes the Firebase Crashlytics dependency. Crashlytics is enabled
+only for release builds containing a reviewed matching Folentra Firebase
+configuration. Debug and benchmark automatic collection remains disabled.
 Reports may include stack traces and non-sensitive technical
 metadata; ledger content, credentials, tokens, and financial values must not be
 intentionally attached.
@@ -134,9 +133,9 @@ reports.
 ## Firebase App Distribution And Internal Testing
 
 Folentra has a GitHub Actions workflow for Firebase App Distribution. This
-workflow can distribute debug APKs to authorized internal testers after CI
-validation and only when required Firebase secrets are configured in GitHub
-Actions.
+workflow can distribute signed, minified release APKs to authorized internal
+testers after CI validation and only when required Firebase and signing secrets
+are configured in a protected GitHub Actions environment.
 
 App Distribution is a CI/CD process, not runtime app code. The app does not
 upload builds, tester lists, service-account credentials, tokens, or Firebase
@@ -183,7 +182,7 @@ privacy claim.
 The current Android app includes or uses these relevant third-party components:
 
 - Firebase Analytics, Firebase Crashlytics, and Google Services configuration.
-- Firebase App Distribution through GitHub Actions for internal debug APK
+- Firebase App Distribution through GitHub Actions for internal signed release APK
   distribution.
 - AndroidX Room for local database storage.
 - AndroidX Security Crypto for encrypted sensitive preferences.
@@ -194,7 +193,7 @@ The current Android app includes or uses these relevant third-party components:
 - Paparazzi, Macrobenchmark, JUnit, and AndroidX test libraries for development
   and CI validation.
 
-Firebase Crashlytics remains disabled until matching Folentra Firebase clients are installed; debug and benchmark builds keep automatic collection disabled.
+Firebase Crashlytics activates only in a configured release build; debug and benchmark builds keep automatic collection disabled.
 
 ## Data Sharing
 

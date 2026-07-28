@@ -32,6 +32,8 @@ Thumbs.db
 *service-account*.json
 firebase-service-account*.json
 play-store-credentials*.json
+**/google-services.json
+__pycache__/
 
 # Local Codex skills
 .codex/

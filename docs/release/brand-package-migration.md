@@ -18,9 +18,9 @@ under either ID until the final identity is approved.
 
 ## Firebase handoff
 
-The checked-in `app/google-services.json` is retained only as evidence of the
-retired Firebase clients. The build verifies that both Folentra package IDs are
-present before applying Google Services or Crashlytics. Until then, Firebase
+`app/google-services.json` is ignored and must never be committed. CI injects it
+from a protected secret and verifies that both Folentra package IDs are present
+before applying Google Services or Crashlytics. Without a valid file, Firebase
 runtime initialization and crash collection are fail-closed and disabled.
 
 In Firebase Console:
