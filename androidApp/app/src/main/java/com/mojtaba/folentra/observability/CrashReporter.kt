@@ -27,12 +27,12 @@ data class CrashReportEvent(
 )
 
 class FirebaseCrashReporter(
-    private val crashlytics: FirebaseCrashlytics,
+    private val crashlytics: CrashlyticsClient,
     override val status: CrashReportingStatus,
     private val redactor: SensitiveValueRedactor = SensitiveValueRedactor(),
 ) : CrashReporter {
     init {
-        crashlytics.setCrashlyticsCollectionEnabled(status.collectionEnabled)
+        crashlytics.setCollectionEnabled(status.collectionEnabled)
     }
 
     override fun recordException(
@@ -43,7 +43,10 @@ class FirebaseCrashReporter(
 
         crashlytics.setCustomKey("event", event.name.safeAttributeValue())
         event.attributes.forEach { (key, value) ->
-            crashlytics.setCustomKey(key.safeAttributeKey(), value.safeAttributeValue())
+            val safeKey = key.safeAttributeKey()
+            if (safeKey in ALLOWED_ATTRIBUTE_KEYS) {
+                crashlytics.setCustomKey(safeKey, value.safeAttributeValue())
+            }
         }
         crashlytics.recordException(throwable.sanitized())
     }
@@ -52,7 +55,7 @@ class FirebaseCrashReporter(
         SanitizedCrashThrowable(
             originalClassName = this::class.java.name,
             sanitizedMessage = message?.let(redactor::redact),
-        )
+        ).also { sanitized -> sanitized.stackTrace = stackTrace }
 
     private fun String.safeAttributeKey(): String =
         replace(Regex("[^A-Za-z0-9_.-]"), "_").take(MAX_ATTRIBUTE_LENGTH).ifBlank { "attribute" }
@@ -74,6 +77,37 @@ class FirebaseCrashReporter(
 
     private companion object {
         const val MAX_ATTRIBUTE_LENGTH = 100
+        val ALLOWED_ATTRIBUTE_KEYS = setOf(
+            "build_variant",
+            "component",
+            "operation",
+            "stage",
+            "throwable_class",
+        )
+    }
+}
+
+interface CrashlyticsClient {
+    fun setCollectionEnabled(enabled: Boolean)
+
+    fun setCustomKey(key: String, value: String)
+
+    fun recordException(throwable: Throwable)
+}
+
+private class FirebaseCrashlyticsClient(
+    private val delegate: FirebaseCrashlytics,
+) : CrashlyticsClient {
+    override fun setCollectionEnabled(enabled: Boolean) {
+        delegate.setCrashlyticsCollectionEnabled(enabled)
+    }
+
+    override fun setCustomKey(key: String, value: String) {
+        delegate.setCustomKey(key, value)
+    }
+
+    override fun recordException(throwable: Throwable) {
+        delegate.recordException(throwable)
     }
 }
 
@@ -104,7 +138,7 @@ object CrashReporterFactory {
 
         return if (firebaseConfigured) {
             FirebaseCrashReporter(
-                crashlytics = FirebaseCrashlytics.getInstance(),
+                crashlytics = FirebaseCrashlyticsClient(FirebaseCrashlytics.getInstance()),
                 status = status,
             )
         } else {

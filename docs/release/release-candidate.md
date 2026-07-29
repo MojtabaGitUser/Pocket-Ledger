@@ -129,10 +129,10 @@ invocation. See `docs/release/signing-versioning.md` for the full policy.
 
 ## Play Store Readiness
 
-The separate internal distribution workflow can send debug APKs to Firebase App
-Distribution for early tester feedback. This release candidate workflow remains
-the source for release APK/AAB artifacts and Play Store internal-testing
-handoff.
+The separate internal distribution workflow sends a signed and minified release
+APK to Firebase App Distribution for tester feedback. This release candidate
+workflow remains the source for Play Store release APK/AAB artifacts and
+internal-testing handoff.
 
 This workflow supports `US-E18-01 - Prepare production-ready Play Store release`
 by producing repeatable release candidate artifacts, validating the release/R8

@@ -11,9 +11,17 @@ plugins {
 }
 
 val googleServicesFile = layout.projectDirectory.file("google-services.json").asFile
+val googleServicesContents = googleServicesFile
+    .takeIf { it.isFile }
+    ?.readText()
+    .orEmpty()
+fun hasFirebaseClient(packageName: String): Boolean =
+    Regex(""""package_name"\s*:\s*"${Regex.escape(packageName)}"""")
+        .containsMatchIn(googleServicesContents)
+
 val firebaseConfiguredForFolentra = googleServicesFile.isFile &&
-    googleServicesFile.readText().contains("\"package_name\": \"com.mojtaba.folentra\"") &&
-    googleServicesFile.readText().contains("\"package_name\": \"com.mojtaba.folentra.debug\"")
+    hasFirebaseClient("com.mojtaba.folentra") &&
+    hasFirebaseClient("com.mojtaba.folentra.debug")
 if (firebaseConfiguredForFolentra) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")
@@ -22,6 +30,17 @@ if (firebaseConfiguredForFolentra) {
         "Firebase is disabled: download a google-services.json containing both " +
             "com.mojtaba.folentra and com.mojtaba.folentra.debug clients."
     )
+}
+
+tasks.register("validateFirebaseConfiguration") {
+    group = "verification"
+    description = "Validates that google-services.json contains both Folentra Android clients."
+    doLast {
+        check(firebaseConfiguredForFolentra) {
+            "A valid app/google-services.json containing com.mojtaba.folentra and " +
+                "com.mojtaba.folentra.debug is required for Firebase-enabled builds."
+        }
+    }
 }
 
 tasks.withType<Test>().configureEach {

@@ -100,8 +100,10 @@ Run connected checks when hardware is available:
 
 ## Distribution And Rollout
 
-- [ ] Firebase/App Distribution internal tester flow was considered and kept
-  separate from Play Store release artifacts.
+- [ ] Firebase/App Distribution produced a signed, minified release APK from
+  the protected `firebase-internal` environment; the Firebase release link and
+  GitHub artifact/mapping evidence were recorded separately from Play Store
+  artifacts.
 - [ ] Play Console upload is manual or handled by a future approved workflow;
   this repository does not currently publish to Play Store.
 - [ ] Staged rollout readiness, rollback plan, and release notes were reviewed.
@@ -144,6 +146,9 @@ Run connected checks when hardware is available:
 - [ ] Play Console Data Safety answers account for Firebase Analytics being
   present in the release app, even though Folentra product events are no-op
   in release and not wired to Firebase Analytics.
+- [ ] Play Console Data Safety answers account for configured-release
+  Crashlytics crash logs, diagnostics, and possible Firebase/device identifiers
+  described in `docs/data-safety.md`.
 - [ ] Play Console permissions declarations use release merged-manifest
   permissions only and exclude debug/test-only permissions.
 - [ ] Backup and device-transfer behavior was reviewed for #227, #7, #81, and

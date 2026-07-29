@@ -36,6 +36,7 @@ data class TransactionAutofillSuggestionUiModel(
     val categoryName: String?,
     val recurring: Boolean?,
     val amountInput: String?,
+    val note: String?,
     val confidenceLabel: String,
     val reason: String,
 )

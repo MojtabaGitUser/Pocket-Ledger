@@ -5,6 +5,7 @@ interface AiProvider {
     val capabilities: AiProviderCapabilities
 
     fun availability(): AiProviderAvailability
+    suspend fun currentAvailability(): AiProviderAvailability = availability()
 
     suspend fun generateSummary(request: AiSummaryRequest): AiInferenceResult<AiSummaryResult>
 

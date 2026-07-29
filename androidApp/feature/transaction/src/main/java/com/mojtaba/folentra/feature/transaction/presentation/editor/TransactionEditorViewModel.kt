@@ -282,6 +282,7 @@ class TransactionEditorViewModel(
                         categoryName = state.categories.firstOrNull { it.id == autofill.categoryId }?.name,
                         recurring = autofill.recurring,
                         amountInput = autofill.amountMinor?.toDisplayAmountInput(),
+                        note = autofill.note,
                         confidenceLabel = result.value.confidence.label,
                         reason = autofill.reason,
                     )
@@ -304,6 +305,7 @@ class TransactionEditorViewModel(
                 categoryId = suggestion.categoryId ?: categoryId,
                 amountInput = suggestion.amountInput ?: amountInput,
                 isRecurring = suggestion.recurring ?: isRecurring,
+                note = suggestion.note ?: note,
             )
         }
         _uiState.update { it.copy(autofillSuggestion = null) }

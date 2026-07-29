@@ -104,6 +104,7 @@ class SearchViewModelTest {
             featureFlags = featureFlags,
         )
         val job = launch { viewModel.uiState.collect {} }
+        advanceUntilIdle()
 
         viewModel.onAction(SearchAction.SearchModeSelected(SearchMode.Semantic))
         viewModel.onAction(SearchAction.KeywordChanged("beans"))
