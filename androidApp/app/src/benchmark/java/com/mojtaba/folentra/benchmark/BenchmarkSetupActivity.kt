@@ -34,6 +34,7 @@ class BenchmarkSetupActivity : ComponentActivity() {
             LaunchedEffect(seedMode) {
                 try {
                     seedBenchmarkData(seedMode)
+                    Log.i(LOG_TAG, "Benchmark data setup complete")
                     finish()
                 } catch (error: Exception) {
                     Log.e(LOG_TAG, "Failed to seed benchmark data", error)

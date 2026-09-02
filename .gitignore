@@ -42,3 +42,5 @@ __pycache__/
 .idea/*
 !.idea/Folentra.iml
 node_modules/
+# Local release smoke evidence can contain device-specific logs.
+androidApp/release-smoke-evidence/

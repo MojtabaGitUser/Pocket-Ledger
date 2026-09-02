@@ -1,5 +1,69 @@
 # Release Candidate Smoke Test
 
+## Repeatable Release-Candidate Gate (#134)
+
+The remaining runtime checklist is implemented as an end-to-end UI Automator test against the
+installed, minified `benchmark` APK. Unlike isolated Compose tests, this exercises the production
+application ID, real navigation, Room persistence, and release/benchmark source-set wiring.
+
+Run from the repository root with one specifically named, authorized device or emulator:
+
+```powershell
+.\scripts\run_release_candidate_smoke.ps1 -DeviceSerial <adb-serial>
+```
+
+If the device already contains a Play-signed `com.mojtaba.folentra`, Android will reject the
+debug-signed benchmark APK because its certificate differs. Prefer a dedicated test device/emulator.
+Only when loss of that installation's local Folentra data is acceptable, explicitly authorize its
+removal and replacement:
+
+```powershell
+.\scripts\run_release_candidate_smoke.ps1 -DeviceSerial <adb-serial> -ReplaceExistingPackage
+```
+
+The runner fails unless the requested serial is connected. It builds and installs the candidate,
+runs `ReleaseCandidateSmokeTest`, validates backup/device-transfer rules, rejects fatal app
+exceptions from a clean logcat session, and writes device metadata, the APK SHA-256, instrumentation
+output, and logcat under the git-ignored `androidApp/release-smoke-evidence/<timestamp>/` directory.
+The device must be unlocked for the connected UI run; the runner fails its preflight when Android
+Keyguard is active, temporarily keeps the display awake while USB-powered, and restores the previous
+stay-awake setting afterwards.
+
+The connected test verifies:
+
+- launch and Dashboard rendering;
+- top-level navigation and seeded transaction list;
+- create-form validation, transaction creation, editing, persistence, search, and deletion;
+- Settings security/privacy entries, including App Lock and the backup-ready profile;
+- absence of the Debug Health destination before and after navigation.
+
+App Lock authentication itself remains device-dependent: the smoke gate verifies the installed
+security control and its availability state without changing the user's biometric/device-credential
+configuration. Firebase remains optional locally by design; a Play-signed Firebase-enabled candidate
+must still be checked through the protected release workflow when its external configuration is
+available. A successful local run must not be represented as a production-signed run.
+
+## 2026-08-31 Physical-Device Gate Result (#134)
+
+| Field | Result |
+| --- | --- |
+| Branch base / commit | `dev` / `949f436` plus the uncommitted #134 implementation under validation |
+| Target | Samsung `SM-S906W`, Android 16 / API 36, serial `R3CT60LKXEA` |
+| Installed artifact | Minified, non-debuggable `androidApp/app/build/outputs/apk/benchmark/app-benchmark.apk` |
+| Artifact SHA-256 | `5947C3175402A95B35D718B81E1F97AD7CFDC3AF93BC34A6212261DC672DD4B0` |
+| Automated result | Passed: one test, zero failures, zero errors, 22.589 seconds |
+| Evidence run ID | `20260831-234009` |
+
+The gate passed launch, Dashboard, top-level navigation, deterministic Room seed verification,
+incomplete-form validation, transaction creation/detail/edit/search/delete, Settings
+security/privacy entries, absence of Debug Health, backup/device-transfer rule validation, and the
+clean-session fatal-exception check. The local evidence directory is intentionally git-ignored; its
+`result.json`, instrumentation output, and logcat remain available on the validation workstation.
+
+This physical-device result satisfies the connected runtime condition for `T-E19-05`. Production
+signing, Play-distributed Firebase configuration, and an actual OS backup/device-transfer exercise
+remain separate release-environment checks and are not claimed by this debug-signed benchmark run.
+
 ## 2026-07-19 Connected Release-Like Validation (Supersedes Earlier Device Blockers)
 
 | Field | Result |
@@ -143,9 +207,9 @@ is attached.
 | Security/privacy-related UI flows | Blocked | Requires runtime manual or connected UI smoke. |
 | Empty/loading/error states | Blocked for runtime smoke | JVM, Compose/Paparazzi, and feature tests passed through `testDebugUnitTest :shared:allTests`; device runtime was not executed. |
 
-Do not mark `T-E19-05` fully complete until a named physical device or emulator
-has installed and launched the release-like APK and the manual flow checklist
-above has been executed.
+The blocked rows above are historical results from the 2026-07-15 run. The named physical-device
+gate recorded in the 2026-08-31 section now satisfies this connected runtime condition for
+`T-E19-05`.
 
 ## Firebase And Release Behavior
 
