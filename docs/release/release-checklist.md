@@ -95,8 +95,13 @@ Run the strongest practical local checks before handing off a public candidate:
 Run connected checks when hardware is available:
 
 ```powershell
-.\androidApp\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest --console=plain
+.\scripts\run_release_candidate_smoke.ps1 -DeviceSerial <adb-serial>
 ```
+
+The runner builds and installs the minified candidate, executes the dedicated critical-flow smoke
+test, validates backup/device-transfer policy, checks logcat for fatal application exceptions, and
+records device and artifact evidence. Use the Play-distributed signed candidate instead when signing
+and Play testing are available, and record that manual run in `docs/release/smoke-test.md`.
 
 ## Distribution And Rollout
 
