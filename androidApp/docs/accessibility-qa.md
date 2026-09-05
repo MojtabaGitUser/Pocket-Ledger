@@ -33,6 +33,27 @@ Review these primary screens for #14 and release candidates:
 
 Use a debug or release-like build with deterministic sample data only. Do not run this pass with personal financial data.
 
+For a primary-screen audit, use the repository runner from the project root. It refuses to start
+unless the requested package is installed and TalkBack is enabled, captures a screenshot and UI
+hierarchy per screen, and writes both machine-readable JSON and a reviewer-signed Markdown record.
+
+```powershell
+.\scripts\run_accessibility_audit.ps1 `
+  -DeviceSerial <adb-serial> `
+  -AndroidUserId 0 `
+  -PackageName com.mojtaba.folentra `
+  -BuildVariant benchmark `
+  -LayoutDeviceClass Compact `
+  -ApkPath .\androidApp\app\build\outputs\apk\benchmark\app-benchmark.apk `
+  -Reviewer "<reviewer-name>"
+```
+
+Use `com.mojtaba.folentra.debug` when auditing a debug build. The generated evidence is intentionally
+gitignored because screenshots and device metadata can be sensitive. Copy only the generated
+`qa-record.md` table into the issue or PR after reviewing and removing any sensitive notes.
+Omit `-ApkPath` only when intentionally auditing a preinstalled Play build. The runner never
+uninstalls a differently signed package or deletes app data.
+
 1. Enable TalkBack on the device or emulator.
 2. Open Folentra and start from the first visible destination.
 3. Swipe forward through the whole screen.
@@ -128,7 +149,20 @@ Automated verification:
 | Transaction instrumentation test compilation | Pass |
 | Transaction Editor 200% Paparazzi verification | Pass |
 
-The automated result does not replace listening to TalkBack output, observing hardware-keyboard/D-pad focus movement, or human contrast review. Those checks remain pending until recorded against a named device/build in the template below.
+The automated result does not replace listening to TalkBack output, observing hardware-keyboard/D-pad focus movement, or human contrast review. Those checks remain pending until recorded against a named device/build in the template below or by `scripts/run_accessibility_audit.ps1`.
+
+## Primary-screen semantics audit (#115)
+
+The code-level audit covers Dashboard, Transactions list/detail/editor, Search, Budget setup,
+Settings, and App Lock. Compose tests assert headings, labels, selected/checked/error/loading states,
+and primary actions. Settings switch rows use one switch-role semantics node for the complete row;
+their decorative trailing switches are hidden from the semantics tree to prevent duplicate TalkBack
+stops while preserving row-wide activation.
+
+The runtime portion is deliberately reviewer-attested. A screenshot or UI hierarchy cannot prove
+what TalkBack spoke, so #115 must not be marked runtime-Pass until the runner produces an all-Pass
+record from a named reviewer, device, Android/TalkBack version, package, build variant, and commit.
+
 ## QA Record Template
 
 Copy this table into the PR description, release record, or issue comment when #14-related QA is run.
@@ -149,9 +183,9 @@ Copy this table into the PR description, release record, or issue comment when #
 
 ## Closure Checklist For #14
 
-- [ ] Compose semantics and content descriptions are present on primary interactive UI.
-- [ ] Navigation, rows, forms, chips, switches, loading/error/empty states, and app lock expose useful labels or state descriptions.
-- [ ] 200% font-scale Paparazzi validation passes and baselines are committed.
+- [x] Compose semantics and content descriptions are present on primary interactive UI.
+- [x] Navigation, rows, forms, chips, switches, loading/error/empty states, and app lock expose useful labels or state descriptions.
+- [x] 200% font-scale Paparazzi validation passes and baselines are committed.
 - [ ] TalkBack pass is run or explicitly marked N/A for non-UI changes.
 - [ ] Keyboard/D-pad traversal is run or explicitly marked N/A for non-UI changes.
 - [ ] Light/dark contrast/readability is reviewed for changed screens.

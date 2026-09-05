@@ -2,6 +2,7 @@ package com.mojtaba.folentra.navigation
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
@@ -9,6 +10,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -135,6 +137,26 @@ class FolentraAppShellTest {
         composeRule.onNodeWithText("Scheduled around 18:00.", substring = true).assertIsDisplayed()
 
     }
+
+    @Test
+    fun settingsSwitchRowsExposeOneActionableSemanticsNode() {
+        setContent()
+
+        composeRule.onNodeWithContentDescription("Settings navigation destination").performClick()
+        composeRule.waitUntilTextExists("Background jobs")
+
+        listOf(
+            "App lock switch",
+            "Backup-ready profile switch",
+            "Monthly summary preparation switch",
+        ).forEach { description ->
+            composeRule.onAllNodesWithContentDescription(description)
+                .assertCountEquals(1)
+            composeRule.onNodeWithContentDescription(description)
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch))
+        }
+    }
+
     @Test
     fun debugHealthDestinationShowsSafeDiagnosticsWhenIncluded() {
         setContent(
