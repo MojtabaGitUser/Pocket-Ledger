@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -19,6 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.heading
@@ -141,23 +144,26 @@ private fun SecuritySettingsSection(
                 .semantics { heading() },
         )
         ListItem(
-            modifier = Modifier.semantics {
-                contentDescription = "App lock"
-                stateDescription = appLockStateDescription
-                if (!canToggle) disabled()
-            },
+            modifier = Modifier
+                .toggleable(
+                    value = state.isEnabled,
+                    enabled = canToggle,
+                    role = Role.Switch,
+                    onValueChange = onAppLockEnabledChange,
+                )
+                .semantics {
+                    contentDescription = "App lock switch"
+                    stateDescription = appLockStateDescription
+                    if (!canToggle) disabled()
+                },
             headlineContent = { Text(text = "App lock") },
             supportingContent = { Text(text = state.availability.description()) },
             trailingContent = {
                 Switch(
                     checked = state.isEnabled,
-                    onCheckedChange = onAppLockEnabledChange,
+                    onCheckedChange = null,
                     enabled = canToggle,
-                    modifier = Modifier.semantics {
-                        contentDescription = "App lock switch"
-                        stateDescription = appLockStateDescription
-                        if (!canToggle) disabled()
-                    },
+                    modifier = Modifier.clearAndSetSemantics {},
                 )
             },
         )
@@ -182,23 +188,26 @@ private fun SecuritySettingsSection(
             },
         )
         ListItem(
-            modifier = Modifier.semantics {
-                contentDescription = "Backup-ready profile"
-                stateDescription = backupReadyProfileState.stateDescription
-                if (!backupReadyProfileState.controlsEnabled) disabled()
-            },
+            modifier = Modifier
+                .toggleable(
+                    value = backupReadyProfileState.optInAccepted,
+                    enabled = backupReadyProfileState.controlsEnabled,
+                    role = Role.Switch,
+                    onValueChange = onBackupReadyProfileOptInChange,
+                )
+                .semantics {
+                    contentDescription = "Backup-ready profile switch"
+                    stateDescription = backupReadyProfileState.stateDescription
+                    if (!backupReadyProfileState.controlsEnabled) disabled()
+                },
             headlineContent = { Text(text = "Backup-ready profile") },
             supportingContent = { Text(text = backupReadyProfileState.supportingText) },
             trailingContent = {
                 Switch(
                     checked = backupReadyProfileState.optInAccepted,
-                    onCheckedChange = onBackupReadyProfileOptInChange,
+                    onCheckedChange = null,
                     enabled = backupReadyProfileState.controlsEnabled,
-                    modifier = Modifier.semantics {
-                        contentDescription = "Backup-ready profile switch"
-                        stateDescription = backupReadyProfileState.stateDescription
-                        if (!backupReadyProfileState.controlsEnabled) disabled()
-                    },
+                    modifier = Modifier.clearAndSetSemantics {},
                 )
             },
         )
@@ -222,23 +231,26 @@ private fun BackgroundJobsSettingsSection(
                 .semantics { heading() },
         )
         ListItem(
-            modifier = Modifier.semantics {
-                contentDescription = "Monthly summary preparation"
-                stateDescription = if (state.monthlySummaryEnabled) "On" else "Off"
-                if (!state.controlsEnabled) disabled()
-            },
+            modifier = Modifier
+                .toggleable(
+                    value = state.monthlySummaryEnabled,
+                    enabled = state.controlsEnabled,
+                    role = Role.Switch,
+                    onValueChange = onEnabledChange,
+                )
+                .semantics {
+                    contentDescription = "Monthly summary preparation switch"
+                    stateDescription = if (state.monthlySummaryEnabled) "On" else "Off"
+                    if (!state.controlsEnabled) disabled()
+                },
             headlineContent = { Text(text = "Monthly summary preparation") },
             supportingContent = { Text(text = state.monthlySummarySupportingText) },
             trailingContent = {
                 Switch(
                     checked = state.monthlySummaryEnabled,
-                    onCheckedChange = onEnabledChange,
+                    onCheckedChange = null,
                     enabled = state.controlsEnabled,
-                    modifier = Modifier.semantics {
-                        contentDescription = "Monthly summary preparation switch"
-                        stateDescription = if (state.monthlySummaryEnabled) "On" else "Off"
-                        if (!state.controlsEnabled) disabled()
-                    },
+                    modifier = Modifier.clearAndSetSemantics {},
                 )
             },
         )

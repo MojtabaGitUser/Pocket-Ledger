@@ -44,3 +44,5 @@ __pycache__/
 node_modules/
 # Local release smoke evidence can contain device-specific logs.
 androidApp/release-smoke-evidence/
+# Local accessibility evidence includes device identifiers and UI captures.
+androidApp/accessibility-audit-evidence/
