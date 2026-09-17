@@ -22,6 +22,12 @@ class FakeCategoryRepository(
 
     override suspend fun insertAll(categories: List<LedgerCategory>) = upsertAll(categories)
 
+    override suspend fun insertAllIfAbsent(categories: List<LedgerCategory>): Int {
+        val missingCategories = categories.filterNot { it.id in this.categories.value }
+        this.categories.update { current -> current + missingCategories.associateBy { it.id } }
+        return missingCategories.size
+    }
+
     override suspend fun upsert(category: LedgerCategory) {
         categories.update { it + (category.id to category) }
     }
