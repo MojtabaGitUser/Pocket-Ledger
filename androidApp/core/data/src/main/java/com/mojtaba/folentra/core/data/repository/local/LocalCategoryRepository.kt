@@ -25,6 +25,9 @@ class LocalCategoryRepository(
         categoryDao.insertAll(categories.map { it.asEntity() })
     }
 
+    override suspend fun insertAllIfAbsent(categories: List<LedgerCategory>): Int =
+        categoryDao.insertAllIfAbsent(categories.map { it.asEntity() }).count { rowId -> rowId != INSERT_IGNORED }
+
     override suspend fun upsert(category: LedgerCategory) {
         categoryDao.upsert(category.asEntity())
     }
@@ -63,4 +66,8 @@ class LocalCategoryRepository(
         categoryDao.observeActiveCategoriesByType(type).map { entities ->
             entities.map { it.asExternalModel() }
         }
+
+    private companion object {
+        const val INSERT_IGNORED = -1L
+    }
 }

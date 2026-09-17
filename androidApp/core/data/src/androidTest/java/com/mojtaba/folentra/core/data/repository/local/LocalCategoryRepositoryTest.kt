@@ -70,6 +70,23 @@ class LocalCategoryRepositoryTest {
     }
 
     @Test
+    fun insertAllIfAbsent_ignoresExistingCategoriesWithoutOverwritingThem() = runTest {
+        repository.insert(testCategory(id = "category", name = "Customized", isActive = false))
+
+        val insertedCount = repository.insertAllIfAbsent(
+            listOf(
+                testCategory(id = "category", name = "Default"),
+                testCategory(id = "new-category", name = "New"),
+            ),
+        )
+
+        assertEquals(1, insertedCount)
+        assertEquals("Customized", repository.getById("category")?.name)
+        assertFalse(repository.getById("category")?.isActive ?: true)
+        assertEquals("New", repository.getById("new-category")?.name)
+    }
+
+    @Test
     fun observeById_reflectsCreateUpdateDeleteChanges() = runTest {
         val observedCategory = repository.observeById("category")
         assertNull(observedCategory.first())

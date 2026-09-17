@@ -25,6 +25,7 @@ class MainActivity : FragmentActivity() {
         try {
             super.onCreate(savedInstanceState)
             enableEdgeToEdge()
+            seedDefaultCategories()
             setContent {
                 FolentraTheme {
                     FolentraApp(appGraph = appGraph)
@@ -50,5 +51,20 @@ class MainActivity : FragmentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         activityScope.cancel()
+    }
+
+    private fun seedDefaultCategories() {
+        activityScope.launch(Dispatchers.IO) {
+            runCatching { appGraph.defaultCategorySeeder.seedIfEmpty() }
+                .onSuccess { insertedCount ->
+                    appGraph.appLogger.info("Default category bootstrap completed inserted_count=$insertedCount")
+                }
+                .onFailure { throwable ->
+                    appGraph.startupFailureReporter.recordCriticalFailure(
+                        throwable = throwable,
+                        stage = "default_category_bootstrap",
+                    )
+                }
+        }
     }
 }

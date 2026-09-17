@@ -9,6 +9,8 @@ interface CategoryRepository : OfflineFirstRepository {
 
     suspend fun insertAll(categories: List<LedgerCategory>)
 
+    suspend fun insertAllIfAbsent(categories: List<LedgerCategory>): Int
+
     suspend fun upsert(category: LedgerCategory)
 
     suspend fun upsertAll(categories: List<LedgerCategory>)
