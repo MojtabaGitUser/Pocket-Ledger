@@ -32,6 +32,7 @@ import com.mojtaba.folentra.core.data.repository.local.LocalBudgetRepository
 import com.mojtaba.folentra.core.data.repository.local.LocalCategoryRepository
 import com.mojtaba.folentra.core.data.repository.local.LocalTagRepository
 import com.mojtaba.folentra.core.data.repository.local.LocalTransactionRepository
+import com.mojtaba.folentra.core.data.seed.DefaultCategorySeeder
 import com.mojtaba.folentra.core.database.createFolentraDatabase
 import com.mojtaba.folentra.core.featureflags.DefaultFeatureFlags
 import com.mojtaba.folentra.core.featureflags.FeatureFlagEvaluator
@@ -77,6 +78,7 @@ class FolentraAppGraph private constructor(
     val budgetRepository: BudgetRepository,
     val categoryRepository: CategoryRepository,
     val tagRepository: TagRepository,
+    val defaultCategorySeeder: DefaultCategorySeeder,
     val featureFlags: FeatureFlagEvaluator,
     val featureFlagProvider: OverrideableFeatureFlagProvider,
     val aiProviderSelector: AiProviderSelector,
@@ -104,6 +106,7 @@ class FolentraAppGraph private constructor(
             budgetRepository: BudgetRepository,
             categoryRepository: CategoryRepository,
             tagRepository: TagRepository,
+            defaultCategorySeeder: DefaultCategorySeeder = DefaultCategorySeeder(categoryRepository),
             featureFlags: FeatureFlagEvaluator,
             featureFlagProvider: OverrideableFeatureFlagProvider = OverrideableFeatureFlagProvider(),
             aiProviderSelector: AiProviderSelector,
@@ -128,6 +131,7 @@ class FolentraAppGraph private constructor(
             budgetRepository = budgetRepository,
             categoryRepository = categoryRepository,
             tagRepository = tagRepository,
+            defaultCategorySeeder = defaultCategorySeeder,
             featureFlags = featureFlags,
             featureFlagProvider = featureFlagProvider,
             aiProviderSelector = aiProviderSelector,
@@ -232,12 +236,14 @@ class FolentraAppGraph private constructor(
                         mapOf(MonthlySummaryPreparationTask.Id to MonthlySummaryPreparationWorker::class.java),
                     ),
                 )
+                val categoryRepository = LocalCategoryRepository(database.categoryDao())
 
                 FolentraAppGraph(
                     transactionRepository = LocalTransactionRepository(database.transactionDao()),
                     budgetRepository = LocalBudgetRepository(database.budgetDao()),
-                    categoryRepository = LocalCategoryRepository(database.categoryDao()),
+                    categoryRepository = categoryRepository,
                     tagRepository = LocalTagRepository(database.tagDao()),
+                    defaultCategorySeeder = DefaultCategorySeeder(categoryRepository),
                     featureFlags = featureFlags,
                     featureFlagProvider = featureFlagProvider,
                     aiProviderSelector = aiProviderSelector,
