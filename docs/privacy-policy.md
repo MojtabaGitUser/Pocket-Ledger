@@ -44,7 +44,11 @@ explicitly changed to require external processing. In the current app:
 - There is no cloud sync implementation.
 - There is no banking integration or bank connection.
 - There is no advertising UI or ad-serving feature.
-- There is no import or export flow implemented.
+- There is no import flow. Users can explicitly export selected transactions as a local CSV.
+  Dates, types, amounts and currencies are included; merchant names and notes are optional
+  and excluded by default. The file is unencrypted and saved through Android's document picker.
+  A selected cloud provider may upload it. Exported files remain at the chosen destination
+  until the user deletes them; Folentra does not keep a separate export cache or log their contents.
 - There is no remote AI provider or network AI request path.
 - Private monthly insights, semantic search ranking, and smart autofill use
   on-device provider contracts with deterministic local fallback. Current
