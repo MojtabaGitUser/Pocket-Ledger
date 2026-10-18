@@ -10,14 +10,14 @@ Folentra is an Android-first Kotlin project with a modular foundation and a sele
 The Android project lives in `androidApp/`.
 
 The Compose Multiplatform desktop demo lives in `androidApp/desktopApp`.
-Run it with `.\androidApp\gradlew.bat :desktopApp:run --console=plain` and
+Run it with `.\androidApp\gradlew.bat -p androidApp :desktopApp:run --console=plain` and
 open `Search` or `Insights` from the desktop navigation rail. The desktop demo
 uses the shared Room KMP database for local file-backed demo persistence. More
 details are in [Desktop demo](docs/desktop-demo.md).
 
 ## CI Commands
 
-Run local validation from the repository root before opening a PR. These
+Run local validation from the repository root before opening a PR. Keep `-p androidApp` in these commands so CLI builds use the same Gradle project as Android Studio. The wrapper location alone does not select the project directory; alternating the repository-root and Android-project builds can leave conflicting incremental outputs in shared module build folders. These
 commands mirror the GitHub Actions workflows where possible; detailed workflow
 strategy, artifacts, and release-safety notes are in
 [CI/CD strategy](docs/ci-cd.md).
@@ -25,10 +25,10 @@ strategy, artifacts, and release-safety notes are in
 Quick PR validation:
 
 ```powershell
-.\androidApp\gradlew.bat lintDebug
-.\androidApp\gradlew.bat testDebugUnitTest :shared:allTests
-.\androidApp\gradlew.bat :app:assembleDebug :app:assembleRelease
-.\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
+.\androidApp\gradlew.bat -p androidApp lintDebug
+.\androidApp\gradlew.bat -p androidApp testDebugUnitTest :shared:allTests
+.\androidApp\gradlew.bat -p androidApp :app:assembleDebug :app:assembleRelease
+.\androidApp\gradlew.bat -p androidApp :app:assembleBenchmark :macrobenchmark:assemble
 ```
 
 For macOS/Linux, run the same tasks from `androidApp/` with `./gradlew`.
@@ -36,15 +36,15 @@ For macOS/Linux, run the same tasks from `androidApp/` with `./gradlew`.
 UI, accessibility, theme, layout, or font-scale changes:
 
 ```powershell
-.\androidApp\gradlew.bat verifyAdaptiveScreenshots
+.\androidApp\gradlew.bat -p androidApp verifyAdaptiveScreenshots
 ```
 
 Performance-sensitive or Baseline Profile changes:
 
 ```powershell
-.\androidApp\gradlew.bat :app:assembleBenchmark :macrobenchmark:assemble
-.\androidApp\gradlew.bat :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
-.\androidApp\gradlew.bat :app:generateReleaseBaselineProfile
+.\androidApp\gradlew.bat -p androidApp :app:assembleBenchmark :macrobenchmark:assemble
+.\androidApp\gradlew.bat -p androidApp :macrobenchmark:connectedBenchmarkBenchmarkAndroidTest
+.\androidApp\gradlew.bat -p androidApp :app:generateReleaseBaselineProfile
 ```
 
 Connected benchmark and Baseline Profile commands require an attached emulator
@@ -55,6 +55,8 @@ or device and are intentionally not part of default PR validation.
 For a fast portfolio review, start with [Portfolio documentation](docs/portfolio/README.md), then use the [portfolio demo script](docs/portfolio/demo-script.md), [architecture diagram](docs/portfolio/architecture-diagram.md), [testing and performance summary](docs/portfolio/testing-performance-summary.md), and [portfolio traceability](docs/portfolio/traceability.md).
 
 ## Documentation
+
+- [Local CSV export](docs/csv-export.md): date-range export from Settings, optional private fields, file format and validation.
 
 - [Portfolio documentation](docs/portfolio/README.md): reviewer path, architecture diagram, testing/performance summary, demo script, and E-20 traceability.
 - [Architecture](docs/architecture.md): module responsibilities, dependency rules, ownership boundaries, and architectural rationale.

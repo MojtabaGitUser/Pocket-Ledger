@@ -1,5 +1,7 @@
 # Export And Accountant/Freelancer Path
 
+> CSV export update: Settings now supports user-initiated local CSV export with date selection and optional merchant/note fields. Earlier statements below describing all export as future-only are superseded for this CSV flow. PDF, import, backup/restore and accountant workflows remain future work. The document picker can save to a cloud provider chosen by the user; generated files are unencrypted. Review the CSV export disclosure and test save/cancel/error behavior before release.
+
 This document satisfies #145 by defining a future export and
 accountant/freelancer path without implementing export UI, file writers, share
 flows, accountant dashboards, invoicing, or tax workflows.

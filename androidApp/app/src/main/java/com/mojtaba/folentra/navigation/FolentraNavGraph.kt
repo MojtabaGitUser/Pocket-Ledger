@@ -74,6 +74,7 @@ fun FolentraNavGraph(
         placeholderDestination(AppDestination.Settings) {
             SettingsScreen(
                 appLockManager = appGraph.appLockManager,
+                transactionRepository = appGraph.transactionRepository,
                 backgroundJobSettingsManager = appGraph.backgroundJobSettingsManager,
                 optionalAccountSettingsState = OptionalAccountSettingsState.from(
                     featureFlags = appGraph.featureFlags,

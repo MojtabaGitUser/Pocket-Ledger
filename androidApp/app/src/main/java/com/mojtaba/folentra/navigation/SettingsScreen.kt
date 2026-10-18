@@ -44,6 +44,10 @@ import com.mojtaba.folentra.core.security.backup.BackupReadyProfileManager
 import com.mojtaba.folentra.core.security.backup.BackupReadyProfilePrerequisites
 import com.mojtaba.folentra.core.security.backup.BackupReadyProfileState
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import com.mojtaba.folentra.core.data.repository.TransactionRepository
+import com.mojtaba.folentra.export.CsvExportSection
 
 @Composable
 fun SettingsScreen(
@@ -51,6 +55,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
     backupReadyProfileManager: BackupReadyProfileManager? = null,
+    transactionRepository: TransactionRepository? = null,
     optionalAccountSettingsState: OptionalAccountSettingsState = OptionalAccountSettingsState(
         featureEnabled = false,
         passkeyClientAvailable = false,
@@ -80,6 +85,7 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(vertical = spacing.large),
             verticalArrangement = Arrangement.spacedBy(spacing.large),
         ) {
@@ -119,6 +125,7 @@ fun SettingsScreen(
                     },
                 )
             }
+            transactionRepository?.let { CsvExportSection(it) }
         }
     }
 }
