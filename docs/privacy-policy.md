@@ -1,7 +1,7 @@
 # Folentra Privacy Policy
 
 Effective date: July 5, 2026
-Last updated: July 20, 2026
+Last updated: October 20, 2026
 
 Contact: support.folentra@gmail.com
 
@@ -10,12 +10,8 @@ categories, tags, and related ledger summaries. This policy describes the
 behavior implemented in the current Android app package
 `com.mojtaba.folentra`.
 
-This policy must be reviewed and updated before public Play Store publication if
-app behavior, third-party services, support contact details, hosted policy URL,
-or data disclosures change. Before submission, Folentra must publish this
-policy at a public HTTPS URL, add that URL to Play Console, and replace the
-support-contact placeholder with the same public contact used in the Play Store
-listing.
+For privacy questions about Folentra or its CSV export feature, contact the
+support address above.
 
 ## Information Stored Locally
 
@@ -69,6 +65,38 @@ for explicit opt-in state, but it does not upload, sync, restore, or include
 ledger records in Android backup. Future production account, cloud sync,
 encrypted backup, or restore behavior would require a separate implementation,
 privacy review, and policy update before release.
+
+## CSV Export
+
+You can export transactions for a date range you select from Settings. Each CSV
+contains transaction dates, transaction types, amounts, and currencies. Merchant
+names and notes are excluded by default; you can choose to include each of them
+before saving. Transaction IDs, categories, tags, and account metadata are not
+included in the current CSV format.
+
+Folentra generates the file on your device and lets you select its destination
+through Android's system document picker, such as the Downloads folder. The
+export feature does not send the file to a Folentra server, keep a separate
+export cache, or log the exported contents. It does not require broad access to
+your device's files.
+
+CSV files contain financial information and are not encrypted by Folentra.
+App Lock does not protect files saved outside the app. If you select a cloud
+storage provider, that provider may upload and store the file under its own
+privacy policy and settings. If you later open or share it with another app or
+person, that recipient can access the information you included.
+
+Exported files are separate copies of your records. Editing or deleting a
+transaction, clearing Folentra's storage, or uninstalling Folentra does not
+remove copies saved in Downloads or another external destination. Delete those
+files yourself using your file manager or storage provider, and manage any
+shared copies with their recipients. A failed save may leave an incomplete file
+at the selected destination; you can delete it there.
+
+Folentra's automatic backup exclusions apply to app-managed data, not to CSV
+files you save elsewhere. Your chosen storage provider controls any backup,
+retention, or deletion of those exported files. CSV export does not provide
+automatic sync or a backup-and-restore service.
 
 ## Information Not Collected By Current App Features
 
@@ -214,7 +242,9 @@ private release data in logs or artifacts.
 ## Data Retention
 
 Ledger records remain on the user's device until the user deletes them in the
-app, clears app storage, or uninstalls the app. Folentra's Android backup
+app, clears app storage, or uninstalls the app. Exported CSV copies remain at
+their selected destinations until separately deleted, as described above.
+Folentra's Android backup
 and data-extraction rules exclude the local ledger database from automatic
 cloud backup and device-to-device transfer by default because encrypted backup
 and restore are not implemented.
@@ -227,6 +257,7 @@ governed by the relevant Firebase/Google service settings and policies.
 Users can delete ledger records through implemented app screens where deletion
 is available. Users can also clear app storage or uninstall the app through
 Android system settings to remove local app data from the device.
+These actions do not delete exported CSV files saved outside the app.
 
 There is currently no Folentra account portal or server-side deletion
 request process because the app does not implement user accounts or server-side
@@ -275,5 +306,4 @@ The app does not knowingly request personal information from children.
 This policy should be updated when Folentra adds or changes analytics,
 crash reporting, cloud sync, account login, import/export, AI providers,
 permissions, backup behavior, third-party services, or Play Store disclosures.
-The effective date at the top of this document should be updated when the policy
-changes.
+The last-updated date at the top of this document identifies the latest revision.
