@@ -56,6 +56,8 @@ For a fast portfolio review, start with [Portfolio documentation](docs/portfolio
 
 ## Documentation
 
+- [Transaction drafts](docs/transaction-drafts.md): local receipt-entry drafts, review and atomic confirmation; OCR is a later step.
+
 - [Local CSV export](docs/csv-export.md): date-range export from Settings, optional private fields, file format and validation.
 
 - [Portfolio documentation](docs/portfolio/README.md): reviewer path, architecture diagram, testing/performance summary, demo script, and E-20 traceability.

@@ -1,7 +1,7 @@
 # Folentra Privacy Policy
 
 Effective date: July 5, 2026
-Last updated: October 20, 2026
+Last updated: October 25, 2026
 
 Contact: support.folentra@gmail.com
 
@@ -14,6 +14,12 @@ For privacy questions about Folentra or its CSV export feature, contact the
 support address above.
 
 ## Information Stored Locally
+
+Pending transaction drafts are also stored locally until you confirm or discard them. They may
+contain manually entered receipt amounts, dates, categories, merchant names and notes. Confirmation
+moves the reviewed data into the ledger and clears the draft financial fields, retaining only an
+identifier, source, timestamps and confirmation marker to prevent duplicate registration. This
+feature does not capture receipt photos or run OCR. Drafts follow the database backup exclusions.
 
 Folentra stores ledger data in the app-private Room database
 `folentra.db` on the user's device. This local data can include:

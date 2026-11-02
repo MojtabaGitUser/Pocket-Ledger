@@ -21,7 +21,7 @@ import androidx.sqlite.execSQL
 object DatabaseMigrations {
     const val INITIAL_VERSION: Int = 1
 
-    const val CURRENT_VERSION: Int = 2
+    const val CURRENT_VERSION: Int = 3
 
     val MIGRATION_1_2: Migration = object : Migration(1, 2) {
         override fun migrate(connection: SQLiteConnection) {
@@ -31,5 +31,19 @@ object DatabaseMigrations {
         }
     }
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
+    val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("""
+                CREATE TABLE IF NOT EXISTS `transaction_drafts` (
+                    `id` TEXT NOT NULL, `amountInput` TEXT NOT NULL,
+                    `currencyCode` TEXT NOT NULL, `type` TEXT NOT NULL,
+                    `occurredAt` INTEGER, `categoryId` TEXT, `merchant` TEXT NOT NULL,
+                    `note` TEXT NOT NULL, `source` TEXT NOT NULL, `createdAt` INTEGER NOT NULL,
+                    `updatedAt` INTEGER NOT NULL, `confirmedTransactionId` TEXT, PRIMARY KEY(`id`)
+                )
+            """.trimIndent())
+        }
+    }
+
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 }
