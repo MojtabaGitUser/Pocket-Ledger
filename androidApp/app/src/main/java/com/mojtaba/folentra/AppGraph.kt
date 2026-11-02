@@ -74,6 +74,7 @@ fun rememberFolentraAppGraph(): FolentraAppGraph {
 }
 
 class FolentraAppGraph private constructor(
+    val draftTransactionRepository: com.mojtaba.folentra.core.data.repository.DraftTransactionRepository?,
     val transactionRepository: TransactionRepository,
     val budgetRepository: BudgetRepository,
     val categoryRepository: CategoryRepository,
@@ -102,6 +103,7 @@ class FolentraAppGraph private constructor(
 ) {
     companion object {
         fun createForTesting(
+            draftTransactionRepository: com.mojtaba.folentra.core.data.repository.DraftTransactionRepository? = null,
             transactionRepository: TransactionRepository,
             budgetRepository: BudgetRepository,
             categoryRepository: CategoryRepository,
@@ -127,6 +129,7 @@ class FolentraAppGraph private constructor(
             productAnalyticsLogger: ProductAnalyticsLogger = NoOpProductAnalyticsLogger(),
             productAnalyticsProviderState: ProductAnalyticsProviderState = ProductAnalyticsProviderState.NoOp,
         ): FolentraAppGraph = FolentraAppGraph(
+            draftTransactionRepository = draftTransactionRepository,
             transactionRepository = transactionRepository,
             budgetRepository = budgetRepository,
             categoryRepository = categoryRepository,
@@ -239,6 +242,7 @@ class FolentraAppGraph private constructor(
                 val categoryRepository = LocalCategoryRepository(database.categoryDao())
 
                 FolentraAppGraph(
+                    draftTransactionRepository = com.mojtaba.folentra.core.data.repository.local.LocalDraftTransactionRepository(database.draftTransactionDao()),
                     transactionRepository = LocalTransactionRepository(database.transactionDao()),
                     budgetRepository = LocalBudgetRepository(database.budgetDao()),
                     categoryRepository = categoryRepository,

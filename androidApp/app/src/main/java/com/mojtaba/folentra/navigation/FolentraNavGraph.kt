@@ -73,6 +73,7 @@ fun FolentraNavGraph(
         }
         placeholderDestination(AppDestination.Settings) {
             SettingsScreen(
+                onOpenDrafts = if (appGraph.draftTransactionRepository != null) ({ navController.navigate("transactions/drafts") }) else null,
                 appLockManager = appGraph.appLockManager,
                 transactionRepository = appGraph.transactionRepository,
                 backgroundJobSettingsManager = appGraph.backgroundJobSettingsManager,
@@ -83,6 +84,13 @@ fun FolentraNavGraph(
                 ),
                 backupReadyProfileManager = appGraph.backupReadyProfileManager,
             )
+        }
+        appGraph.draftTransactionRepository?.let { repository ->
+            composable("transactions/drafts") {
+                com.mojtaba.folentra.feature.transaction.draft.DraftTransactionsRoute(
+                    repository, appGraph.categoryRepository, onBack = { navController.popBackStack() },
+                )
+            }
         }
         if (includeDebugDestinations) {
             placeholderDestination(AppDestination.DebugHealth) {
