@@ -56,6 +56,7 @@ fun SettingsScreen(
     backgroundJobSettingsManager: BackgroundJobSettingsManager? = null,
     backupReadyProfileManager: BackupReadyProfileManager? = null,
     transactionRepository: TransactionRepository? = null,
+    onOpenDrafts: (() -> Unit)? = null,
     optionalAccountSettingsState: OptionalAccountSettingsState = OptionalAccountSettingsState(
         featureEnabled = false,
         passkeyClientAvailable = false,
@@ -93,6 +94,7 @@ fun SettingsScreen(
                 title = "Settings",
                 subtitle = "Security and privacy",
             )
+            onOpenDrafts?.let { open -> TextButton(onClick = open) { Text("Transaction drafts") } }
             SecuritySettingsSection(
                 state = state,
                 canToggle = canToggle,

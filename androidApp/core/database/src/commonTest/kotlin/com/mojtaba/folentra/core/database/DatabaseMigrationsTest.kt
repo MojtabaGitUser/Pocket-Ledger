@@ -11,14 +11,14 @@ class DatabaseMigrationsTest {
     }
 
     @Test
-    fun currentVersion_isVersionTwo() {
-        assertEquals(2, DatabaseMigrations.CURRENT_VERSION)
+    fun currentVersion_isVersionThree() {
+        assertEquals(3, DatabaseMigrations.CURRENT_VERSION)
     }
 
     @Test
-    fun migrationOneToTwo_isRegistered() {
+    fun migrationsOneToThree_areRegistered() {
         assertEquals(
-            listOf(1 to 2),
+            listOf(1 to 2, 2 to 3),
             DatabaseMigrations.ALL.map { it.startVersion to it.endVersion },
         )
     }

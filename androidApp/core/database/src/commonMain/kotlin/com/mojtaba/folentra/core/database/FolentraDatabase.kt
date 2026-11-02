@@ -1,6 +1,8 @@
 package com.mojtaba.folentra.core.database
 
 import androidx.room.ConstructedBy
+import com.mojtaba.folentra.core.database.dao.DraftTransactionDao
+import com.mojtaba.folentra.core.database.model.DraftTransactionEntity
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabase.Builder
@@ -25,12 +27,14 @@ import kotlin.coroutines.CoroutineContext
         TagEntity::class,
         TransactionEntity::class,
         TransactionTagCrossRef::class,
+        DraftTransactionEntity::class,
     ],
     version = DatabaseMigrations.CURRENT_VERSION,
     exportSchema = true,
 )
 @ConstructedBy(FolentraDatabaseConstructor::class)
 abstract class FolentraDatabase : RoomDatabase() {
+    abstract fun draftTransactionDao(): DraftTransactionDao
     abstract fun budgetDao(): BudgetDao
 
     abstract fun categoryDao(): CategoryDao
