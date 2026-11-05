@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import java.time.Instant
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,12 +32,21 @@ fun DateSelector(
     modifier: Modifier = Modifier,
 ) {
     var showPicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = occurredAt)
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = occurredAt?.let {
+        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+            .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+    })
     val dateLabel = occurredAt?.formatDate()
 
     androidx.compose.foundation.layout.Column(modifier = modifier) {
         OutlinedButton(
-            onClick = { showPicker = true },
+            onClick = {
+                datePickerState.selectedDateMillis = occurredAt?.let {
+                    Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                        .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+                }
+                showPicker = true
+            },
             modifier = Modifier.semantics {
                 contentDescription = "Transaction date"
                 stateDescription = dateLabel ?: "No date selected"
@@ -60,7 +70,10 @@ fun DateSelector(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        datePickerState.selectedDateMillis?.let(onDateSelected)
+                        datePickerState.selectedDateMillis?.let {
+                            val localDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
+                            onDateSelected(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                        }
                         showPicker = false
                     },
                 ) {

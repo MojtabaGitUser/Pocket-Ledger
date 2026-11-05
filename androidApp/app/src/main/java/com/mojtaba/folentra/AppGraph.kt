@@ -74,6 +74,7 @@ fun rememberFolentraAppGraph(): FolentraAppGraph {
 }
 
 class FolentraAppGraph private constructor(
+    val receiptTextRecognizer: com.mojtaba.folentra.core.data.receipt.ReceiptTextRecognizer?,
     val draftTransactionRepository: com.mojtaba.folentra.core.data.repository.DraftTransactionRepository?,
     val transactionRepository: TransactionRepository,
     val budgetRepository: BudgetRepository,
@@ -103,6 +104,7 @@ class FolentraAppGraph private constructor(
 ) {
     companion object {
         fun createForTesting(
+            receiptTextRecognizer: com.mojtaba.folentra.core.data.receipt.ReceiptTextRecognizer? = null,
             draftTransactionRepository: com.mojtaba.folentra.core.data.repository.DraftTransactionRepository? = null,
             transactionRepository: TransactionRepository,
             budgetRepository: BudgetRepository,
@@ -129,6 +131,7 @@ class FolentraAppGraph private constructor(
             productAnalyticsLogger: ProductAnalyticsLogger = NoOpProductAnalyticsLogger(),
             productAnalyticsProviderState: ProductAnalyticsProviderState = ProductAnalyticsProviderState.NoOp,
         ): FolentraAppGraph = FolentraAppGraph(
+            receiptTextRecognizer = receiptTextRecognizer,
             draftTransactionRepository = draftTransactionRepository,
             transactionRepository = transactionRepository,
             budgetRepository = budgetRepository,
@@ -242,6 +245,7 @@ class FolentraAppGraph private constructor(
                 val categoryRepository = LocalCategoryRepository(database.categoryDao())
 
                 FolentraAppGraph(
+                    receiptTextRecognizer = com.mojtaba.folentra.core.data.receipt.MlKitReceiptTextRecognizer(context),
                     draftTransactionRepository = com.mojtaba.folentra.core.data.repository.local.LocalDraftTransactionRepository(database.draftTransactionDao()),
                     transactionRepository = LocalTransactionRepository(database.transactionDao()),
                     budgetRepository = LocalBudgetRepository(database.budgetDao()),

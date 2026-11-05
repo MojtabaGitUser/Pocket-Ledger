@@ -26,6 +26,7 @@ benchmark = "1.5.0-alpha06"
 lifecycle = "2.9.4"
 material3Adaptive = "1.2.0"
 mlKitGenAiPrompt = "1.0.0-beta2"
+mlKitTextRecognition = "16.0.1"
 paparazzi = "2.0.0-alpha05"
 playIntegrity = "1.4.0"
 profileinstaller = "1.4.1"
@@ -40,6 +41,7 @@ crashlyticsGradle = "3.0.6"
 composeMultiplatform = "1.9.0"
 
 [libraries]
+mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlKitTextRecognition" }
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

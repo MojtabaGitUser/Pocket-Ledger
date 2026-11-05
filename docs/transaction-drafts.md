@@ -3,8 +3,8 @@
 Open Settings → Transaction drafts → New receipt draft. Enter receipt details, save an incomplete
 draft, reopen and edit it, then choose Confirm and add transaction and explicitly confirm the dialog.
 Discard requires a separate confirmation. Closing the editor through its button or Android Back
-saves the draft; edits not yet saved can be lost if the process is killed or navigation bypasses it.
-Photo capture, image storage and OCR are not implemented in this stage.
+saves the draft. Edits also queue local saves and checkpoint saved screen state; an abrupt force-stop before a write finishes can still lose the newest keystroke.
+Photo capture and on-device OCR now feed this same flow; see [receipt-scanner.md](receipt-scanner.md).
 
 The existing transaction feature owns the screen and ViewModel. AppGraph supplies a local draft
 repository. The repository reuses shared transaction validation and the Room KMP database owns
@@ -22,7 +22,7 @@ This prevents duplicate confirmation of one draft, not duplicate receipts entere
 Cross-source receipt matching belongs to the later ingestion/reconciliation work.
 
 Drafts stay in the existing app-private database and inherit its backup exclusions. They are not
-separately encrypted. No receipt images, raw OCR text, analytics events or financial logs are added.
+separately encrypted. Receipt scanning uses temporary image cache; raw OCR text is not persisted. See receipt-scanner.md for retention and SDK diagnostics.
 Pending drafts can be discarded from the review screen. Clearing app data removes all drafts and
 confirmation markers. Removing a confirmed ledger transaction leaves no hidden draft financial copy.
 
@@ -31,8 +31,7 @@ concurrent confirmation, rollback on failed insert, retry after deletion, input 
 state after errors. Device checks still needed before release: update an installed schema-2 build,
 save/reopen/edit/confirm/discard, TalkBack, 200% fonts, rotation and process restart.
 
-Next: feed on-device OCR results into DraftTransaction with a stable draft ID; require the same
-review/confirmation path, and add image permission, retention and deletion rules before capture.
+The receipt scanner now uses this stable draft ID and the same review/confirmation path.
 
 ## Physical-device verification — 2026-11-01
 

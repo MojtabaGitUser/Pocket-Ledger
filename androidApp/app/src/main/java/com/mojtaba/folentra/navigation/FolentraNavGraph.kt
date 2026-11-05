@@ -89,6 +89,7 @@ fun FolentraNavGraph(
             composable("transactions/drafts") {
                 com.mojtaba.folentra.feature.transaction.draft.DraftTransactionsRoute(
                     repository, appGraph.categoryRepository, onBack = { navController.popBackStack() },
+                    recognizer = appGraph.receiptTextRecognizer,
                 )
             }
         }
