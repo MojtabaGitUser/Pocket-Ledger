@@ -7,6 +7,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.mlkit.text.recognition)
+    implementation(libs.androidx.core.ktx)
     implementation(project(":shared"))
     implementation(project(":core:database"))
     implementation(libs.kotlinx.coroutines.core)

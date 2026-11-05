@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#5067a0">
+  <meta name="description" content="دیاگرام یک‌صفحه‌ای معماری لایه‌ای Folentra از UI تا Room">
+  <title>Folentra · معماری لایه‌ای</title>
+  <style>
+    :root {
+      --ink: #202331;
+      --muted: #626777;
+      --brand: #5067a0;
+      --brand-dark: #354b81;
+      --brand-soft: #e8edff;
+      --paper: #fbfaff;
+      --card: #ffffff;
+      --line: #dfe2ed;
+      --green: #2b7657;
+      --green-soft: #e8f5ef;
+      --amber: #9a641c;
+      --amber-soft: #fff3df;
+      --shadow: 0 16px 45px rgba(42, 49, 78, .10);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 5%, #e9efff 0, transparent 30%),
+        linear-gradient(145deg, #f7f4ff 0, #fff 48%, #eef3ff 100%);
+      font: 15px/1.65 Tahoma, "Segoe UI", system-ui, sans-serif;
+    }
+    main { width: min(1180px, calc(100% - 32px)); margin: 28px auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 12px;
+      border: 1px solid #cad5f8;
+      border-radius: 999px;
+      color: var(--brand-dark);
+      background: #f2f5ff;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+    h1 { margin: 10px 0 4px; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.05; letter-spacing: -.04em; }
+    header p { margin: 0; color: var(--muted); }
+    .rule {
+      max-width: 340px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      color: #fff;
+      background: var(--brand);
+      box-shadow: var(--shadow);
+      font-weight: 800;
+      direction: ltr;
+      text-align: center;
+    }
+    .board {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: rgba(255,255,255,.88);
+      box-shadow: var(--shadow);
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      direction: ltr;
+      gap: 30px;
+      align-items: stretch;
+    }
+    .layer {
+      position: relative;
+      min-height: 190px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      direction: rtl;
+    }
+    .layer:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      z-index: 2;
+      left: -25px;
+      top: 50%;
+      width: 20px;
+      color: var(--brand);
+      font-size: 1.7rem;
+      font-weight: 900;
+      transform: translateY(-50%);
+    }
+    .presentation { border-top: 5px solid var(--brand); }
+    .data { border-top: 5px solid var(--green); }
+    .badge {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      margin-left: 8px;
+      border-radius: 11px;
+      color: var(--brand-dark);
+      background: var(--brand-soft);
+      font-weight: 900;
+    }
+    .data .badge { color: var(--green); background: var(--green-soft); }
+    .layer h2 { display: inline; margin: 0; font-size: 1.15rem; }
+    .layer .tech { margin: 7px 0 12px; color: var(--muted); font-size: .82rem; direction: ltr; text-align: right; }
+    .layer ul { margin: 0; padding-right: 18px; }
+    .layer li { margin: 4px 0; }
+    .boundary {
+      margin-top: 13px;
+      padding: 8px 10px;
+      border-radius: 11px;
+      color: var(--amber);
+      background: var(--amber-soft);
+      font-size: .78rem;
+      font-weight: 700;
+    }
+    .labels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .zone {
+      padding: 9px 14px;
+      border: 1px dashed #aebce9;
+      border-radius: 14px;
+      color: var(--brand-dark);
+      background: #f5f7ff;
+      text-align: center;
+      font-weight: 800;
+    }
+    .zone.data-zone { border-color: #add4c1; color: var(--green); background: #f2fbf7; }
+    .details {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .panel {
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255,255,255,.82);
+    }
+    .panel h3 { margin: 0 0 10px; font-size: 1rem; }
+    .journey { display: flex; direction: rtl; flex-wrap: wrap; align-items: center; gap: 7px; }
+    .step { padding: 7px 10px; border-radius: 10px; background: #f0f2f8; font-size: .82rem; font-weight: 700; }
+    .arrow { color: var(--brand); font-weight: 900; transform: rotate(180deg); }
+    .contract { margin: 0; padding-right: 18px; color: var(--muted); }
+    .contract strong { color: var(--ink); }
+    .interview {
+      margin-top: 18px;
+      padding: 20px;
+      border: 1px solid #cdd7f5;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #f3f6ff, #fff);
+    }
+    .interview-head { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+    .interview h2 { margin: 0; font-size: 1.15rem; }
+    .time { padding: 5px 10px; border-radius: 999px; color: var(--brand-dark); background: var(--brand-soft); font-size: .76rem; font-weight: 800; white-space: nowrap; }
+    blockquote {
+      margin: 14px 0;
+      padding: 12px 16px;
+      border-right: 4px solid var(--brand);
+      border-radius: 12px 0 0 12px;
+      color: var(--brand-dark);
+      background: #fff;
+      font-weight: 750;
+    }
+    .answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .answer-card { padding: 14px 16px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.8); }
+    .answer-card h3 { margin: 0 0 7px; font-size: .9rem; }
+    .answer-card ul { margin: 0; padding-right: 18px; color: var(--muted); font-size: .84rem; }
+    .answer-card li { margin: 3px 0; }
+    .example { margin: 12px 0 0; color: var(--muted); font-size: .85rem; }
+    code { direction: ltr; display: inline-block; padding: 1px 6px; border-radius: 6px; color: #334b86; background: #e9edfa; font-family: Consolas, monospace; }
+    footer { margin-top: 14px; color: var(--muted); font-size: .78rem; text-align: center; }
+
+    @media (max-width: 860px) {
+      header { display: block; }
+      .rule { margin-top: 16px; max-width: none; }
+      .flow { grid-template-columns: 1fr; gap: 30px; }
+      .layer { min-height: auto; }
+      .layer:not(:last-child)::after { content: "↓"; left: 50%; top: auto; bottom: -28px; transform: translateX(-50%); }
+      .labels, .details, .answer-grid { grid-template-columns: 1fr; }
+      .interview-head { align-items: start; }
+    }
+
+    @media print {
+      @page { size: A4 landscape; margin: 9mm; }
+      body { background: #fff; font-size: 11px; }
+      main { width: 100%; margin: 0; }
+      header { margin-bottom: 12px; }
+      h1 { font-size: 25px; }
+      .board, .panel, .rule { box-shadow: none; }
+      .board { padding: 14px; }
+      .layer { min-height: 160px; padding: 12px; }
+      .details { margin-top: 10px; }
+      .interview { margin-top: 10px; padding: 12px; }
+      .interview blockquote { margin: 8px 0; padding: 8px 12px; }
+      .answer-card { padding: 9px 12px; }
+      footer { margin-top: 7px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <span class="eyebrow">تمرین معماری · Folentra</span>
+        <h1>از رابط کاربری تا پایگاه داده</h1>
+        <p>مسیر وابستگی، مسئولیت و مرز هر لایه در جریان ثبت تراکنش</p>
+      </div>
+      <div class="rule" aria-label="Dependency direction">UI → ViewModel → Repository → Room</div>
+    </header>
+
+    <section class="board" aria-label="دیاگرام معماری Folentra">
+      <div class="flow">
+        <article class="layer presentation">
+          <span class="badge">01</span><h2>UI</h2>
+          <p class="tech">Jetpack Compose</p>
+          <ul>
+            <li>نمایش <b>UiState</b></li>
+            <li>دریافت ورودی و کلیک کاربر</li>
+            <li>ارسال event به ViewModel</li>
+          </ul>
+          <div class="boundary">مرز: بدون DAO، SQL یا منطق مالی</div>
+        </article>
+
+        <article class="layer presentation">
+          <span class="badge">02</span><h2>ViewModel</h2>
+          <p class="tech">StateFlow · Coroutines</p>
+          <ul>
+            <li>مدیریت state، loading و error</li>
+            <li>اعتبارسنجی و هماهنگی جریان</li>
+            <li>فراخوانی قرارداد Repository</li>
+          </ul>
+          <div class="boundary">مرز: بدون Compose UI و دسترسی مستقیم به Room</div>
+        </article>
+
+        <article class="layer data">
+          <span class="badge">03</span><h2>Repository</h2>
+          <p class="tech">Domain API · Mapping</p>
+          <ul>
+            <li>API پایدار برای داده‌ها</li>
+            <li>تبدیل Entity به مدل برنامه</li>
+            <li>هماهنگی عملیات اتمیک</li>
+          </ul>
+          <div class="boundary">مرز: بدون state نمایشی یا پیام UI</div>
+        </article>
+
+        <article class="layer data">
+          <span class="badge">04</span><h2>Room</h2>
+          <p class="tech">Database · DAO · Entity</p>
+          <ul>
+            <li>ذخیره و query محلی</li>
+            <li>transaction و constraint</li>
+            <li>migration و انتشار Flow</li>
+          </ul>
+          <div class="boundary">مرز: بدون تصمیم‌گیری درباره نمایش یا تجربهٔ کاربر</div>
+        </article>
+      </div>
+
+      <div class="labels" aria-label="مرزهای سطح بالا">
+        <div class="zone">Presentation Layer · UI + ViewModel</div>
+        <div class="zone data-zone">Data Layer · Repository + Room</div>
+      </div>
+    </section>
+
+    <section class="details">
+      <article class="panel">
+        <h3>نمونهٔ جریان: تأیید تراکنش</h3>
+        <div class="journey" aria-label="Confirmation flow">
+          <span class="step">Confirm</span><span class="arrow">←</span>
+          <span class="step">Validate</span><span class="arrow">←</span>
+          <span class="step">confirmDraft()</span><span class="arrow">←</span>
+          <span class="step">Room Transaction</span><span class="arrow">←</span>
+          <span class="step">Flow → UiState</span>
+        </div>
+      </article>
+      <article class="panel">
+        <h3>قرارداد معماری</h3>
+        <ul class="contract">
+          <li><strong>رو به پایین:</strong> event و درخواست عملیات</li>
+          <li><strong>رو به بالا:</strong> مدل، Result و Flow</li>
+          <li><strong>اصل کلیدی:</strong> هر لایه فقط لایهٔ بعدی را می‌شناسد.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="interview" aria-labelledby="repository-question">
+      <div class="interview-head">
+        <h2 id="repository-question">چرا Repository؟ چه چیزی را در ViewModel نمی‌گذاری؟</h2>
+        <span class="time">سؤال شروع مصاحبه · ۳۰ دقیقه</span>
+      </div>
+      <blockquote>
+        Repository مرز میان منطق ارائه و زیرساخت داده است؛ ViewModel باید بداند کاربر چه عملی می‌خواهد، نه اینکه کدام جدول، DAO یا منبع داده آن را انجام می‌دهد.
+      </blockquote>
+      <div class="answer-grid">
+        <article class="answer-card">
+          <h3>در Repository قرار می‌گیرد</h3>
+          <ul>
+            <li>دسترسی به DAO، query و منبع داده</li>
+            <li>تبدیل Entity به مدل برنامه و سیاست cache</li>
+            <li>عملیات اتمیک، transaction و خطاهای ذخیره‌سازی</li>
+          </ul>
+        </article>
+        <article class="answer-card">
+          <h3>ViewModel روی این موارد تمرکز می‌کند</h3>
+          <ul>
+            <li>دریافت event و تولید <code>UiState</code></li>
+            <li>مدیریت loading، error، lifecycle و cancellation</li>
+            <li>فراخوانی Repository یا Use Case و اعتبارسنجی فرم</li>
+          </ul>
+        </article>
+      </div>
+      <p class="example"><strong>مثال Folentra:</strong> ViewModel فقط <code>confirmDraft(id)</code> را صدا می‌زند؛ Repository تضمین می‌کند ثبت تراکنش و علامت‌گذاری draft در یک Room transaction و به‌صورت idempotent انجام شوند. Repository صرفاً wrapper روی DAO نیست؛ باید abstraction یا سیاست دادهٔ معناداری ایجاد کند.</p>
+    </section>
+
+    <footer>Folentra · Layered Architecture · UI → ViewModel → Repository → Room</footer>
+  </main>
+</body>
+</html>
