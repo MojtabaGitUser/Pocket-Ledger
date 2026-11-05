@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.activity.compose)
     implementation(project(":shared"))
     implementation(project(":core:ai"))
     implementation(project(":core:data"))

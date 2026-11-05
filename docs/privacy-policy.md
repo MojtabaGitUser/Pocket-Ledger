@@ -1,7 +1,7 @@
 # Folentra Privacy Policy
 
 Effective date: July 5, 2026
-Last updated: October 25, 2026
+Last updated: November 1, 2026
 
 Contact: support.folentra@gmail.com
 
@@ -16,10 +16,9 @@ support address above.
 ## Information Stored Locally
 
 Pending transaction drafts are also stored locally until you confirm or discard them. They may
-contain manually entered receipt amounts, dates, categories, merchant names and notes. Confirmation
+contain manually entered or locally recognized receipt amounts, dates, categories, merchant names and notes. Confirmation
 moves the reviewed data into the ledger and clears the draft financial fields, retaining only an
-identifier, source, timestamps and confirmation marker to prevent duplicate registration. This
-feature does not capture receipt photos or run OCR. Drafts follow the database backup exclusions.
+identifier, source, timestamps and confirmation marker to prevent duplicate registration. Drafts follow the database backup exclusions.
 
 Folentra stores ledger data in the app-private Room database
 `folentra.db` on the user's device. This local data can include:
@@ -36,6 +35,27 @@ preferences. The current app-lock preference records whether app lock is enabled
 Future passkey/session preference keys are defined in code, but the current app
 does not implement user accounts, passkeys, or server-backed authentication.
 
+## Receipt Scanning
+
+You can capture a receipt with the system camera or select an image through Android's photo picker.
+Folentra uses a bundled Google ML Kit Latin text-recognition model on the device. Receipt images
+and recognized text are not sent by Folentra to a remote OCR service. Recognition works without
+a model download. The system picker may need connectivity to retrieve an image from a cloud provider.
+Only draft fields are stored in the local database; full OCR text is not retained or logged.
+
+Temporary image copies and camera captures are held in app-private cache and removed after processing
+or cancellation. If processing is interrupted, files older than 24 hours are removed when the receipt
+screen is next opened. Cache files are excluded from Android backup and may also be cleared by Android.
+Gallery originals are not deleted. Corrections are saved locally and in Android's saved screen state
+for restoration; only explicit confirmation adds a ledger transaction.
+
+Google ML Kit can send SDK diagnostics and usage metrics to Google, including device/app information,
+installation identifiers, performance, configuration and error information. This is separate from the
+receipt image and recognized contents. See [Google's ML Kit privacy information](https://developers.google.com/ml-kit/terms)
+and [SDK data disclosures](https://developers.google.com/ml-kit/android-data-disclosure).
+Folentra does not request camera or broad media/storage permissions for this flow; the system camera
+and picker provide scoped image access.
+
 ## Financial Data Handling
 
 Folentra is designed to keep financial records local unless a feature is
@@ -46,7 +66,7 @@ explicitly changed to require external processing. In the current app:
 - There is no cloud sync implementation.
 - There is no banking integration or bank connection.
 - There is no advertising UI or ad-serving feature.
-- There is no import flow. Users can explicitly export selected transactions as a local CSV.
+- There is no bank-statement import flow. Receipt images can populate editable local drafts. Users can explicitly export selected transactions as a local CSV.
   Dates, types, amounts and currencies are included; merchant names and notes are optional
   and excluded by default. The file is unencrypted and saved through Android's document picker.
   A selected cloud provider may upload it. Exported files remain at the chosen destination
@@ -107,7 +127,7 @@ automatic sync or a backup-and-restore service.
 ## Information Not Collected By Current App Features
 
 The current app does not ask users to provide an email address, phone number,
-mailing address, government identifier, contact list, photos, camera input,
+mailing address, government identifier, contact list,
 location, or payment-card credentials.
 
 Folentra does not intentionally collect transaction descriptions, merchant
